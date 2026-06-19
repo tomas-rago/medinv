@@ -1,0 +1,98 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { SignUpSchema } from "@/lib/schemas/sign-up/sign-up";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+export type SignUpResult = {
+  ok: false;
+  errors: {
+    firstName?: string[];
+    lastName?: string[];
+    email?: string[];
+    password?: string[];
+    _form?: string[];
+  };
+};
+
+export async function signup(
+  _prevState: SignUpResult,
+  formData: FormData
+): Promise<SignUpResult> {
+  const raw = {
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+  };
+
+  console.log("[signup] raw form data:", JSON.stringify(raw));
+
+  const result = SignUpSchema.safeParse(raw);
+  if (!result.success) {
+    return { ok: false, errors: result.error.flatten().fieldErrors };
+  }
+
+  const { firstName, lastName, email, password } = result.data;
+  const fullName = `${firstName} ${lastName}`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+  if (process.env.NODE_ENV === "development") {
+    // In dev, create the user as auto-confirmed and sign them in immediately.
+    // generateLink was tried before but its confirmation URL uses implicit flow
+    // (hash fragment) which the Route Handler can't read — the new session was
+    // never established and the old cookie session persisted instead.
+    const adminClient = createAdminClient();
+    const { data: created, error: createError } =
+      await adminClient.auth.admin.createUser({
+        email,
+        password,
+        user_metadata: { full_name: fullName },
+        email_confirm: true,
+      });
+
+    console.log("[signup] dev createUser:", created?.user?.id ?? null, createError?.message ?? null);
+    if (!created?.user) {
+      return { ok: false, errors: { _form: ["No se pudo crear el usuario"] } };
+    }
+
+    if (createError) {
+      return { ok: false, errors: { _form: [createError.message] } };
+    }
+
+    // Sign in with the new credentials so session cookies are set for this user
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    console.log("[signup] dev signIn error:", signInError?.message ?? null);
+
+    if (signInError) {
+      return { ok: false, errors: { _form: [signInError.message] } };
+    }
+
+    redirect("/onboarding");
+  } else {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: `${siteUrl}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      return { ok: false, errors: { _form: [error.message] } };
+    }
+
+    redirect("/auth/confirm");
+  }
+}
