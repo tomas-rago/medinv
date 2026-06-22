@@ -6,7 +6,7 @@ import { InviteModal } from "./InviteModal";
 type Profile = {
   id: string;
   full_name: string | null;
-  role: string;
+  role: "admin" | "operator" | "read_only" | null;
   active: boolean;
   created_at: string;
 };
@@ -125,8 +125,8 @@ export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin:
                       </div>
                     </td>
                     <td>
-                      <span className={`mi-badge mi-badge--${ROLE_TONES[p.role] ?? "gray"}`}>
-                        {ROLE_LABELS[p.role] ?? p.role}
+                      <span className={`mi-badge mi-badge--${ROLE_TONES[p.role ?? ""] ?? "gray"}`}>
+                        {ROLE_LABELS[p.role ?? ""] ?? p.role}
                       </span>
                     </td>
                     <td>
