@@ -94,3 +94,49 @@ export async function inviteUser(
   revalidatePath("/users");
   return { ok: true, errors: {} };
 }
+
+export type ToggleActiveResult = {
+  ok: boolean;
+  error?: string;
+};
+
+export async function toggleUserActive(
+  userId: string,
+  active: boolean
+): Promise<ToggleActiveResult> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "No autenticado" };
+
+  if (user.app_metadata?.role !== "admin") {
+    return { ok: false, error: "Sin permiso para modificar usuarios" };
+  }
+
+  if (userId === user.id) {
+    return { ok: false, error: "No podés desactivarte a ti mismo" };
+  }
+
+  const organizationId = user.app_metadata?.organization_id as string;
+  if (!organizationId) {
+    return { ok: false, error: "No se encontró la organización en la sesión" };
+  }
+
+  const adminClient = createAdminClient();
+
+  const { error: dbError } = await adminClient
+    .from("profiles")
+    .update({ active })
+    .eq("id", userId)
+    .eq("organization_id", organizationId);
+
+  if (dbError) {
+    return { ok: false, error: dbError.message };
+  }
+
+  revalidatePath("/users");
+  return { ok: true };
+}

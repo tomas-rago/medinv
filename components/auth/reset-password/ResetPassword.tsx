@@ -2,22 +2,21 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { login } from "@/app/(auth)/login/actions";
-import type { LoginResult } from "@/app/(auth)/login/actions";
+import { resetPassword } from "@/app/(auth)/auth/reset-password/actions";
+import type { ResetPasswordResult } from "@/app/(auth)/auth/reset-password/actions";
 import { Logo } from "@/components/ui/Logo";
 import { AuthArt } from "@/components/ui/AuthArt";
 import { IconSprite } from "@/components/ui/Icons";
 
-const initialState: LoginResult = { ok: false, errors: {} };
+const initialState: ResetPasswordResult = { ok: false, errors: {} };
 
-export function Login() {
-  const [state, action, isPending] = useActionState(login, initialState);
+export function ResetPassword() {
+  const [state, action, isPending] = useActionState(resetPassword, initialState);
 
   return (
     <>
       <IconSprite />
       <section className="mi-auth mi-fade">
-        {/* Left panel */}
         <div className="mi-auth-panel">
           <Logo size="md" />
 
@@ -26,56 +25,49 @@ export function Login() {
             style={{ maxWidth: 360 }}
           >
             <h1 className="font-display text-ink leading-tight" style={{ fontSize: 30 }}>
-              Bienvenid@ de nuevo
+              Nueva contraseña
             </h1>
             <p className="text-ink2 mt-2 mb-8" style={{ fontSize: 15 }}>
-              Gestioná tu inventario, compras y equipo desde un solo lugar.
+              Elegí una contraseña segura de al menos 8 caracteres.
             </p>
 
             <form action={action}>
               <div className="mi-field" style={{ marginTop: 0 }}>
-                <label htmlFor="email" className="mi-label">Email</label>
+                <label htmlFor="password" className="mi-label">Nueva contraseña</label>
                 <div className="mi-input-group">
-                  <svg><use href="#i-mail" /></svg>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    className="mi-input"
-                    placeholder="tu@farmacia.com"
-                    autoComplete="email"
-                  />
-                </div>
-                {state.errors.email?.map((e) => (
-                  <p key={e} className="mi-field-error">{e}</p>
-                ))}
-              </div>
-
-              <div className="mi-field">
-                <div className="flex items-center justify-between" style={{ marginBottom: 7 }}>
-                  <label htmlFor="password" className="mi-label" style={{ marginBottom: 0 }}>
-                    Contraseña
-                  </label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-primary hover:text-primaryd"
-                    style={{ fontSize: 13, fontWeight: 600 }}
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Link>
-                </div>
-                <div className="mi-input-group">
-                  <svg><use href="#i-lock" /></svg>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
                   <input
                     id="password"
                     name="password"
                     type="password"
                     className="mi-input"
-                    placeholder="••••••••"
-                    autoComplete="current-password"
+                    placeholder="Mínimo 8 caracteres"
+                    autoComplete="new-password"
                   />
                 </div>
                 {state.errors.password?.map((e) => (
+                  <p key={e} className="mi-field-error">{e}</p>
+                ))}
+              </div>
+
+              <div className="mi-field">
+                <label htmlFor="confirmPassword" className="mi-label">Repetir contraseña</label>
+                <div className="mi-input-group">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    className="mi-input"
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                  />
+                </div>
+                {state.errors.confirmPassword?.map((e) => (
                   <p key={e} className="mi-field-error">{e}</p>
                 ))}
               </div>
@@ -90,17 +82,13 @@ export function Login() {
                 className="mi-btn mi-btn--primary mi-btn--block mi-btn--lg"
                 style={{ marginTop: 28 }}
               >
-                {isPending ? "Iniciando sesión…" : "Iniciar sesión"}
+                {isPending ? "Guardando…" : "Establecer contraseña"}
               </button>
             </form>
 
             <p className="text-center text-ink2 mt-7" style={{ fontSize: 14 }}>
-              ¿No tenés una cuenta?{" "}
-              <Link
-                href="/sign-up"
-                className="font-semibold text-primary hover:text-primaryd"
-              >
-                Registrate
+              <Link href="/login" className="font-semibold text-primary hover:text-primaryd">
+                Volver al inicio de sesión
               </Link>
             </p>
           </div>
@@ -112,8 +100,7 @@ export function Login() {
           </p>
         </div>
 
-        {/* Right art panel */}
-        <AuthArt caption="Accedé a tu farmacia" />
+        <AuthArt caption="Establecé tu nueva contraseña" />
       </section>
     </>
   );
