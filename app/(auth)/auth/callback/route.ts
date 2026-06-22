@@ -20,6 +20,10 @@ export async function GET(request: Request) {
 
   if (!user) redirect("/login");
 
+  if (searchParams.get("type") === "recovery") {
+    redirect("/auth/reset-password");
+  }
+
   const { data: profile } = await supabase
     .from("profiles")
     .select("organization_id, role")
