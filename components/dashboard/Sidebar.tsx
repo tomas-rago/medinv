@@ -4,6 +4,7 @@ import { Logo } from "@/components/ui/Logo";
 interface SidebarProps {
   activeSection: string;
   profile: { full_name: string | null; role: string };
+  hasAiAccess?: boolean;
 }
 
 interface NavItem {
@@ -16,7 +17,7 @@ interface NavItem {
   adminOnly?: boolean;
 }
 
-const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+const BASE_NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "General",
     items: [{ id: "panel", href: "/dashboard", icon: "i-home", label: "Panel" }],
@@ -27,13 +28,6 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { id: "inventario", href: "/stock", icon: "i-pill", label: "Inventario", badge: "12", badgeTone: "danger" },
       { id: "compras", href: "/purchases", icon: "i-cart", label: "Compras" },
       { id: "personal", href: "/users", icon: "i-users", label: "Personal", adminOnly: true },
-    ],
-  },
-  {
-    label: "Cuenta",
-    items: [
-      { id: "suscripcion", href: "/onboarding", icon: "i-card", label: "Suscripción" },
-      { id: "ia", href: "#", icon: "i-spark", label: "Asistente IA", badge: "Pro", badgeTone: "amber" },
     ],
   },
 ];
@@ -67,7 +61,24 @@ const ROLE_LABELS: Record<string, string> = {
   read_only: "Solo lectura",
 };
 
-export function Sidebar({ activeSection, profile }: SidebarProps) {
+export function Sidebar({ activeSection, profile, hasAiAccess = false }: SidebarProps) {
+  const NAV_GROUPS = [
+    ...BASE_NAV_GROUPS,
+    {
+      label: "Cuenta",
+      items: [
+        { id: "suscripcion", href: "/cuenta/suscripcion", icon: "i-card", label: "Suscripción", adminOnly: true },
+        {
+          id: "ia",
+          href: hasAiAccess ? "/asistencia-ia" : "#",
+          icon: "i-spark",
+          label: "Asistente IA",
+          ...(hasAiAccess ? {} : { badge: "Pro", badgeTone: "amber" }),
+        } as NavItem,
+      ],
+    },
+  ];
+
   return (
     <aside
       className="w-[260px] flex-none flex flex-col border-r"
