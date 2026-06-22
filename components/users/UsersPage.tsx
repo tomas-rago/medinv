@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { InviteModal } from "./InviteModal";
+import { EditUserModal } from "./EditUserModal";
 
 type Profile = {
   id: string;
@@ -39,6 +40,7 @@ const AVATAR_COLORS = [
 
 export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin: boolean }) {
   const [showInvite, setShowInvite] = useState(false);
+  const [editProfile, setEditProfile] = useState<Profile | null>(null);
 
   return (
     <div
@@ -153,7 +155,7 @@ export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin:
                     {isAdmin && (
                       <td>
                         <div className="inline-flex gap-1">
-                          <button className="mi-iconbtn" title="Editar">
+                          <button className="mi-iconbtn" title="Editar" onClick={() => setEditProfile(p)}>
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
                             </svg>
@@ -175,6 +177,9 @@ export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin:
       </div>
 
       {showInvite && <InviteModal onClose={() => setShowInvite(false)} />}
+      {editProfile && (
+        <EditUserModal profile={editProfile} onClose={() => setEditProfile(null)} />
+      )}
     </div>
   );
 }
