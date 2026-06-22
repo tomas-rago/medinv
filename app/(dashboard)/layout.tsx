@@ -27,13 +27,31 @@ export default async function DashboardLayout({
   console.log("[dashboard layout] user:", user.id, "app_metadata:", JSON.stringify(user.app_metadata), "profile:", JSON.stringify(profile));
   if (!profile?.organization_id) redirect("/onboarding");
 
+  // Fetch org plan to determine AI feature access
+  let hasAiAccess = false;
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("plan_id")
+    .eq("id", profile.organization_id)
+    .single();
+
+  if (org?.plan_id) {
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("token_limit_per_month")
+      .eq("id", org.plan_id)
+      .single();
+    hasAiAccess = (plan?.token_limit_per_month ?? 0) > 0;
+  }
+
   return (
     <>
       <IconSprite />
       <div className="h-screen flex overflow-hidden">
         <Sidebar
           activeSection="panel"
-          profile={{ full_name: profile.full_name, role: profile.role }}
+          profile={{ full_name: profile.full_name ?? "", role: profile.role ?? "read_only" }}
+          hasAiAccess={hasAiAccess}
         />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {children}
