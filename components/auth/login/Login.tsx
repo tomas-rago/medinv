@@ -56,13 +56,13 @@ export function Login() {
                   <label htmlFor="password" className="mi-label" style={{ marginBottom: 0 }}>
                     Contraseña
                   </label>
-                  <a
-                    href="#"
+                  <Link
+                    href="/forgot-password"
                     className="text-primary hover:text-primaryd"
                     style={{ fontSize: 13, fontWeight: 600 }}
                   >
                     ¿Olvidaste tu contraseña?
-                  </a>
+                  </Link>
                 </div>
                 <div className="mi-input-group">
                   <svg><use href="#i-lock" /></svg>
