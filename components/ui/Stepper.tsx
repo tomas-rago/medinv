@@ -1,8 +1,11 @@
 "use client";
 
-const STEPS = ["Cuenta", "Plan", "Pago"];
+import { useTranslations } from "next-intl";
 
 export function Stepper({ step }: { step: number }) {
+  const t = useTranslations("Stepper");
+  const STEPS = [t("step_account"), t("step_plan"), t("step_payment")];
+
   return (
     <div className="flex items-center gap-2">
       {STEPS.map((s, i) => {

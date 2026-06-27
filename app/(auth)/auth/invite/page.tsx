@@ -2,43 +2,50 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/ui/Logo";
 
 export default function InviteCallbackPage() {
+  const t = useTranslations("InviteCallback");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // @supabase/ssr's createBrowserClient defaults to PKCE flow and does NOT
-    // auto-process #access_token hash fragments (it only looks for ?code=).
-    // Supabase invite emails use implicit flow, so we parse the hash manually.
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-    const tokenType = params.get("type");
+    async function run() {
+      // @supabase/ssr's createBrowserClient defaults to PKCE flow and does NOT
+      // auto-process #access_token hash fragments (it only looks for ?code=).
+      // Supabase invite emails use implicit flow, so we parse the hash manually.
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      const tokenType = params.get("type");
 
-    console.log("[invite] hash type:", tokenType, "has token:", !!accessToken);
+      console.log("[invite] hash type:", tokenType, "has token:", !!accessToken);
 
-    if (!accessToken || !refreshToken) {
-      setError("El enlace de invitación no es válido o ya fue usado.");
-      return;
+      if (!accessToken || !refreshToken) {
+        setError(t("invalid_link"));
+        return;
+      }
+
+      const supabase = createClient();
+      const { data, error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      console.log("[invite] setSession result:", data?.session?.user?.email ?? null, sessionError?.message ?? null);
+
+      if (sessionError || !data.session) {
+        setError(sessionError?.message ?? t("invalid_link"));
+      } else {
+        router.replace("/auth/complete-profile");
+      }
     }
 
-    const supabase = createClient();
-
-    supabase.auth
-      .setSession({ access_token: accessToken, refresh_token: refreshToken })
-      .then(({ data, error: sessionError }) => {
-        console.log("[invite] setSession result:", data?.session?.user?.email ?? null, sessionError?.message ?? null);
-        if (sessionError || !data.session) {
-          setError(sessionError?.message ?? "El enlace de invitación no es válido o ya fue usado.");
-        } else {
-          router.replace("/auth/complete-profile");
-        }
-      });
-  }, [router]);
+    run();
+  }, [router, t]);
 
   return (
     <div
@@ -61,11 +68,11 @@ export default function InviteCallbackPage() {
               </svg>
             </span>
             <h1 className="font-display text-ink leading-tight" style={{ fontSize: 22 }}>
-              Enlace inválido
+              {t("error_heading")}
             </h1>
             <p className="text-ink2 mt-2" style={{ fontSize: 14 }}>{error}</p>
             <a href="/login" className="mi-btn mi-btn--ghost mi-btn--block mt-6">
-              Ir al inicio de sesión
+              {t("go_to_login")}
             </a>
           </>
         ) : (
@@ -74,7 +81,7 @@ export default function InviteCallbackPage() {
               className="inline-block w-8 h-8 rounded-full border-2 border-t-transparent mb-4"
               style={{ borderColor: "var(--c-primary)", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }}
             />
-            <p className="text-ink2" style={{ fontSize: 15 }}>Verificando invitación…</p>
+            <p className="text-ink2" style={{ fontSize: 15 }}>{t("verifying")}</p>
           </>
         )}
       </div>

@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 export const SignUpSchema = z.object({
-  firstName: z.string().min(1, "Requerido"),
-  lastName: z.string().min(1, "Requerido"),
-  email: z.email("Email inválido"),
-  password: z.string().min(8, "Mínimo 8 caracteres"),
+  firstName: z.string().min(1, "required"),
+  lastName: z.string().min(1, "required"),
+  email: z.email("email_invalid"),
+  password: z.string().min(8, "min_8"),
 });
 
 export type SignUpInput = z.infer<typeof SignUpSchema>;

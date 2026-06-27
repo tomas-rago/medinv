@@ -1,16 +1,17 @@
-const GLYPHS = ["M", "+", "i", "N", "V", "M", "+", "i", "V", "N", "M", "+", "i", "N", "V", "M", "+", "i", "V", "N", "M", "+", "i", "N", "V"];
+"use client";
 
-const BULLETS = [
-  "Control de stock y vencimientos en tiempo real",
-  "Compras y pedidos con seguimiento de estado",
-  "Tu equipo con roles y permisos a medida",
-];
+import { useTranslations } from "next-intl";
+
+const GLYPHS = ["M", "+", "i", "N", "V", "M", "+", "i", "V", "N", "M", "+", "i", "N", "V", "M", "+", "i", "V", "N", "M", "+", "i", "N", "V"];
 
 interface AuthArtProps {
   caption: string;
 }
 
 export function AuthArt({ caption }: AuthArtProps) {
+  const t = useTranslations("AuthArt");
+  const BULLETS = [t("bullet_0"), t("bullet_1"), t("bullet_2")];
+
   return (
     <div className="mi-auth-art" style={{ minHeight: "100vh" }}>
       <div className="mi-tilewall">
@@ -39,7 +40,7 @@ export function AuthArt({ caption }: AuthArtProps) {
           {caption}
         </h2>
         <p className="text-white/80 mt-3 max-w-md" style={{ fontSize: 15 }}>
-          Med+Inv reúne inventario, compras y personal en un solo sistema, con un asistente de IA opcional.
+          {t("description")}
         </p>
         <ul className="mt-8 space-y-3">
           {BULLETS.map((b) => (

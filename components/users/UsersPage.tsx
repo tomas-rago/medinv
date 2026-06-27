@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { InviteModal } from "./InviteModal";
 import { EditUserModal } from "./EditUserModal";
 
@@ -10,12 +11,6 @@ type Profile = {
   role: "admin" | "operator" | "read_only" | null;
   active: boolean;
   created_at: string;
-};
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrador",
-  operator: "Operador",
-  read_only: "Solo lectura",
 };
 
 const ROLE_TONES: Record<string, string> = {
@@ -39,8 +34,15 @@ const AVATAR_COLORS = [
 ];
 
 export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin: boolean }) {
+  const t = useTranslations("Users");
   const [showInvite, setShowInvite] = useState(false);
   const [editProfile, setEditProfile] = useState<Profile | null>(null);
+
+  const ROLE_LABELS: Record<string, string> = {
+    admin: t("roles.admin"),
+    operator: t("roles.operator"),
+    read_only: t("roles.read_only"),
+  };
 
   return (
     <div
@@ -51,15 +53,15 @@ export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin:
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-ink3 mb-1" style={{ fontSize: 13 }}>
-            <span>Cuenta</span>
+            <span>{t("breadcrumb_account")}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6"/></svg>
-            <span className="text-ink2 font-medium">Personal</span>
+            <span className="text-ink2 font-medium">{t("breadcrumb_users")}</span>
           </div>
           <h1 className="font-display text-ink leading-tight" style={{ fontSize: 28 }}>
-            Personal
+            {t("heading")}
           </h1>
           <p className="text-ink2 mt-1" style={{ fontSize: 14 }}>
-            Gestioná los usuarios de tu institución, sus roles y accesos.
+            {t("subheading")}
           </p>
         </div>
         {isAdmin && (
@@ -68,7 +70,7 @@ export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin:
             onClick={() => setShowInvite(true)}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            Invitar usuario
+            {t("invite_button")}
           </button>
         )}
       </div>
@@ -91,12 +93,12 @@ export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin:
             <input
               className="mi-input"
               style={{ paddingLeft: 40, paddingTop: 8, paddingBottom: 8 }}
-              placeholder="Buscar por nombre o email…"
+              placeholder={t("search_placeholder")}
             />
           </div>
           <div className="flex-1" />
           <span className="text-ink3" style={{ fontSize: 13 }}>
-            {profiles.length} usuario{profiles.length !== 1 ? "s" : ""}
+            {t("user_count", { count: profiles.length })}
           </span>
         </div>
 
@@ -104,11 +106,11 @@ export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin:
           <table className="mi-table">
             <thead>
               <tr>
-                <th>Usuario</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Miembro desde</th>
-                {isAdmin && <th>Acciones</th>}
+                <th>{t("table_user")}</th>
+                <th>{t("table_role")}</th>
+                <th>{t("table_status")}</th>
+                <th>{t("table_since")}</th>
+                {isAdmin && <th>{t("table_actions")}</th>}
               </tr>
             </thead>
             <tbody>
@@ -142,7 +144,7 @@ export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin:
                             background: p.active ? "var(--c-ok)" : "var(--c-ink-3)",
                           }}
                         />
-                        {p.active ? "Activo" : "Inactivo"}
+                        {p.active ? t("status_active") : t("status_inactive")}
                       </span>
                     </td>
                     <td className="text-ink3" style={{ fontSize: 13 }}>
@@ -155,12 +157,12 @@ export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin:
                     {isAdmin && (
                       <td>
                         <div className="inline-flex gap-1">
-                          <button className="mi-iconbtn" title="Editar" onClick={() => setEditProfile(p)}>
+                          <button className="mi-iconbtn" title={t("edit_tooltip")} onClick={() => setEditProfile(p)}>
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
                             </svg>
                           </button>
-                          <button className="mi-iconbtn" title="Más">
+                          <button className="mi-iconbtn" title={t("more_tooltip")}>
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/>
                             </svg>

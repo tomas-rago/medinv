@@ -2,10 +2,8 @@
 
 import { initMercadoPago, Payment } from "@mercadopago/sdk-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-
-// initMercadoPago is global state — track the key to reinitialize if it changes
-let initializedKey = "";
+import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 type Props = {
   publicKey: string;
@@ -16,14 +14,16 @@ type Props = {
 };
 
 export function CheckoutBrick({ publicKey, amount, planName, billingCycle, checkoutType = "initial" }: Props) {
+  const t = useTranslations("Checkout");
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [errorKey, setErrorKey] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  if (publicKey && initializedKey !== publicKey) {
-    initMercadoPago(publicKey, { locale: "es-AR" });
-    initializedKey = publicKey;
-  }
+  useEffect(() => {
+    if (publicKey) {
+      initMercadoPago(publicKey, { locale: "es-AR" });
+    }
+  }, [publicKey]);
 
   const initialization = { amount };
 
@@ -47,12 +47,12 @@ export function CheckoutBrick({ publicKey, amount, planName, billingCycle, check
     const { token, payment_method_id, issuer_id } = formData.formData;
     console.log("[CheckoutBrick] onSubmit token:", token ? `${token.slice(0, 8)}… (len=${token.length})` : "MISSING", "pm:", payment_method_id);
     if (!token) {
-      setError("No se pudo tokenizar la tarjeta. Intentá de nuevo.");
+      setErrorKey("error_tokenize");
       return;
     }
 
     setSubmitting(true);
-    setError(null);
+    setErrorKey(null);
 
     try {
       const endpoint = checkoutType === "upgrade" ? "/api/mp/subscription/activate" : "/api/mp/subscribe";
@@ -70,28 +70,27 @@ export function CheckoutBrick({ publicKey, amount, planName, billingCycle, check
       const data = (await res.json()) as { ok: boolean; error?: string };
 
       if (!res.ok || !data.ok) {
-        setError(data.error ?? "Error al procesar el pago. Intentá de nuevo.");
+        setErrorKey("error_payment");
         setSubmitting(false);
         return;
       }
 
       router.push("/dashboard");
     } catch {
-      setError("Error de conexión. Verificá tu internet e intentá de nuevo.");
+      setErrorKey("error_connection");
       setSubmitting(false);
     }
   }
 
   function onError(error: unknown) {
     console.error("[CheckoutBrick] error:", error);
-    setError("Ocurrió un error con el formulario de pago.");
+    setErrorKey("error_form");
   }
 
   return (
     <div className="mi-card mi-card-pad">
       <p className="text-ink2 mb-6" style={{ fontSize: 14 }}>
-        Ingresá los datos de tu tarjeta para activar tu suscripción a{" "}
-        <strong className="text-ink">{planName}</strong>. Podés cancelar cuando querés.
+        {t("card_info", { planName })}
       </p>
 
       {submitting ? (
@@ -108,7 +107,7 @@ export function CheckoutBrick({ publicKey, amount, planName, billingCycle, check
           >
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
           </svg>
-          <p className="text-ink2" style={{ fontSize: 14 }}>Procesando tu suscripción…</p>
+          <p className="text-ink2" style={{ fontSize: 14 }}>{t("processing")}</p>
         </div>
       ) : (
         <Payment
@@ -119,8 +118,9 @@ export function CheckoutBrick({ publicKey, amount, planName, billingCycle, check
         />
       )}
 
-      {error && (
-        <p className="mi-field-error mt-4">{error}</p>
+      {errorKey && (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        <p className="mi-field-error mt-4">{t(errorKey as any)}</p>
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Logo } from "@/components/ui/Logo";
 
 interface SidebarProps {
@@ -16,21 +17,6 @@ interface NavItem {
   badgeTone?: string;
   adminOnly?: boolean;
 }
-
-const BASE_NAV_GROUPS: { label: string; items: NavItem[] }[] = [
-  {
-    label: "General",
-    items: [{ id: "panel", href: "/dashboard", icon: "i-home", label: "Panel" }],
-  },
-  {
-    label: "Operación",
-    items: [
-      { id: "inventario", href: "/stock", icon: "i-pill", label: "Inventario", badge: "12", badgeTone: "danger" },
-      { id: "compras", href: "/purchases", icon: "i-cart", label: "Compras" },
-      { id: "personal", href: "/users", icon: "i-users", label: "Personal", adminOnly: true },
-    ],
-  },
-];
 
 function Icon({ id }: { id: string }) {
   const paths: Record<string, React.ReactNode> = {
@@ -55,24 +41,37 @@ function initials(name: string | null) {
   return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrador",
-  operator: "Operador",
-  read_only: "Solo lectura",
-};
+export async function Sidebar({ activeSection, profile, hasAiAccess = false }: SidebarProps) {
+  const t = await getTranslations("Sidebar");
 
-export function Sidebar({ activeSection, profile, hasAiAccess = false }: SidebarProps) {
-  const NAV_GROUPS = [
-    ...BASE_NAV_GROUPS,
+  const ROLE_LABELS: Record<string, string> = {
+    admin: t("roles.admin"),
+    operator: t("roles.operator"),
+    read_only: t("roles.read_only"),
+  };
+
+  const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     {
-      label: "Cuenta",
+      label: t("groups.general"),
+      items: [{ id: "panel", href: "/dashboard", icon: "i-home", label: t("nav.panel") }],
+    },
+    {
+      label: t("groups.operation"),
       items: [
-        { id: "suscripcion", href: "/cuenta/suscripcion", icon: "i-card", label: "Suscripción", adminOnly: true },
+        { id: "inventario", href: "/stock", icon: "i-pill", label: t("nav.inventory"), badge: "12", badgeTone: "danger" },
+        { id: "compras", href: "/purchases", icon: "i-cart", label: t("nav.purchases") },
+        { id: "personal", href: "/users", icon: "i-users", label: t("nav.users"), adminOnly: true },
+      ],
+    },
+    {
+      label: t("groups.account"),
+      items: [
+        { id: "suscripcion", href: "/cuenta/suscripcion", icon: "i-card", label: t("nav.subscription"), adminOnly: true },
         {
           id: "ia",
           href: hasAiAccess ? "/asistencia-ia" : "#",
           icon: "i-spark",
-          label: "Asistente IA",
+          label: t("nav.ai"),
           ...(hasAiAccess ? {} : { badge: "Pro", badgeTone: "amber" }),
         } as NavItem,
       ],
@@ -121,7 +120,7 @@ export function Sidebar({ activeSection, profile, hasAiAccess = false }: Sidebar
       <div className="p-3 border-t" style={{ borderColor: "color-mix(in srgb,var(--c-line) 70%,transparent)" }}>
         <Link href="/settings" className="mi-nav-item">
           <Icon id="i-settings" />
-          <span>Ajustes</span>
+          <span>{t("nav.settings")}</span>
         </Link>
         <div
           className="flex items-center gap-2 px-3 py-2 mt-1 rounded-xl"
@@ -132,14 +131,14 @@ export function Sidebar({ activeSection, profile, hasAiAccess = false }: Sidebar
           </span>
           <div className="leading-tight flex-1 min-w-0">
             <div className="font-semibold text-ink truncate" style={{ fontSize: 13 }}>
-              {profile.full_name ?? "Usuario"}
+              {profile.full_name ?? t("user_fallback")}
             </div>
             <div className="text-ink3 truncate" style={{ fontSize: 12 }}>
               {ROLE_LABELS[profile.role] ?? profile.role}
             </div>
           </div>
           <form action="/auth/signout" method="post">
-            <Link href="/login" className="mi-iconbtn" title="Cerrar sesión">
+            <Link href="/login" className="mi-iconbtn" title={t("logout")}>
               <Icon id="i-logout" />
             </Link>
           </form>

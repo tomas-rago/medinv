@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { initiateUpgrade } from "@/app/(dashboard)/cuenta/actions";
 
 type Plan = {
@@ -26,28 +27,6 @@ type Props = {
   plans: Plan[];
 };
 
-const TIER_META: { desc: string; feats: string[] }[] = [
-  {
-    desc: "Para farmacias que recién arrancan.",
-    feats: ["Inventario y control de stock", "Compras y seguimiento de pedidos", "Alertas de stock y vencimiento"],
-  },
-  {
-    desc: "Para equipos que crecen y quieren IA.",
-    feats: ["Todo lo del plan anterior", "Asistente IA — chatbot integrado", "Sugerencias predictivas de compra", "Reportes y exportación"],
-  },
-  {
-    desc: "Para cadenas y multi-sucursal.",
-    feats: ["Todo lo del plan anterior", "Usuarios ilimitados", "Multi-sucursal centralizado", "Soporte prioritario 24/7", "Acceso a la API"],
-  },
-];
-
-const STATUS_LABELS: Record<string, { label: string; tone: string }> = {
-  active:    { label: "Activa",        tone: "green" },
-  past_due:  { label: "Pago pendiente", tone: "amber" },
-  cancelled: { label: "Cancelada",      tone: "danger" },
-  pending:   { label: "Pendiente",      tone: "gray" },
-};
-
 function formatDate(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" });
@@ -59,6 +38,7 @@ type ConfirmState =
   | { type: "cancel" };
 
 export function SuscripcionPage({ org, currentPlan, plans }: Props) {
+  const t = useTranslations("Subscription");
   const [confirmState, setConfirmState] = useState<ConfirmState>({ type: "none" });
   const [annual, setAnnual] = useState(org.billing_cycle === "annual");
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +46,31 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
   const [isPending, startTransition] = useTransition();
 
   const isFreePlan = !org.mp_subscription_id || currentPlan.monthly_price === 0;
-  const status = STATUS_LABELS[org.subscription_status] ?? { label: org.subscription_status, tone: "gray" };
+
+  const STATUS_MAP: Record<string, { tone: string; key: string }> = {
+    active:    { tone: "green",  key: "status_active" },
+    past_due:  { tone: "amber",  key: "status_past_due" },
+    cancelled: { tone: "danger", key: "status_cancelled" },
+    pending:   { tone: "gray",   key: "status_pending" },
+  };
+  const statusEntry = STATUS_MAP[org.subscription_status] ?? { tone: "gray", key: null };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const statusLabel = statusEntry.key ? t(statusEntry.key as any) : org.subscription_status;
+
+  const TIER_META: { desc: string; feats: string[] }[] = [
+    {
+      desc: t("tier_0_desc"),
+      feats: [t("tier_0_feat_0"), t("tier_0_feat_1"), t("tier_0_feat_2")],
+    },
+    {
+      desc: t("tier_1_desc"),
+      feats: [t("tier_1_feat_0"), t("tier_1_feat_1"), t("tier_1_feat_2"), t("tier_1_feat_3")],
+    },
+    {
+      desc: t("tier_2_desc"),
+      feats: [t("tier_2_feat_0"), t("tier_2_feat_1"), t("tier_2_feat_2"), t("tier_2_feat_3"), t("tier_2_feat_4")],
+    },
+  ];
 
   function price(plan: Plan) {
     if (plan.monthly_price === 0) return 0;
@@ -91,10 +95,9 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
     if (confirmState.type === "none") return;
 
     if (confirmState.type === "cancel" || (confirmState.type === "change" && confirmState.plan.monthly_price === 0)) {
-      // Find free plan
       const freePlan = plans.find((p) => p.monthly_price === 0);
       if (!freePlan) {
-        setError("No se encontró el plan gratuito.");
+        setError(t("error_free_plan_not_found"));
         setConfirmState({ type: "none" });
         return;
       }
@@ -106,10 +109,9 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
         });
         const data = await res.json() as { ok: boolean; error?: string };
         if (!data.ok) {
-          setError(data.error ?? "Error al cancelar la suscripción.");
+          setError(t("error_cancel"));
         } else {
-          setSuccess("Tu suscripción fue cancelada. Seguís con el plan gratuito.");
-          // Reload to reflect new plan
+          setSuccess(t("success_cancelled"));
           window.location.reload();
         }
         setConfirmState({ type: "none" });
@@ -121,14 +123,12 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
       const { plan, billingCycle, requiresCheckout } = confirmState;
 
       if (requiresCheckout) {
-        // Free → Paid: set cookie and redirect to checkout via server action
         startTransition(async () => {
           await initiateUpgrade(plan.id, billingCycle);
         });
         return;
       }
 
-      // Paid → Paid: update amount in place
       startTransition(async () => {
         const res = await fetch("/api/mp/subscription/change", {
           method: "POST",
@@ -137,9 +137,9 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
         });
         const data = await res.json() as { ok: boolean; error?: string };
         if (!data.ok) {
-          setError(data.error ?? "Error al cambiar el plan.");
+          setError(t("error_change"));
         } else {
-          setSuccess(`Plan actualizado a ${plan.name}.`);
+          setSuccess(t("success_plan_updated", { name: plan.name }));
           window.location.reload();
         }
         setConfirmState({ type: "none" });
@@ -156,9 +156,9 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
 
         {/* Header */}
         <div>
-          <h1 className="font-display text-ink" style={{ fontSize: 26 }}>Suscripción</h1>
+          <h1 className="font-display text-ink" style={{ fontSize: 26 }}>{t("heading")}</h1>
           <p className="text-ink2 mt-1" style={{ fontSize: 14 }}>
-            Administrá el plan de tu institución.
+            {t("subheading")}
           </p>
         </div>
 
@@ -178,26 +178,28 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
         <div className="mi-card mi-card-pad">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-ink3 mb-1" style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em" }}>Plan actual</p>
+              <p className="text-ink3 mb-1" style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                {t("current_plan_label")}
+              </p>
               <h2 className="font-display text-ink" style={{ fontSize: 22 }}>{currentPlan.name}</h2>
               {isFreePlan ? (
-                <p className="text-ink2 mt-1" style={{ fontSize: 14 }}>Sin suscripción activa</p>
+                <p className="text-ink2 mt-1" style={{ fontSize: 14 }}>{t("no_active_subscription")}</p>
               ) : (
                 <p className="text-ink2 mt-1" style={{ fontSize: 14 }}>
                   US${price(currentPlan)}/mes ·{" "}
-                  {org.billing_cycle === "annual" ? "facturado anualmente" : "facturado mensualmente"}
+                  {org.billing_cycle === "annual" ? t("billed_annually") : t("billed_monthly")}
                 </p>
               )}
             </div>
             <div className="flex flex-col items-end gap-2">
               {!isFreePlan && (
-                <span className={`mi-badge mi-badge--${status.tone}`} style={{ padding: "4px 10px", fontSize: 12 }}>
-                  {status.label}
+                <span className={`mi-badge mi-badge--${statusEntry.tone}`} style={{ padding: "4px 10px", fontSize: 12 }}>
+                  {statusLabel}
                 </span>
               )}
               {org.current_period_end && !isFreePlan && (
                 <p className="text-ink3" style={{ fontSize: 12 }}>
-                  Próximo cobro: {formatDate(org.current_period_end)}
+                  {t("next_billing", { date: formatDate(org.current_period_end) })}
                 </p>
               )}
             </div>
@@ -207,13 +209,13 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
         {/* Plan selection */}
         <div>
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-            <h2 className="font-display text-ink" style={{ fontSize: 18 }}>Cambiar plan</h2>
+            <h2 className="font-display text-ink" style={{ fontSize: 18 }}>{t("change_plan")}</h2>
             <div className="mi-seg">
               <button type="button" className={!annual ? "is-on" : ""} onClick={() => setAnnual(false)}>
-                Mensual
+                {t("billing_monthly")}
               </button>
               <button type="button" className={annual ? "is-on" : ""} onClick={() => setAnnual(true)}>
-                Anual <span className="mi-badge mi-badge--green" style={{ fontSize: 10, padding: "1px 6px", marginLeft: 4 }}>−20%</span>
+                {t("billing_annual")} <span className="mi-badge mi-badge--green" style={{ fontSize: 10, padding: "1px 6px", marginLeft: 4 }}>−20%</span>
               </button>
             </div>
           </div>
@@ -235,7 +237,7 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
                       className="mi-badge mi-badge--green mi-shadow"
                       style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 12px" }}
                     >
-                      Plan actual
+                      {t("plan_current")}
                     </span>
                   )}
                   {isFeatured && !isCurrent && (
@@ -243,7 +245,7 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
                       className="mi-badge mi-badge--green mi-shadow"
                       style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 12px" }}
                     >
-                      Recomendado
+                      {t("plan_recommended")}
                     </span>
                   )}
 
@@ -252,7 +254,7 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
 
                   <div className="flex items-baseline gap-1">
                     <span className="font-display text-ink" style={{ fontSize: 34 }}>US${price(plan)}</span>
-                    <span className="text-ink3" style={{ fontSize: 13 }}>/mes</span>
+                    <span className="text-ink3" style={{ fontSize: 13 }}>{t("price_per_month")}</span>
                   </div>
 
                   <button
@@ -261,7 +263,7 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
                     onClick={() => handleSelectPlan(plan)}
                     className={`mi-btn mi-btn--block mt-4 ${isFeatured && !isCurrent ? "mi-btn--primary" : "mi-btn--soft"}`}
                   >
-                    {isCurrent ? "Plan actual" : `Elegir ${plan.name}`}
+                    {isCurrent ? t("plan_current") : t("choose_plan", { name: plan.name })}
                   </button>
 
                   <hr className="mi-divider my-4" />
@@ -283,15 +285,15 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
           </div>
         </div>
 
-        {/* Cancel section — only show if on paid plan */}
+        {/* Cancel section */}
         {!isFreePlan && (
           <div
             className="mi-card mi-card-pad"
             style={{ borderColor: "color-mix(in srgb, var(--c-danger) 30%, var(--c-line))" }}
           >
-            <h3 className="font-semibold text-ink mb-1" style={{ fontSize: 15 }}>Cancelar suscripción</h3>
+            <h3 className="font-semibold text-ink mb-1" style={{ fontSize: 15 }}>{t("cancel_title")}</h3>
             <p className="text-ink2 mb-4" style={{ fontSize: 13 }}>
-              Al cancelar, tu cuenta pasará al plan gratuito de inmediato. Esta acción no tiene vuelta atrás.
+              {t("cancel_body")}
             </p>
             <button
               type="button"
@@ -300,7 +302,7 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
               className="mi-btn mi-btn--soft"
               style={{ color: "var(--c-danger)", borderColor: "color-mix(in srgb, var(--c-danger) 40%, transparent)" }}
             >
-              Cancelar suscripción
+              {t("cancel_button")}
             </button>
           </div>
         )}
@@ -315,9 +317,9 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
           <div className="mi-card mi-card-pad" style={{ maxWidth: 440, width: "90%", margin: "0 auto" }}>
             {confirmState.type === "cancel" && (
               <>
-                <h3 className="font-display text-ink mb-2" style={{ fontSize: 20 }}>¿Cancelar suscripción?</h3>
+                <h3 className="font-display text-ink mb-2" style={{ fontSize: 20 }}>{t("confirm_cancel_title")}</h3>
                 <p className="text-ink2 mb-6" style={{ fontSize: 14 }}>
-                  Tu cuenta pasará al plan gratuito inmediatamente. Perderás acceso a las funciones del plan{" "}
+                  {t("confirm_cancel_body_prefix")}{" "}
                   <strong>{currentPlan.name}</strong>.
                 </p>
               </>
@@ -326,17 +328,21 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
             {confirmState.type === "change" && (
               <>
                 <h3 className="font-display text-ink mb-2" style={{ fontSize: 20 }}>
-                  Cambiar a {confirmState.plan.name}
+                  {t("confirm_change_title", { name: confirmState.plan.name })}
                 </h3>
                 {confirmState.requiresCheckout ? (
                   <p className="text-ink2 mb-6" style={{ fontSize: 14 }}>
-                    Para activar el plan <strong>{confirmState.plan.name}</strong> (US${price(confirmState.plan)}/mes),
-                    necesitás ingresar los datos de tu tarjeta.
+                    {t("confirm_change_checkout_prefix")}{" "}
+                    <strong>{confirmState.plan.name}</strong>{" "}
+                    (US${price(confirmState.plan)}/mes),{" "}
+                    {t("confirm_change_checkout_suffix")}
                   </p>
                 ) : (
                   <p className="text-ink2 mb-6" style={{ fontSize: 14 }}>
-                    Tu suscripción se actualizará a <strong>{confirmState.plan.name}</strong> por{" "}
-                    US${price(confirmState.plan)}/mes. El cambio se aplica de inmediato.
+                    {t("confirm_change_body_prefix")}{" "}
+                    <strong>{confirmState.plan.name}</strong>{" "}
+                    {t("price_per_month", { count: price(confirmState.plan) })}.{" "}
+                    {t("confirm_change_body_suffix")}
                   </p>
                 )}
               </>
@@ -349,7 +355,7 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
                 onClick={() => setConfirmState({ type: "none" })}
                 disabled={isPending}
               >
-                Cancelar
+                {t("cancel_action")}
               </button>
               <button
                 type="button"
@@ -358,12 +364,12 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
                 disabled={isPending}
               >
                 {isPending
-                  ? "Procesando…"
+                  ? t("processing")
                   : confirmState.type === "cancel"
-                  ? "Sí, cancelar"
+                  ? t("confirm_cancel_action")
                   : confirmState.type === "change" && confirmState.requiresCheckout
-                  ? "Ingresar datos de pago"
-                  : "Confirmar cambio"}
+                  ? t("confirm_checkout")
+                  : t("confirm_change")}
               </button>
             </div>
           </div>

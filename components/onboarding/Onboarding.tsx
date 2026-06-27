@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useTranslations } from "next-intl";
 import { completeOnboarding } from "@/app/(auth)/onboarding/actions";
 import type { OnboardingResult } from "@/app/(auth)/onboarding/actions";
 import { Logo } from "@/components/ui/Logo";
@@ -15,56 +16,55 @@ type Plan = {
   token_limit_per_month: number;
 };
 
-// Feature lists keyed by tier position (0 = cheapest, 1 = mid, 2 = top)
-const TIER_META: { desc: string; feats: [boolean, string][] }[] = [
-  {
-    desc: "Para farmacias que recién arrancan.",
-    feats: [
-      [true, "Inventario y control de stock"],
-      [true, "Compras y seguimiento de pedidos"],
-      [true, "Alertas de stock y vencimiento"],
-      [false, "Asistente IA (chatbot)"],
-      [false, "Sugerencias predictivas de compra"],
-    ],
-  },
-  {
-    desc: "Para equipos que crecen y quieren IA.",
-    feats: [
-      [true, "Todo lo del plan anterior"],
-      [true, "Asistente IA — chatbot integrado"],
-      [true, "Asistente contextual en línea"],
-      [true, "Sugerencias predictivas de compra"],
-      [true, "Reportes y exportación"],
-    ],
-  },
-  {
-    desc: "Para cadenas y multi-sucursal.",
-    feats: [
-      [true, "Todo lo del plan anterior"],
-      [true, "Usuarios ilimitados"],
-      [true, "Multi-sucursal centralizado"],
-      [true, "Soporte prioritario 24/7"],
-      [true, "Acceso a la API"],
-      [true, "Onboarding dedicado"],
-    ],
-  },
-];
-
 const ANNUAL_DISCOUNT = 0.8;
 
 const initialState: OnboardingResult = { ok: false, errors: {} };
 
 export function Onboarding({ plans }: { plans: Plan[] }) {
+  const t = useTranslations("Onboarding");
+  const tVal = useTranslations("Validation");
   const [state, action, isPending] = useActionState(completeOnboarding, initialState);
   const [annual, setAnnual] = useState(false);
-  // Default to the middle plan (index 1), fall back to first if only one plan exists
   const defaultPlan = plans[Math.min(1, plans.length - 1)]?.id ?? "";
   const [selectedPlan, setSelectedPlan] = useState(defaultPlan);
+
+  const TIER_META: { desc: string; feats: [boolean, string][] }[] = [
+    {
+      desc: t("tier_0_desc"),
+      feats: [
+        [true,  t("tier_0_feat_0")],
+        [true,  t("tier_0_feat_1")],
+        [true,  t("tier_0_feat_2")],
+        [false, t("tier_0_feat_3")],
+        [false, t("tier_0_feat_4")],
+      ],
+    },
+    {
+      desc: t("tier_1_desc"),
+      feats: [
+        [true, t("tier_1_feat_0")],
+        [true, t("tier_1_feat_1")],
+        [true, t("tier_1_feat_2")],
+        [true, t("tier_1_feat_3")],
+        [true, t("tier_1_feat_4")],
+      ],
+    },
+    {
+      desc: t("tier_2_desc"),
+      feats: [
+        [true, t("tier_2_feat_0")],
+        [true, t("tier_2_feat_1")],
+        [true, t("tier_2_feat_2")],
+        [true, t("tier_2_feat_3")],
+        [true, t("tier_2_feat_4")],
+        [true, t("tier_2_feat_5")],
+      ],
+    },
+  ];
 
   const price = (p: Plan) =>
     annual ? Math.round(p.monthly_price * ANNUAL_DISCOUNT) : p.monthly_price;
 
-  // Middle tier is "featured/recommended"
   const featuredIndex = Math.floor(plans.length / 2);
 
   return (
@@ -86,30 +86,29 @@ export function Onboarding({ plans }: { plans: Plan[] }) {
             {/* Heading */}
             <div className="text-center mx-auto" style={{ maxWidth: 560 }}>
               <h1 className="font-display text-ink leading-tight" style={{ fontSize: 34 }}>
-                Elegí el plan para tu institución
+                {t("heading")}
               </h1>
               <p className="text-ink2 mt-3" style={{ fontSize: 15 }}>
-                Todos los planes incluyen inventario, compras y gestión de personal. El{" "}
-                <b className="text-ink">Asistente IA</b> se desbloquea desde el plan intermedio.
+                {t("subheading")}
               </p>
 
               <div className="mt-6 flex items-center justify-center gap-3">
                 <div className="mi-seg">
                   <button type="button" className={!annual ? "is-on" : ""} onClick={() => setAnnual(false)}>
-                    Mensual
+                    {t("billing_monthly")}
                   </button>
                   <button type="button" className={annual ? "is-on" : ""} onClick={() => setAnnual(true)}>
-                    Anual
+                    {t("billing_annual")}
                   </button>
                 </div>
-                <span className="mi-badge mi-badge--green">2 meses gratis</span>
+                <span className="mi-badge mi-badge--green">{t("free_months_badge")}</span>
               </div>
             </div>
 
             {/* Org name field */}
             <div className="mt-10 mx-auto" style={{ maxWidth: 440 }}>
               <label htmlFor="orgName" className="mi-label">
-                Nombre de tu institución
+                {t("org_name_label")}
               </label>
               <form id="onboarding-form" action={action}>
                 <input type="hidden" name="planId" value={selectedPlan} />
@@ -118,10 +117,11 @@ export function Onboarding({ plans }: { plans: Plan[] }) {
                   id="orgName"
                   name="orgName"
                   className="mi-input"
-                  placeholder="Farmacia Central"
+                  placeholder={t("org_name_placeholder")}
                 />
                 {state.errors.orgName?.map((e) => (
-                  <p key={e} className="mi-field-error">{e}</p>
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  <p key={e} className="mi-field-error">{tVal(e as any)}</p>
                 ))}
                 {state.errors._form?.map((e) => (
                   <p key={e} className="mi-field-error mt-2">{e}</p>
@@ -147,7 +147,7 @@ export function Onboarding({ plans }: { plans: Plan[] }) {
                         className="mi-badge mi-badge--green mi-shadow"
                         style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 12px" }}
                       >
-                        Recomendado
+                        {t("recommended")}
                       </span>
                     )}
 
@@ -162,10 +162,10 @@ export function Onboarding({ plans }: { plans: Plan[] }) {
                       <span className="font-display text-ink" style={{ fontSize: 40 }}>
                         US${price(plan)}
                       </span>
-                      <span className="text-ink3" style={{ fontSize: 14 }}>/ mes</span>
+                      <span className="text-ink3" style={{ fontSize: 14 }}>{t("price_per_month")}</span>
                     </div>
                     <p className="text-ink3 mt-1" style={{ fontSize: 12, height: 16 }}>
-                      {annual ? "facturado anualmente" : "facturado mensualmente"}
+                      {annual ? t("billed_annually") : t("billed_monthly")}
                     </p>
 
                     <button
@@ -175,7 +175,7 @@ export function Onboarding({ plans }: { plans: Plan[] }) {
                       onClick={() => setSelectedPlan(plan.id)}
                       className={`mi-btn mi-btn--block mt-5 ${isFeatured ? "mi-btn--primary" : "mi-btn--soft"}`}
                     >
-                      {isPending && isSelected ? "Continuando…" : `Elegir ${plan.name}`}
+                      {isPending && isSelected ? t("continuing") : t("choose_plan", { name: plan.name })}
                     </button>
 
                     <hr className="mi-divider my-5" />
@@ -200,7 +200,7 @@ export function Onboarding({ plans }: { plans: Plan[] }) {
             </div>
 
             <p className="text-center text-ink3 mt-8" style={{ fontSize: 13 }}>
-              Precios por institución en USD. Cancelás cuando querés.
+              {t("price_note")}
             </p>
           </div>
         </div>

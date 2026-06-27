@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { signup } from "@/app/(auth)/sign-up/actions";
 import type { SignUpResult } from "@/app/(auth)/sign-up/actions";
 import { Logo } from "@/components/ui/Logo";
@@ -10,9 +11,10 @@ import { IconSprite } from "@/components/ui/Icons";
 
 const initialState: SignUpResult = { ok: false, errors: {} };
 
-const STEPS = ["Cuenta", "Plan", "Pago"];
-
 function Stepper({ step }: { step: number }) {
+  const t = useTranslations("Stepper");
+  const STEPS = [t("step_account"), t("step_plan"), t("step_payment")];
+
   return (
     <div className="flex items-center gap-2">
       {STEPS.map((s, i) => {
@@ -57,6 +59,9 @@ function Stepper({ step }: { step: number }) {
 }
 
 export function SignUp() {
+  const t = useTranslations("SignUp");
+  const tVal = useTranslations("Validation");
+  const tErr = useTranslations("Errors");
   const [state, action, isPending] = useActionState(signup, initialState);
 
   return (
@@ -77,16 +82,16 @@ export function SignUp() {
               className="font-display text-ink leading-tight mt-6"
               style={{ fontSize: 30 }}
             >
-              Creá tu cuenta
+              {t("heading")}
             </h1>
             <p className="text-ink2 mt-2 mb-7" style={{ fontSize: 15 }}>
-              Empezá como administrador de tu institución. Después podrás invitar a tu equipo.
+              {t("subheading")}
             </p>
 
             <form action={action}>
               <div className="grid grid-cols-2 gap-3">
                 <div className="mi-field" style={{ marginTop: 0 }}>
-                  <label htmlFor="firstName" className="mi-label">Nombre</label>
+                  <label htmlFor="firstName" className="mi-label">{t("first_name")}</label>
                   <input
                     id="firstName"
                     name="firstName"
@@ -95,11 +100,12 @@ export function SignUp() {
                     autoComplete="given-name"
                   />
                   {state.errors.firstName?.map((e) => (
-                    <p key={e} className="mi-field-error">{e}</p>
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    <p key={e} className="mi-field-error">{tVal(e as any)}</p>
                   ))}
                 </div>
                 <div className="mi-field" style={{ marginTop: 0 }}>
-                  <label htmlFor="lastName" className="mi-label">Apellido</label>
+                  <label htmlFor="lastName" className="mi-label">{t("last_name")}</label>
                   <input
                     id="lastName"
                     name="lastName"
@@ -108,13 +114,14 @@ export function SignUp() {
                     autoComplete="family-name"
                   />
                   {state.errors.lastName?.map((e) => (
-                    <p key={e} className="mi-field-error">{e}</p>
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    <p key={e} className="mi-field-error">{tVal(e as any)}</p>
                   ))}
                 </div>
               </div>
 
               <div className="mi-field">
-                <label htmlFor="email" className="mi-label">Email de trabajo</label>
+                <label htmlFor="email" className="mi-label">{t("email")}</label>
                 <div className="mi-input-group">
                   <svg><use href="#i-mail" /></svg>
                   <input
@@ -127,12 +134,13 @@ export function SignUp() {
                   />
                 </div>
                 {state.errors.email?.map((e) => (
-                  <p key={e} className="mi-field-error">{e}</p>
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  <p key={e} className="mi-field-error">{tVal(e as any)}</p>
                 ))}
               </div>
 
               <div className="mi-field">
-                <label htmlFor="password" className="mi-label">Contraseña</label>
+                <label htmlFor="password" className="mi-label">{t("password")}</label>
                 <div className="mi-input-group">
                   <svg><use href="#i-lock" /></svg>
                   <input
@@ -140,17 +148,19 @@ export function SignUp() {
                     name="password"
                     type="password"
                     className="mi-input"
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder={t("password_placeholder")}
                     autoComplete="new-password"
                   />
                 </div>
                 {state.errors.password?.map((e) => (
-                  <p key={e} className="mi-field-error">{e}</p>
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  <p key={e} className="mi-field-error">{tVal(e as any)}</p>
                 ))}
               </div>
 
               {state.errors._form && (
-                <p className="mi-field-error mt-3">{state.errors._form[0]}</p>
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                <p className="mi-field-error mt-3">{tErr(state.errors._form[0] as any)}</p>
               )}
 
               <button
@@ -159,21 +169,21 @@ export function SignUp() {
                 className="mi-btn mi-btn--primary mi-btn--block mi-btn--lg"
                 style={{ marginTop: 24 }}
               >
-                {isPending ? "Creando cuenta…" : "Continuar"}
+                {isPending ? t("submitting") : t("submit")}
               </button>
             </form>
 
             <p className="text-center text-ink2 mt-6" style={{ fontSize: 14 }}>
-              ¿Ya tenés cuenta?{" "}
+              {t("have_account")}{" "}
               <Link href="/login" className="font-semibold text-primary hover:text-primaryd">
-                Iniciá sesión
+                {t("sign_in")}
               </Link>
             </p>
           </div>
         </div>
 
         {/* Right art panel */}
-        <AuthArt caption="Tu equipo, organizado" />
+        <AuthArt caption={t("art_caption")} />
       </section>
     </>
   );

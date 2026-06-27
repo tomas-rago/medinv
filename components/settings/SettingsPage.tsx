@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import {
   updateProfile,
   updatePassword,
@@ -20,6 +21,8 @@ interface SettingsPageProps {
 }
 
 export function SettingsPage({ email, initialFirstName, initialLastName }: SettingsPageProps) {
+  const t = useTranslations("Settings");
+  const tVal = useTranslations("Validation");
   const [profileState, profileAction, profilePending] = useActionState(updateProfile, initProfile);
   const [passwordState, passwordAction, passwordPending] = useActionState(updatePassword, initPassword);
 
@@ -31,21 +34,21 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
       {/* Page header */}
       <div>
         <div className="flex items-center gap-2 text-ink3 mb-1" style={{ fontSize: 13 }}>
-          <span>Cuenta</span>
+          <span>{t("breadcrumb_account")}</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m9 6 6 6-6 6"/>
           </svg>
-          <span className="text-ink2 font-medium">Ajustes</span>
+          <span className="text-ink2 font-medium">{t("breadcrumb_settings")}</span>
         </div>
-        <h1 className="font-display text-ink leading-tight" style={{ fontSize: 28 }}>Ajustes</h1>
+        <h1 className="font-display text-ink leading-tight" style={{ fontSize: 28 }}>{t("heading")}</h1>
         <p className="text-ink2 mt-1" style={{ fontSize: 14 }}>
-          Gestioná tu nombre y contraseña.
+          {t("subheading")}
         </p>
       </div>
 
       {/* Section 1: Mi perfil */}
       <section className="mi-card mi-shadow" style={{ maxWidth: 520, padding: "var(--d-card-pad)" }}>
-        <h2 className="font-display text-ink" style={{ fontSize: 18, marginBottom: 4 }}>Mi perfil</h2>
+        <h2 className="font-display text-ink" style={{ fontSize: 18, marginBottom: 4 }}>{t("profile_title")}</h2>
         <p className="text-ink3 mb-5" style={{ fontSize: 13 }}>{email}</p>
 
         {profileState.ok && (
@@ -56,14 +59,14 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 6 9 17l-5-5"/>
             </svg>
-            Perfil actualizado correctamente.
+            {t("profile_updated")}
           </div>
         )}
 
         <form action={profileAction}>
           <div className="grid grid-cols-2 gap-3">
             <div className="mi-field" style={{ marginTop: 0 }}>
-              <label htmlFor="firstName" className="mi-label">Nombre</label>
+              <label htmlFor="firstName" className="mi-label">{t("first_name")}</label>
               <input
                 id="firstName"
                 name="firstName"
@@ -72,11 +75,12 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
                 autoComplete="given-name"
               />
               {profileState.errors.firstName?.map((e) => (
-                <p key={e} className="mi-field-error">{e}</p>
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                <p key={e} className="mi-field-error">{tVal(e as any)}</p>
               ))}
             </div>
             <div className="mi-field" style={{ marginTop: 0 }}>
-              <label htmlFor="lastName" className="mi-label">Apellido</label>
+              <label htmlFor="lastName" className="mi-label">{t("last_name")}</label>
               <input
                 id="lastName"
                 name="lastName"
@@ -85,12 +89,14 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
                 autoComplete="family-name"
               />
               {profileState.errors.lastName?.map((e) => (
-                <p key={e} className="mi-field-error">{e}</p>
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                <p key={e} className="mi-field-error">{tVal(e as any)}</p>
               ))}
             </div>
           </div>
           {profileState.errors._form && (
-            <p className="mi-field-error mt-3">{profileState.errors._form[0]}</p>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            <p className="mi-field-error mt-3">{tVal(profileState.errors._form[0] as any)}</p>
           )}
           <button
             type="submit"
@@ -98,14 +104,14 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
             className="mi-btn mi-btn--primary"
             style={{ marginTop: 20 }}
           >
-            {profilePending ? "Guardando…" : "Guardar cambios"}
+            {profilePending ? t("saving") : t("save")}
           </button>
         </form>
       </section>
 
       {/* Section 2: Cambiar contraseña */}
       <section className="mi-card mi-shadow" style={{ maxWidth: 520, padding: "var(--d-card-pad)" }}>
-        <h2 className="font-display text-ink" style={{ fontSize: 18, marginBottom: 16 }}>Cambiar contraseña</h2>
+        <h2 className="font-display text-ink" style={{ fontSize: 18, marginBottom: 16 }}>{t("password_title")}</h2>
 
         {passwordState.ok && (
           <div
@@ -115,13 +121,13 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 6 9 17l-5-5"/>
             </svg>
-            Contraseña actualizada correctamente.
+            {t("password_updated")}
           </div>
         )}
 
         <form action={passwordAction}>
           <div className="mi-field" style={{ marginTop: 0 }}>
-            <label htmlFor="currentPassword" className="mi-label">Contraseña actual</label>
+            <label htmlFor="currentPassword" className="mi-label">{t("current_password")}</label>
             <div className="mi-input-group">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -136,12 +142,13 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
               />
             </div>
             {passwordState.errors.currentPassword?.map((e) => (
-              <p key={e} className="mi-field-error">{e}</p>
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              <p key={e} className="mi-field-error">{tVal(e as any)}</p>
             ))}
           </div>
 
           <div className="mi-field">
-            <label htmlFor="newPassword" className="mi-label">Nueva contraseña</label>
+            <label htmlFor="newPassword" className="mi-label">{t("new_password")}</label>
             <div className="mi-input-group">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -151,17 +158,18 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
                 name="newPassword"
                 type="password"
                 className="mi-input"
-                placeholder="Mínimo 8 caracteres"
+                placeholder={t("new_password_placeholder")}
                 autoComplete="new-password"
               />
             </div>
             {passwordState.errors.newPassword?.map((e) => (
-              <p key={e} className="mi-field-error">{e}</p>
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              <p key={e} className="mi-field-error">{tVal(e as any)}</p>
             ))}
           </div>
 
           <div className="mi-field">
-            <label htmlFor="confirmPassword" className="mi-label">Repetir nueva contraseña</label>
+            <label htmlFor="confirmPassword" className="mi-label">{t("confirm_password")}</label>
             <div className="mi-input-group">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -176,12 +184,14 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
               />
             </div>
             {passwordState.errors.confirmPassword?.map((e) => (
-              <p key={e} className="mi-field-error">{e}</p>
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              <p key={e} className="mi-field-error">{tVal(e as any)}</p>
             ))}
           </div>
 
           {passwordState.errors._form && (
-            <p className="mi-field-error mt-3">{passwordState.errors._form[0]}</p>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            <p className="mi-field-error mt-3">{tVal(passwordState.errors._form[0] as any)}</p>
           )}
 
           <button
@@ -190,7 +200,7 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
             className="mi-btn mi-btn--primary"
             style={{ marginTop: 20 }}
           >
-            {passwordPending ? "Actualizando…" : "Actualizar contraseña"}
+            {passwordPending ? t("updating") : t("update_password")}
           </button>
         </form>
       </section>

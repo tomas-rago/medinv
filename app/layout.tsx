@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Madimi_One } from "next/font/google";
 import "./globals.css";
+import "@/lib/i18n/zod";
+import { getMessages } from "next-intl/server";
+import { IntlProvider } from "@/components/IntlProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -18,11 +21,18 @@ export const metadata: Metadata = {
   description: "Sistema de gestión de inventario para farmacias",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let messages = {};
+  try {
+    messages = await getMessages();
+  } catch {
+    // During build-time pre-rendering of error pages, request context is unavailable
+  }
+
   return (
     <html
       lang="es"
@@ -30,7 +40,11 @@ export default function RootLayout({
       data-density="comfortable"
       className={`${inter.variable} ${musimiOne.variable} h-full`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <IntlProvider messages={messages}>
+          {children}
+        </IntlProvider>
+      </body>
     </html>
   );
 }
