@@ -64,7 +64,7 @@ export async function completeProfile(
   if (profileLookupError || !profile?.organization_id) {
     return {
       ok: false,
-      errors: { _form: ["No se encontró el perfil asociado a este usuario"] },
+      errors: { _form: ["profile_not_found"] },
     };
   }
 

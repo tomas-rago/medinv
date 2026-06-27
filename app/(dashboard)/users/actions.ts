@@ -31,17 +31,17 @@ export async function inviteUser(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, errors: { _form: ["No autenticado"] } };
+  if (!user) return { ok: false, errors: { _form: ["not_authenticated"] } };
 
   // Only admins can invite
   if (user.app_metadata?.role !== "admin") {
-    return { ok: false, errors: { _form: ["Sin permiso para invitar usuarios"] } };
+    return { ok: false, errors: { _form: ["no_invite_permission"] } };
   }
 
   const organizationId = user.app_metadata?.organization_id as string;
 
   if (!organizationId) {
-    return { ok: false, errors: { _form: ["No se encontró la organización en la sesión"] } };
+    return { ok: false, errors: { _form: ["org_not_found"] } };
   }
 
   const adminClient = createAdminClient();
@@ -110,19 +110,19 @@ export async function toggleUserActive(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "No autenticado" };
+  if (!user) return { ok: false, error: "not_authenticated" };
 
   if (user.app_metadata?.role !== "admin") {
-    return { ok: false, error: "Sin permiso para modificar usuarios" };
+    return { ok: false, error: "no_modify_permission" };
   }
 
   if (userId === user.id) {
-    return { ok: false, error: "No podés desactivarte a ti mismo" };
+    return { ok: false, error: "cannot_deactivate_self" };
   }
 
   const organizationId = user.app_metadata?.organization_id as string;
   if (!organizationId) {
-    return { ok: false, error: "No se encontró la organización en la sesión" };
+    return { ok: false, error: "org_not_found" };
   }
 
   const adminClient = createAdminClient();

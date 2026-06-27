@@ -97,7 +97,7 @@ export async function updatePassword(
   });
 
   if (verifyError) {
-    return { ok: false, errors: { currentPassword: ["Contraseña actual incorrecta"] } };
+    return { ok: false, errors: { currentPassword: ["current_password_incorrect"] } };
   }
 
   const { error: updateError } = await supabase.auth.updateUser({

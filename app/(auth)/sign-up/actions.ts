@@ -55,7 +55,7 @@ export async function signup(
 
     console.log("[signup] dev createUser:", created?.user?.id ?? null, createError?.message ?? null);
     if (!created?.user) {
-      return { ok: false, errors: { _form: ["No se pudo crear el usuario"] } };
+      return { ok: false, errors: { _form: ["cannot_create_user"] } };
     }
 
     if (createError) {

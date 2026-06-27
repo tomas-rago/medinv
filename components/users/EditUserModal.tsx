@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { toggleUserActive } from "@/app/(dashboard)/users/actions";
 
 type Profile = {
@@ -15,22 +16,24 @@ interface EditUserModalProps {
 }
 
 export function EditUserModal({ profile, onClose }: EditUserModalProps) {
+  const t = useTranslations("EditUserModal");
+  const tErr = useTranslations("Errors");
   const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorKey, setErrorKey] = useState<string | null>(null);
 
   const handleToggle = async () => {
     setIsPending(true);
-    setError(null);
+    setErrorKey(null);
     const result = await toggleUserActive(profile.id, !profile.active);
     setIsPending(false);
     if (result.ok) {
       onClose();
     } else {
-      setError(result.error ?? "Error inesperado");
+      setErrorKey(result.error ?? "unexpected");
     }
   };
 
-  const actionLabel = profile.active ? "Desactivar" : "Activar";
+  const actionLabel = profile.active ? t("deactivate") : t("activate");
 
   return (
     <div className="mi-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -48,14 +51,14 @@ export function EditUserModal({ profile, onClose }: EditUserModalProps) {
             </span>
             <div>
               <div className="font-display text-ink leading-tight" style={{ fontSize: 18 }}>
-                Editar usuario
+                {t("title")}
               </div>
               <div className="text-ink2" style={{ fontSize: 13 }}>
-                {profile.full_name ?? "Usuario"}
+                {profile.full_name ?? t("user_fallback")}
               </div>
             </div>
           </div>
-          <button className="mi-iconbtn" onClick={onClose} aria-label="Cerrar">
+          <button className="mi-iconbtn" onClick={onClose} aria-label={t("close")}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 6l12 12M18 6 6 18"/>
             </svg>
@@ -65,7 +68,7 @@ export function EditUserModal({ profile, onClose }: EditUserModalProps) {
         {/* Body */}
         <div className="p-5">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-ink2" style={{ fontSize: 14 }}>Estado actual:</span>
+            <span className="text-ink2" style={{ fontSize: 14 }}>{t("current_status")}</span>
             <span
               className="inline-flex items-center gap-2"
               style={{ fontSize: 13, fontWeight: 600, color: profile.active ? "var(--c-ok)" : "var(--c-ink-3)" }}
@@ -77,27 +80,30 @@ export function EditUserModal({ profile, onClose }: EditUserModalProps) {
                   flexShrink: 0,
                 }}
               />
-              {profile.active ? "Activo" : "Inactivo"}
+              {profile.active ? t("status_active") : t("status_inactive")}
             </span>
           </div>
 
           <p className="text-ink2" style={{ fontSize: 14 }}>
-            ¿Querés {profile.active ? "desactivar" : "activar"} a{" "}
-            <b className="text-ink">{profile.full_name ?? "este usuario"}</b>?
+            ¿Querés {profile.active ? t("deactivate_verb") : t("activate_verb")} a{" "}
+            <b className="text-ink">{profile.full_name ?? t("user_fallback")}</b>?
             {profile.active && (
               <span className="text-ink3" style={{ display: "block", marginTop: 6, fontSize: 13 }}>
-                El usuario ya no podrá acceder al sistema.
+                {t("deactivate_warning")}
               </span>
             )}
           </p>
 
-          {error && <p className="mi-field-error mt-4">{error}</p>}
+          {errorKey && (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            <p className="mi-field-error mt-4">{tErr(errorKey as any)}</p>
+          )}
         </div>
 
         {/* Footer */}
         <div className="flex justify-end gap-2 p-5 border-t" style={{ borderColor: "var(--c-line)" }}>
           <button type="button" className="mi-btn mi-btn--ghost" onClick={onClose}>
-            Cancelar
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -110,7 +116,7 @@ export function EditUserModal({ profile, onClose }: EditUserModalProps) {
             }
             onClick={handleToggle}
           >
-            {isPending ? "Guardando…" : actionLabel}
+            {isPending ? t("saving") : actionLabel}
           </button>
         </div>
       </div>

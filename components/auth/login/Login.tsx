@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { login } from "@/app/(auth)/login/actions";
 import type { LoginResult } from "@/app/(auth)/login/actions";
 import { Logo } from "@/components/ui/Logo";
@@ -11,6 +12,10 @@ import { IconSprite } from "@/components/ui/Icons";
 const initialState: LoginResult = { ok: false, errors: {} };
 
 export function Login() {
+  const t = useTranslations("Login");
+  const tVal = useTranslations("Validation");
+  const tErr = useTranslations("Errors");
+  const tFoot = useTranslations("Footer");
   const [state, action, isPending] = useActionState(login, initialState);
 
   return (
@@ -26,15 +31,15 @@ export function Login() {
             style={{ maxWidth: 360 }}
           >
             <h1 className="font-display text-ink leading-tight" style={{ fontSize: 30 }}>
-              Bienvenid@ de nuevo
+              {t("heading")}
             </h1>
             <p className="text-ink2 mt-2 mb-8" style={{ fontSize: 15 }}>
-              Gestioná tu inventario, compras y equipo desde un solo lugar.
+              {t("subheading")}
             </p>
 
             <form action={action}>
               <div className="mi-field" style={{ marginTop: 0 }}>
-                <label htmlFor="email" className="mi-label">Email</label>
+                <label htmlFor="email" className="mi-label">{t("email")}</label>
                 <div className="mi-input-group">
                   <svg><use href="#i-mail" /></svg>
                   <input
@@ -47,21 +52,22 @@ export function Login() {
                   />
                 </div>
                 {state.errors.email?.map((e) => (
-                  <p key={e} className="mi-field-error">{e}</p>
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  <p key={e} className="mi-field-error">{tVal(e as any)}</p>
                 ))}
               </div>
 
               <div className="mi-field">
                 <div className="flex items-center justify-between" style={{ marginBottom: 7 }}>
                   <label htmlFor="password" className="mi-label" style={{ marginBottom: 0 }}>
-                    Contraseña
+                    {t("password")}
                   </label>
                   <Link
                     href="/forgot-password"
                     className="text-primary hover:text-primaryd"
                     style={{ fontSize: 13, fontWeight: 600 }}
                   >
-                    ¿Olvidaste tu contraseña?
+                    {t("forgot_password")}
                   </Link>
                 </div>
                 <div className="mi-input-group">
@@ -76,12 +82,14 @@ export function Login() {
                   />
                 </div>
                 {state.errors.password?.map((e) => (
-                  <p key={e} className="mi-field-error">{e}</p>
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  <p key={e} className="mi-field-error">{tVal(e as any)}</p>
                 ))}
               </div>
 
               {state.errors._form && (
-                <p className="mi-field-error mt-3">{state.errors._form[0]}</p>
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                <p className="mi-field-error mt-3">{tErr(state.errors._form[0] as any)}</p>
               )}
 
               <button
@@ -90,30 +98,30 @@ export function Login() {
                 className="mi-btn mi-btn--primary mi-btn--block mi-btn--lg"
                 style={{ marginTop: 28 }}
               >
-                {isPending ? "Iniciando sesión…" : "Iniciar sesión"}
+                {isPending ? t("submitting") : t("submit")}
               </button>
             </form>
 
             <p className="text-center text-ink2 mt-7" style={{ fontSize: 14 }}>
-              ¿No tenés una cuenta?{" "}
+              {t("no_account")}{" "}
               <Link
                 href="/sign-up"
                 className="font-semibold text-primary hover:text-primaryd"
               >
-                Registrate
+                {t("sign_up")}
               </Link>
             </p>
           </div>
 
           <p className="text-center text-ink3" style={{ fontSize: 12 }}>
-            © 2026 Med+Inv ·{" "}
-            <a href="#" className="hover:text-ink2">Privacidad</a> ·{" "}
-            <a href="#" className="hover:text-ink2">Términos</a>
+            {tFoot("copyright")} ·{" "}
+            <a href="#" className="hover:text-ink2">{tFoot("privacy")}</a> ·{" "}
+            <a href="#" className="hover:text-ink2">{tFoot("terms")}</a>
           </p>
         </div>
 
         {/* Right art panel */}
-        <AuthArt caption="Accedé a tu farmacia" />
+        <AuthArt caption={t("art_caption")} />
       </section>
     </>
   );

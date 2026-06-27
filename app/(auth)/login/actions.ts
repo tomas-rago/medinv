@@ -30,7 +30,7 @@ export async function login(
   const { error } = await supabase.auth.signInWithPassword(result.data);
 
   if (error) {
-    return { ok: false, errors: { _form: ["Email o contraseña incorrectos"] } };
+    return { ok: false, errors: { _form: ["email_or_password_incorrect"] } };
   }
 
   redirect("/dashboard");
