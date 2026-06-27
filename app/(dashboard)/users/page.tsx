@@ -12,7 +12,7 @@ export default async function UsersServerPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const isAdmin = user.app_metadata?.role === "admin";
+  const isAdmin = user.app_metadata?.role === "chief_doctor";
 
   const { data: profiles } = await supabase
     .from("profiles")

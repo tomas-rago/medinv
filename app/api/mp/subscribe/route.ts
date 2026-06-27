@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
   // Link profile to org with admin role
   const { error: profileError } = await adminClient
     .from("profiles")
-    .update({ organization_id: org.id, role: "admin" })
+    .update({ organization_id: org.id, role: "chief_doctor" })
     .eq("id", user.id);
 
   if (profileError) {
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
 
   // Sync org + role into JWT app_metadata
   const { error: metaError } = await adminClient.auth.admin.updateUserById(user.id, {
-    app_metadata: { role: "admin", organization_id: org.id },
+    app_metadata: { role: "chief_doctor", organization_id: org.id },
   });
   if (metaError) {
     console.error("[mp/subscribe] app_metadata error:", metaError.message);

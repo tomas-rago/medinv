@@ -22,8 +22,9 @@ export function InviteModal({ onClose }: InviteModalProps) {
   }, [state.ok, onClose]);
 
   const ROLE_OPTIONS = [
-    { value: "operator", label: t("role_operator") },
-    { value: "read_only", label: t("role_read_only") },
+    { value: "doctor", label: t("role_doctor") },
+    { value: "nurse", label: t("role_nurse") },
+    { value: "administrative", label: t("role_administrative") },
   ];
 
   return (

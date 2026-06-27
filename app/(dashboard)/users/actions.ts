@@ -34,7 +34,7 @@ export async function inviteUser(
   if (!user) return { ok: false, errors: { _form: ["not_authenticated"] } };
 
   // Only admins can invite
-  if (user.app_metadata?.role !== "admin") {
+  if (user.app_metadata?.role !== "chief_doctor") {
     return { ok: false, errors: { _form: ["no_invite_permission"] } };
   }
 
@@ -112,7 +112,7 @@ export async function toggleUserActive(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "not_authenticated" };
 
-  if (user.app_metadata?.role !== "admin") {
+  if (user.app_metadata?.role !== "chief_doctor") {
     return { ok: false, error: "no_modify_permission" };
   }
 

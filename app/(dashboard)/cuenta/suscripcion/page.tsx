@@ -15,7 +15,7 @@ export default async function SuscripcionRoute() {
 
   // Admin-only page
   const role = user.app_metadata?.role;
-  if (role !== "admin") redirect("/dashboard");
+  if (role !== "chief_doctor") redirect("/dashboard");
 
   const orgId = user.app_metadata?.organization_id as string | undefined;
   if (!orgId) redirect("/onboarding");

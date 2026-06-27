@@ -87,7 +87,7 @@ export type Database = {
           id: string;
           organization_id: string | null;
           full_name: string | null;
-          role: "admin" | "operator" | "read_only" | null;
+          role: "chief_doctor" | "doctor" | "nurse" | "administrative" | null;
           active: boolean;
           created_at: string;
         };
@@ -95,7 +95,7 @@ export type Database = {
           id: string;
           organization_id?: string | null;
           full_name?: string | null;
-          role?: "admin" | "operator" | "read_only" | null;
+          role?: "chief_doctor" | "doctor" | "nurse" | "administrative" | null;
           active?: boolean;
           created_at?: string;
         };
@@ -103,7 +103,7 @@ export type Database = {
           id?: string;
           organization_id?: string | null;
           full_name?: string | null;
-          role?: "admin" | "operator" | "read_only" | null;
+          role?: "chief_doctor" | "doctor" | "nurse" | "administrative" | null;
           active?: boolean;
           created_at?: string;
         };
@@ -127,7 +127,7 @@ export type Database = {
           id: string;
           organization_id: string;
           email: string;
-          role: "operator" | "read_only";
+          role: "doctor" | "nurse" | "administrative";
           invited_by: string;
           status: "pending" | "accepted";
           created_at: string;
@@ -136,7 +136,7 @@ export type Database = {
           id?: string;
           organization_id: string;
           email: string;
-          role: "operator" | "read_only";
+          role: "doctor" | "nurse" | "administrative";
           invited_by: string;
           status?: "pending" | "accepted";
           created_at?: string;
@@ -145,7 +145,7 @@ export type Database = {
           id?: string;
           organization_id?: string;
           email?: string;
-          role?: "operator" | "read_only";
+          role?: "doctor" | "nurse" | "administrative";
           invited_by?: string;
           status?: "pending" | "accepted";
           created_at?: string;

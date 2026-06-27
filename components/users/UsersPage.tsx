@@ -8,15 +8,16 @@ import { EditUserModal } from "./EditUserModal";
 type Profile = {
   id: string;
   full_name: string | null;
-  role: "admin" | "operator" | "read_only" | null;
+  role: "chief_doctor" | "doctor" | "nurse" | "administrative" | null;
   active: boolean;
   created_at: string;
 };
 
 const ROLE_TONES: Record<string, string> = {
-  admin: "green",
-  operator: "blue",
-  read_only: "gray",
+  chief_doctor: "green",
+  doctor: "blue",
+  nurse: "amber",
+  administrative: "gray",
 };
 
 function initials(name: string | null) {
@@ -39,9 +40,10 @@ export function UsersPage({ profiles, isAdmin }: { profiles: Profile[]; isAdmin:
   const [editProfile, setEditProfile] = useState<Profile | null>(null);
 
   const ROLE_LABELS: Record<string, string> = {
-    admin: t("roles.admin"),
-    operator: t("roles.operator"),
-    read_only: t("roles.read_only"),
+    chief_doctor: t("roles.chief_doctor"),
+    doctor: t("roles.doctor"),
+    nurse: t("roles.nurse"),
+    administrative: t("roles.administrative"),
   };
 
   return (
