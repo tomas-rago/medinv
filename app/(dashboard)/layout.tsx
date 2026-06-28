@@ -22,9 +22,6 @@ export default async function DashboardLayout({
     .select("organization_id, full_name, role")
     .eq("id", user.id)
     .single();
-  if (profileError) console.log("[dashboard layout] profile error:", profileError.code, profileError.message);
-
-  console.log("[dashboard layout] user:", user.id, "app_metadata:", JSON.stringify(user.app_metadata), "profile:", JSON.stringify(profile));
   if (!profile?.organization_id) redirect("/onboarding");
 
   // Fetch org plan to determine AI feature access

@@ -48,9 +48,7 @@ export async function createPreapproval(
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   const planData = await planVerifyRes.json();
-  console.log("[mp/preapproval] plan verify:", planVerifyRes.status, JSON.stringify(planData).slice(0, 200));
-
-  console.log("[mp/preapproval] request body:", JSON.stringify({ ...body, card_token_id: body.card_token_id?.slice(0, 8) + "…" }));
+  if (!planVerifyRes.ok) throw new Error(`MP plan not found: ${planData?.message ?? planVerifyRes.status}`);
 
   const res = await fetch("https://api.mercadopago.com/preapproval", {
     method: "POST",
@@ -64,7 +62,6 @@ export async function createPreapproval(
   const data = await res.json();
 
   if (!res.ok) {
-    console.error("[mp/preapproval] error response:", JSON.stringify(data));
     const message = data?.message ?? data?.cause?.[0]?.description ?? `MP API error ${res.status}`;
     throw new Error(message);
   }

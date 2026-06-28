@@ -28,8 +28,6 @@ export async function signup(
     password: formData.get("password"),
   };
 
-  console.log("[signup] raw form data:", JSON.stringify(raw));
-
   const result = SignUpSchema.safeParse(raw);
   if (!result.success) {
     return { ok: false, errors: result.error.flatten().fieldErrors };
@@ -53,7 +51,6 @@ export async function signup(
         email_confirm: true,
       });
 
-    console.log("[signup] dev createUser:", created?.user?.id ?? null, createError?.message ?? null);
     if (!created?.user) {
       return { ok: false, errors: { _form: ["cannot_create_user"] } };
     }
@@ -69,8 +66,6 @@ export async function signup(
       email,
       password,
     });
-
-    console.log("[signup] dev signIn error:", signInError?.message ?? null);
 
     if (signInError) {
       return { ok: false, errors: { _form: [signInError.message] } };
