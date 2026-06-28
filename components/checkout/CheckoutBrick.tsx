@@ -30,7 +30,11 @@ export function CheckoutBrick({ publicKey, amount, planName, billingCycle, check
   const customization = {
     paymentMethods: {
       creditCard: "all" as const,
-      debitCard: "all" as const,
+      types: {
+        excluded: ["debitCard" as const],
+      },
+      minInstallments: 1,
+      maxInstallments: 1,
     },
   };
 

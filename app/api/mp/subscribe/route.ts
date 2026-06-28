@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getPendingCheckoutCookie, deletePendingCheckoutCookie } from "@/lib/mp/cookie";
 import { createPreapproval } from "@/lib/mp/preapproval";
 import { CheckoutSchema } from "@/lib/schemas/checkout/checkout";
+import { provisionOrganization } from "@/lib/org";
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
@@ -88,44 +89,19 @@ export async function POST(req: NextRequest) {
 
   const subscriptionStatus = mpStatus === "authorized" ? "active" : "pending";
 
-  // Create organization
-  const { data: org, error: orgError } = await adminClient
-    .from("organizations")
-    .insert({
-      name: pending.orgName,
-      plan_id: plan.id,
-      mp_subscription_id: mpSubscriptionId,
-      subscription_status: subscriptionStatus,
-      billing_cycle: billingCycle,
-    })
-    .select("id")
-    .single();
-
-  if (orgError || !org) {
-    console.error("[mp/subscribe] org insert error:", orgError?.message);
-    return Response.json(
-      { ok: false, error: orgError?.message ?? "Error al crear la organización" },
-      { status: 500 }
-    );
-  }
-
-  // Link profile to org with admin role
-  const { error: profileError } = await adminClient
-    .from("profiles")
-    .update({ organization_id: org.id, role: "chief_doctor" })
-    .eq("id", user.id);
-
-  if (profileError) {
-    console.error("[mp/subscribe] profile update error:", profileError.message);
-    return Response.json({ ok: false, error: profileError.message }, { status: 500 });
-  }
-
-  // Sync org + role into JWT app_metadata
-  const { error: metaError } = await adminClient.auth.admin.updateUserById(user.id, {
-    app_metadata: { role: "chief_doctor", organization_id: org.id },
-  });
-  if (metaError) {
-    console.error("[mp/subscribe] app_metadata error:", metaError.message);
+  try {
+    await provisionOrganization({
+      userId: user.id,
+      orgName: pending.orgName,
+      planId: plan.id,
+      billingCycle,
+      mpSubscriptionId,
+      subscriptionStatus,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Error al crear la organización";
+    console.error("[mp/subscribe] provision error:", message);
+    return Response.json({ ok: false, error: message }, { status: 500 });
   }
 
   // Refresh session so updated JWT is written to cookies before client redirect

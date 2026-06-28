@@ -86,7 +86,7 @@ export async function fetchPreapproval(id: string): Promise<{ status: string; ne
 export async function updatePreapproval(
   id: string,
   fields: {
-    status?: "authorized" | "paused" | "canceled";
+    status?: "authorized" | "paused" | "cancelled";
     auto_recurring?: { transaction_amount: number; currency_id: string };
   }
 ): Promise<void> {
@@ -110,7 +110,7 @@ export async function updatePreapproval(
 }
 
 export async function cancelPreapproval(id: string): Promise<void> {
-  return updatePreapproval(id, { status: "canceled" });
+  return updatePreapproval(id, { status: "cancelled" });
 }
 
 export async function fetchAuthorizedPayment(id: string): Promise<{

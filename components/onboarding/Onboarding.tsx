@@ -160,7 +160,7 @@ export function Onboarding({ plans }: { plans: Plan[] }) {
 
                     <div className="flex items-baseline gap-1">
                       <span className="font-display text-ink" style={{ fontSize: 40 }}>
-                        US${price(plan)}
+                        ${price(plan)}
                       </span>
                       <span className="text-ink3" style={{ fontSize: 14 }}>{t("price_per_month")}</span>
                     </div>
