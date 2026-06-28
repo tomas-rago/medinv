@@ -129,7 +129,7 @@ export type Database = {
           email: string;
           role: "doctor" | "nurse" | "administrative";
           invited_by: string;
-          status: "pending" | "accepted";
+          accepted: boolean;
           created_at: string;
         };
         Insert: {
@@ -138,7 +138,7 @@ export type Database = {
           email: string;
           role: "doctor" | "nurse" | "administrative";
           invited_by: string;
-          status?: "pending" | "accepted";
+          accepted?: boolean;
           created_at?: string;
         };
         Update: {
@@ -147,7 +147,7 @@ export type Database = {
           email?: string;
           role?: "doctor" | "nurse" | "administrative";
           invited_by?: string;
-          status?: "pending" | "accepted";
+          accepted?: boolean;
           created_at?: string;
         };
         Relationships: [

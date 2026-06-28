@@ -1,28 +1,29 @@
 -- Update role values: admin→chief_doctor, operator→doctor, read_only→administrative
 -- New roles: chief_doctor, doctor, nurse, administrative
 
--- 1. Drop old check constraints and add new ones
+-- 1. Drop old check constraints
 alter table public.profiles
   drop constraint if exists profiles_role_check;
 
+alter table public.invitations
+  drop constraint if exists invitations_role_check;
+
+-- 2. Migrate existing data before adding new constraints
+update public.profiles set role = 'chief_doctor'   where role = 'admin';
+update public.profiles set role = 'doctor'         where role = 'operator';
+update public.profiles set role = 'administrative' where role = 'read_only';
+
+update public.invitations set role = 'doctor'         where role = 'operator';
+update public.invitations set role = 'administrative' where role = 'read_only';
+
+-- 3. Add new check constraints
 alter table public.profiles
   add constraint profiles_role_check
     check (role in ('chief_doctor', 'doctor', 'nurse', 'administrative'));
 
 alter table public.invitations
-  drop constraint if exists invitations_role_check;
-
-alter table public.invitations
   add constraint invitations_role_check
     check (role in ('doctor', 'nurse', 'administrative'));
-
--- 2. Migrate existing data
-update public.profiles set role = 'chief_doctor'  where role = 'admin';
-update public.profiles set role = 'doctor'        where role = 'operator';
-update public.profiles set role = 'administrative' where role = 'read_only';
-
-update public.invitations set role = 'doctor'        where role = 'operator';
-update public.invitations set role = 'administrative' where role = 'read_only';
 
 -- 3. Update RLS policies that hard-code the 'admin' role value
 drop policy if exists "profiles_select_org" on public.profiles;

@@ -53,25 +53,41 @@ export async function completeProfile(
 
   const adminClient = createAdminClient();
 
-  // The DB trigger already populated organization_id and role on the profile when
-  // the invite was accepted — read them rather than looking up the invitation again.
+  // The DB trigger populates organization_id and role from the pending invitation
+  // when the user is created. Fall back to the invitations table if the trigger
+  // ran before the fix (profile row exists but fields are null).
   const { data: profile, error: profileLookupError } = await adminClient
     .from("profiles")
     .select("organization_id, role")
     .eq("id", user.id)
     .single();
 
-  if (profileLookupError || !profile?.organization_id) {
-    return {
-      ok: false,
-      errors: { _form: ["profile_not_found"] },
-    };
+  if (profileLookupError) {
+    return { ok: false, errors: { _form: ["profile_not_found"] } };
   }
 
-  // Update full_name — org and role were already set by the trigger
+  let organizationId = profile?.organization_id;
+  let role = profile?.role;
+
+  if (!organizationId || !role) {
+    const { data: invitation } = await adminClient
+      .from("invitations")
+      .select("organization_id, role")
+      .eq("email", user.email!)
+      .eq("accepted", false)
+      .single();
+
+    organizationId = invitation?.organization_id ?? null;
+    role = invitation?.role ?? null;
+  }
+
+  if (!organizationId || !role) {
+    return { ok: false, errors: { _form: ["profile_not_found"] } };
+  }
+
   const { error: profileError } = await adminClient
     .from("profiles")
-    .update({ full_name: fullName })
+    .update({ full_name: fullName, organization_id: organizationId, role })
     .eq("id", user.id);
 
   if (profileError) {
@@ -80,10 +96,7 @@ export async function completeProfile(
 
   // Sync app_metadata so JWT carries role + org for RLS
   await adminClient.auth.admin.updateUserById(user.id, {
-    app_metadata: {
-      role: profile.role,
-      organization_id: profile.organization_id,
-    },
+    app_metadata: { role, organization_id: organizationId },
   });
 
   // Refresh session so the updated app_metadata is written to cookies before the
@@ -94,9 +107,9 @@ export async function completeProfile(
   // Mark invitation as accepted
   await adminClient
     .from("invitations")
-    .update({ status: "accepted" })
+    .update({ accepted: true })
     .eq("email", user.email!)
-    .eq("status", "pending");
+    .eq("accepted", false);
 
   redirect("/dashboard");
 }
