@@ -57,3 +57,14 @@ Note: the key env var is `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, not `NEXT_PUBLI
 ### Client Components
 
 Any component using React hooks (`useState`, `useEffect`, etc.) or browser APIs must have `"use client"` as its **first line**. Components in `components/` are client components by convention in this project.
+
+## Debugging
+
+### Database
+
+Supabase MCP is configured. When debugging anything DB-related (missing rows, auth issues, RLS, schema questions), use the MCP tools directly instead of asking the user to check manually:
+
+- `mcp__supabase__execute_sql` — run arbitrary SQL to inspect data
+- `mcp__supabase__list_tables` — check schema
+- `mcp__supabase__get_logs` — check recent DB/auth/edge function logs
+- `mcp__supabase__get_advisors` — surface security and performance issues
