@@ -186,7 +186,7 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
                 <p className="text-ink2 mt-1" style={{ fontSize: 14 }}>{t("no_active_subscription")}</p>
               ) : (
                 <p className="text-ink2 mt-1" style={{ fontSize: 14 }}>
-                  US${price(currentPlan)}/mes ·{" "}
+                  ${price(currentPlan)}/mes ·{" "}
                   {org.billing_cycle === "annual" ? t("billed_annually") : t("billed_monthly")}
                 </p>
               )}
@@ -253,7 +253,7 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
                   <p className="text-ink2 mt-1 mb-4 leading-snug" style={{ fontSize: 13 }}>{meta.desc}</p>
 
                   <div className="flex items-baseline gap-1">
-                    <span className="font-display text-ink" style={{ fontSize: 34 }}>US${price(plan)}</span>
+                    <span className="font-display text-ink" style={{ fontSize: 34 }}>${price(plan)}</span>
                     <span className="text-ink3" style={{ fontSize: 13 }}>{t("price_per_month")}</span>
                   </div>
 
@@ -334,7 +334,7 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
                   <p className="text-ink2 mb-6" style={{ fontSize: 14 }}>
                     {t("confirm_change_checkout_prefix")}{" "}
                     <strong>{confirmState.plan.name}</strong>{" "}
-                    (US${price(confirmState.plan)}/mes),{" "}
+                    (${price(confirmState.plan)}/mes),{" "}
                     {t("confirm_change_checkout_suffix")}
                   </p>
                 ) : (

@@ -34,7 +34,7 @@ export async function inviteUser(
   if (!user) return { ok: false, errors: { _form: ["not_authenticated"] } };
 
   // Only admins can invite
-  if (user.app_metadata?.role !== "admin") {
+  if (user.app_metadata?.role !== "chief_doctor") {
     return { ok: false, errors: { _form: ["no_invite_permission"] } };
   }
 
@@ -46,20 +46,8 @@ export async function inviteUser(
 
   const adminClient = createAdminClient();
 
-  // Use admin client — invitations RLS requires app_metadata claims that may not
-  // yet be reflected in the cookie JWT after onboarding
-  const { error: invError } = await adminClient.from("invitations").insert({
-    organization_id: organizationId,
-    email: result.data.email,
-    role: result.data.role,
-    invited_by: user.id,
-  });
-
-  if (invError) {
-    return { ok: false, errors: { _form: [invError.message] } };
-  }
-
-  // Send invitation email via Supabase Auth
+  // Send invitation email via Supabase Auth first — only persist the invitation
+  // row if the auth call succeeds, so we never have orphaned invitation records.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const inviteOptions = {
     data: { role: result.data.role },
@@ -76,6 +64,7 @@ export async function inviteUser(
         options: inviteOptions,
       });
     if (authError) {
+      console.error("[inviteUser] generateLink error:", authError.message);
       return { ok: false, errors: { _form: [authError.message] } };
     }
     console.log(
@@ -87,8 +76,21 @@ export async function inviteUser(
       inviteOptions
     );
     if (authError) {
+      console.error("[inviteUser] inviteUserByEmail error:", authError.message);
       return { ok: false, errors: { _form: [authError.message] } };
     }
+  }
+
+  const { error: invError } = await adminClient.from("invitations").insert({
+    organization_id: organizationId,
+    email: result.data.email,
+    role: result.data.role,
+    invited_by: user.id,
+  });
+
+  if (invError) {
+    console.error("[inviteUser] invitations insert error:", invError.message);
+    return { ok: false, errors: { _form: [invError.message] } };
   }
 
   revalidatePath("/users");
@@ -112,7 +114,7 @@ export async function toggleUserActive(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "not_authenticated" };
 
-  if (user.app_metadata?.role !== "admin") {
+  if (user.app_metadata?.role !== "chief_doctor") {
     return { ok: false, error: "no_modify_permission" };
   }
 

@@ -66,7 +66,7 @@ export default async function CheckoutPage() {
               </h1>
               <p className="text-ink2 mt-2" style={{ fontSize: 15 }}>
                 Plan <strong className="text-ink">{plan.name}</strong> ·{" "}
-                US${price}/mes{" "}
+                ${price}/mes{" "}
                 {pending.billingCycle === "annual" && (
                   <span className="text-ink3">(facturado anualmente)</span>
                 )}

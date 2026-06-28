@@ -30,7 +30,11 @@ export function CheckoutBrick({ publicKey, amount, planName, billingCycle, check
   const customization = {
     paymentMethods: {
       creditCard: "all" as const,
-      debitCard: "all" as const,
+      types: {
+        excluded: ["debitCard" as const],
+      },
+      minInstallments: 1,
+      maxInstallments: 1,
     },
   };
 
@@ -45,7 +49,6 @@ export function CheckoutBrick({ publicKey, amount, planName, billingCycle, check
     };
   }) {
     const { token, payment_method_id, issuer_id } = formData.formData;
-    console.log("[CheckoutBrick] onSubmit token:", token ? `${token.slice(0, 8)}… (len=${token.length})` : "MISSING", "pm:", payment_method_id);
     if (!token) {
       setErrorKey("error_tokenize");
       return;
@@ -82,8 +85,7 @@ export function CheckoutBrick({ publicKey, amount, planName, billingCycle, check
     }
   }
 
-  function onError(error: unknown) {
-    console.error("[CheckoutBrick] error:", error);
+  function onError(_error: unknown) {
     setErrorKey("error_form");
   }
 

@@ -22,8 +22,6 @@ export default function InviteCallbackPage() {
       const refreshToken = params.get("refresh_token");
       const tokenType = params.get("type");
 
-      console.log("[invite] hash type:", tokenType, "has token:", !!accessToken);
-
       if (!accessToken || !refreshToken) {
         setError(t("invalid_link"));
         return;
@@ -34,8 +32,6 @@ export default function InviteCallbackPage() {
         access_token: accessToken,
         refresh_token: refreshToken,
       });
-
-      console.log("[invite] setSession result:", data?.session?.user?.email ?? null, sessionError?.message ?? null);
 
       if (sessionError || !data.session) {
         setError(sessionError?.message ?? t("invalid_link"));

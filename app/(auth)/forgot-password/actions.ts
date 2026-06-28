@@ -31,10 +31,14 @@ export async function requestPasswordReset(
       email: result.data.email,
       options: { redirectTo },
     });
-    if (!error && linkData?.properties?.action_link) {
+    if (error) {
+      console.error(`[DEV] generateLink error:`, error.message);
+    } else if (linkData?.properties?.action_link) {
       console.log(
         `\n🔗 DEV password reset link for ${result.data.email}:\n${linkData.properties.action_link}\n`
       );
+    } else {
+      console.warn(`[DEV] generateLink returned no action_link`, linkData);
     }
   } else {
     const cookieStore = await cookies();

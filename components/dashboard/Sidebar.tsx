@@ -45,9 +45,10 @@ export async function Sidebar({ activeSection, profile, hasAiAccess = false }: S
   const t = await getTranslations("Sidebar");
 
   const ROLE_LABELS: Record<string, string> = {
-    admin: t("roles.admin"),
-    operator: t("roles.operator"),
-    read_only: t("roles.read_only"),
+    chief_doctor: t("roles.chief_doctor"),
+    doctor: t("roles.doctor"),
+    nurse: t("roles.nurse"),
+    administrative: t("roles.administrative"),
   };
 
   const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
@@ -95,7 +96,7 @@ export async function Sidebar({ activeSection, profile, hasAiAccess = false }: S
           <div key={group.label}>
             <div className="mi-nav-label mt-4 mb-1">{group.label}</div>
             {group.items.map((item) => {
-              if (item.adminOnly && profile.role !== "admin") return null;
+              if (item.adminOnly && profile.role !== "chief_doctor") return null;
               const isActive = activeSection === item.id;
               return (
                 <Link

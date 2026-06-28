@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
   // Enforce admin role via JWT app_metadata
   const role = user.app_metadata?.role;
-  if (role !== "admin") {
+  if (role !== "chief_doctor") {
     return Response.json({ ok: false, error: "Sin permisos" }, { status: 403 });
   }
 

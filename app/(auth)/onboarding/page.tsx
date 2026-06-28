@@ -25,7 +25,6 @@ export default async function OnboardingPage() {
     .select("id, name, monthly_price, user_limit, token_limit_per_month")
     .eq("active", true)
     .order("monthly_price");
-  console.log(plans);
 
   return <Onboarding plans={plans ?? []} />;
 }

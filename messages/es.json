@@ -79,9 +79,10 @@
       "settings": "Ajustes"
     },
     "roles": {
-      "admin": "Administrador",
-      "operator": "Operador",
-      "read_only": "Solo lectura"
+      "chief_doctor": "Médico Jefe",
+      "doctor": "Médico",
+      "nurse": "Enfermero/a",
+      "administrative": "Administrativo/a"
     },
     "user_fallback": "Usuario",
     "logout": "Cerrar sesión"
@@ -100,7 +101,7 @@
     "billed_annually": "facturado anualmente",
     "choose_plan": "Elegir {name}",
     "continuing": "Continuando…",
-    "price_note": "Precios por institución en USD. Cancelás cuando querés.",
+    "price_note": "Precios por institución en ARS. Cancelás cuando querés.",
     "tier_0_desc": "Para farmacias que recién arrancan.",
     "tier_0_feat_0": "Inventario y control de stock",
     "tier_0_feat_1": "Compras y seguimiento de pedidos",
@@ -139,9 +140,10 @@
     "edit_tooltip": "Editar",
     "more_tooltip": "Más",
     "roles": {
-      "admin": "Administrador",
-      "operator": "Operador",
-      "read_only": "Solo lectura"
+      "chief_doctor": "Médico Jefe",
+      "doctor": "Médico",
+      "nurse": "Enfermero/a",
+      "administrative": "Administrativo/a"
     }
   },
   "InviteModal": {
@@ -151,8 +153,9 @@
     "email": "Email",
     "email_placeholder": "persona@farmacia.com",
     "role": "Rol",
-    "role_operator": "Operador — puede gestionar stock y compras",
-    "role_read_only": "Solo lectura — puede consultar, no modificar",
+    "role_doctor": "Médico — acceso completo a inventario y compras",
+    "role_nurse": "Enfermero/a — puede consultar y registrar movimientos",
+    "role_administrative": "Administrativo/a — gestión de compras y personal",
     "role_hint": "El rol define a qué módulos accede. Podés cambiarlo en cualquier momento.",
     "cancel": "Cancelar",
     "submit": "Enviar invitación",
