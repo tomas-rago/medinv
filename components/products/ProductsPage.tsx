@@ -4,6 +4,9 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ProductModal } from "./ProductModal";
+import { EditProductModal } from "./EditProductModal";
+import type { EditableProduct } from "./EditProductModal";
+import { ProductActiveModal } from "./ProductActiveModal";
 import { PRODUCT_CATEGORIES } from "@/lib/constants/categories";
 
 type Product = {
@@ -13,6 +16,7 @@ type Product = {
   presentation: string | null;
   category: string | null;
   unit: string;
+  description: string | null;
   active: boolean;
   created_at: string;
 };
@@ -24,31 +28,39 @@ interface ProductsPageProps {
   pageSize: number;
   q: string;
   category: string;
+  status: string;
   canWrite: boolean;
 }
 
-export function ProductsPage({ products, count, page, pageSize, q, category, canWrite }: ProductsPageProps) {
+export function ProductsPage({ products, count, page, pageSize, q, category, status, canWrite }: ProductsPageProps) {
   const t = useTranslations("Products");
   const tCat = useTranslations("Categories");
   const tUnit = useTranslations("Units");
   const router = useRouter();
 
   const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState<EditableProduct | null>(null);
+  const [toggling, setToggling] = useState<Product | null>(null);
   const [search, setSearch] = useState(q);
   const [cat, setCat] = useState(category);
+  const [stat, setStat] = useState(status);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
   const rangeFrom = count === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeTo = Math.min(page * pageSize, count);
 
-  function navigate(next: { q?: string; category?: string; page?: number }) {
+  const colCount = canWrite ? 6 : 5;
+
+  function navigate(next: { q?: string; category?: string; status?: string; page?: number }) {
     const params = new URLSearchParams();
     const nq = next.q ?? search;
     const nc = next.category ?? cat;
+    const ns = next.status ?? stat;
     const np = next.page ?? 1;
     if (nq) params.set("q", nq);
     if (nc) params.set("category", nc);
+    if (ns) params.set("status", ns);
     if (np > 1) params.set("page", String(np));
     const qs = params.toString();
     router.push(qs ? `/products?${qs}` : "/products");
@@ -121,6 +133,16 @@ export function ProductsPage({ products, count, page, pageSize, q, category, can
               <option key={c} value={c}>{tCat(c)}</option>
             ))}
           </select>
+          <select
+            className="mi-input"
+            style={{ maxWidth: 160, paddingTop: 8, paddingBottom: 8 }}
+            value={stat}
+            onChange={(e) => { setStat(e.target.value); navigate({ status: e.target.value, page: 1 }); }}
+          >
+            <option value="">{t("all_statuses")}</option>
+            <option value="active">{t("status_active")}</option>
+            <option value="inactive">{t("status_inactive")}</option>
+          </select>
           <div className="flex-1" />
           <span className="text-ink3" style={{ fontSize: 13 }}>
             {t("product_count", { count })}
@@ -136,20 +158,26 @@ export function ProductsPage({ products, count, page, pageSize, q, category, can
                 <th>{t("table_presentation")}</th>
                 <th>{t("table_ean")}</th>
                 <th>{t("table_unit")}</th>
+                {canWrite && <th style={{ textAlign: "right" }}>{t("table_actions")}</th>}
               </tr>
             </thead>
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-ink3" style={{ textAlign: "center", padding: "32px 0" }}>
+                  <td colSpan={colCount} className="text-ink3" style={{ textAlign: "center", padding: "32px 0" }}>
                     {t("empty")}
                   </td>
                 </tr>
               ) : (
                 products.map((p) => (
-                  <tr key={p.id}>
+                  <tr key={p.id} style={p.active ? undefined : { opacity: 0.55 }}>
                     <td>
-                      <div className="font-semibold text-ink">{p.name}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-ink">{p.name}</span>
+                        {!p.active && (
+                          <span className="mi-badge mi-badge--gray">{t("inactive_badge")}</span>
+                        )}
+                      </div>
                     </td>
                     <td>
                       {p.category ? (
@@ -161,6 +189,40 @@ export function ProductsPage({ products, count, page, pageSize, q, category, can
                     <td className="text-ink2" style={{ fontSize: 13 }}>{p.presentation ?? "—"}</td>
                     <td className="text-ink3" style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>{p.ean ?? "—"}</td>
                     <td className="text-ink2" style={{ fontSize: 13 }}>{tUnit.has(p.unit) ? tUnit(p.unit) : p.unit}</td>
+                    {canWrite && (
+                      <td>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            className="mi-iconbtn"
+                            aria-label={t("action_edit")}
+                            title={t("action_edit")}
+                            onClick={() => setEditing(p)}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            className="mi-iconbtn"
+                            aria-label={p.active ? t("action_deactivate") : t("action_reactivate")}
+                            title={p.active ? t("action_deactivate") : t("action_reactivate")}
+                            onClick={() => setToggling(p)}
+                          >
+                            {p.active ? (
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                              </svg>
+                            ) : (
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -196,6 +258,26 @@ export function ProductsPage({ products, count, page, pageSize, q, category, can
       </div>
 
       {showCreate && <ProductModal onClose={() => setShowCreate(false)} />}
+      {editing && (
+        <EditProductModal
+          product={{
+            id: editing.id,
+            name: editing.name,
+            ean: editing.ean,
+            category: editing.category,
+            presentation: editing.presentation,
+            unit: editing.unit,
+            description: editing.description,
+          }}
+          onClose={() => setEditing(null)}
+        />
+      )}
+      {toggling && (
+        <ProductActiveModal
+          product={{ id: toggling.id, name: toggling.name, active: toggling.active }}
+          onClose={() => setToggling(null)}
+        />
+      )}
     </div>
   );
 }
