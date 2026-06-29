@@ -1,0 +1,246 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import {
+  StockEntrySchema,
+  StockExitSchema,
+  RectifySchema,
+} from "@/lib/schemas/stock/movement";
+import { canWriteInventory } from "@/lib/constants/roles";
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
+
+export type ProductMatch = {
+  id: string;
+  name: string;
+  ean: string | null;
+  category: string | null;
+  presentation: string | null;
+  unit: string;
+};
+
+export async function searchProducts(query: string): Promise<ProductMatch[]> {
+  const term = query.trim();
+  if (term.length < 2) return [];
+
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const safe = term.replace(/[,()*]/g, " ").trim();
+  if (!safe) return [];
+
+  const { data } = await supabase
+    .from("products")
+    .select("id, name, ean, category, presentation, unit")
+    .eq("active", true)
+    .or(`name.ilike.%${safe}%,ean.ilike.%${safe}%,category.ilike.%${safe}%`)
+    .order("name")
+    .limit(10);
+
+  return data ?? [];
+}
+
+export type StockEntryResult = {
+  ok: boolean;
+  errors: {
+    product_id?: string[];
+    quantity?: string[];
+    expiry_date?: string[];
+    notes?: string[];
+    _form?: string[];
+  };
+};
+
+export async function registerStockEntry(
+  _prevState: StockEntryResult,
+  formData: FormData
+): Promise<StockEntryResult> {
+  const raw = {
+    product_id: formData.get("product_id"),
+    quantity: formData.get("quantity"),
+    expiry_date: formData.get("expiry_date"),
+    notes: formData.get("notes"),
+  };
+
+  const result = StockEntrySchema.safeParse(raw);
+  if (!result.success) {
+    return { ok: false, errors: result.error.flatten().fieldErrors };
+  }
+
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, errors: { _form: ["not_authenticated"] } };
+
+  if (!canWriteInventory(user.app_metadata?.role as string)) {
+    return { ok: false, errors: { _form: ["no_permission"] } };
+  }
+
+  const { error } = await supabase.rpc("register_stock_movement", {
+    p_product_id: result.data.product_id,
+    p_type: "entry",
+    p_quantity: result.data.quantity,
+    p_expiry_date: result.data.expiry_date ?? undefined,
+    p_notes: result.data.notes ?? undefined,
+  });
+
+  if (error) {
+    console.error("[registerStockEntry] rpc error:", error.message);
+    return { ok: false, errors: { _form: [error.message] } };
+  }
+
+  revalidatePath("/stock");
+  revalidatePath("/products");
+  return { ok: true, errors: {} };
+}
+
+// Current on-hand quantity for a product (aggregate `stock`), for the egress hint.
+export async function getProductStock(productId: string): Promise<number> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return 0;
+
+  const { data } = await supabase
+    .from("stock")
+    .select("quantity")
+    .eq("product_id", productId)
+    .maybeSingle();
+
+  return data?.quantity ?? 0;
+}
+
+export type StockExitResult = {
+  ok: boolean;
+  errors: {
+    product_id?: string[];
+    quantity?: string[];
+    notes?: string[];
+    _form?: string[];
+  };
+};
+
+export async function registerStockExit(
+  _prevState: StockExitResult,
+  formData: FormData
+): Promise<StockExitResult> {
+  const raw = {
+    product_id: formData.get("product_id"),
+    quantity: formData.get("quantity"),
+    notes: formData.get("notes"),
+  };
+
+  const result = StockExitSchema.safeParse(raw);
+  if (!result.success) {
+    return { ok: false, errors: result.error.flatten().fieldErrors };
+  }
+
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, errors: { _form: ["not_authenticated"] } };
+
+  if (!canWriteInventory(user.app_metadata?.role as string)) {
+    return { ok: false, errors: { _form: ["no_permission"] } };
+  }
+
+  const { error } = await supabase.rpc("register_stock_exit", {
+    p_product_id: result.data.product_id,
+    p_quantity: result.data.quantity,
+    p_notes: result.data.notes ?? undefined,
+  });
+
+  if (error) {
+    console.error("[registerStockExit] rpc error:", error.message);
+    // Surface the insufficient-stock guard on the quantity field.
+    if (error.message.includes("insufficient_stock")) {
+      return { ok: false, errors: { quantity: ["insufficient_stock"] } };
+    }
+    return { ok: false, errors: { _form: [error.message] } };
+  }
+
+  revalidatePath("/stock");
+  revalidatePath("/products");
+  return { ok: true, errors: {} };
+}
+
+export type RectifyResult = {
+  ok: boolean;
+  errors: {
+    quantity?: string[];
+    expiry_date?: string[];
+    reason?: string[];
+    _form?: string[];
+  };
+};
+
+export async function rectifyStockMovement(
+  _prevState: RectifyResult,
+  formData: FormData
+): Promise<RectifyResult> {
+  // Disabled inputs (when "nullify" is checked) are omitted from FormData, so
+  // get() returns null — normalize to undefined so the optional fields validate.
+  const raw = {
+    movement_id: formData.get("movement_id"),
+    nullify: formData.get("nullify") === "on" || formData.get("nullify") === "true",
+    quantity: formData.get("quantity") ?? undefined,
+    expiry_date: formData.get("expiry_date") ?? undefined,
+    reason: formData.get("reason") ?? undefined,
+  };
+
+  const result = RectifySchema.safeParse(raw);
+  if (!result.success) {
+    const fe = result.error.flatten().fieldErrors;
+    return { ok: false, errors: { quantity: fe.quantity, expiry_date: fe.expiry_date, reason: fe.reason, _form: fe.movement_id } };
+  }
+
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, errors: { _form: ["not_authenticated"] } };
+
+  if (!canWriteInventory(user.app_metadata?.role as string)) {
+    return { ok: false, errors: { _form: ["no_permission"] } };
+  }
+
+  // Nullify => target quantity 0. Otherwise use the corrected quantity.
+  const newQuantity = result.data.nullify ? 0 : result.data.quantity ?? 0;
+
+  const { error } = await supabase.rpc("rectify_stock_movement", {
+    p_movement_id: result.data.movement_id,
+    p_new_quantity: newQuantity,
+    p_new_expiry_date: result.data.nullify ? undefined : result.data.expiry_date ?? undefined,
+    p_reason: result.data.reason ?? undefined,
+  });
+
+  if (error) {
+    console.error("[rectifyStockMovement] rpc error:", error.message);
+    for (const key of ["already_rectified", "insufficient_stock", "no_change", "not_rectifiable", "movement_not_found"]) {
+      if (error.message.includes(key)) {
+        return { ok: false, errors: { _form: [key] } };
+      }
+    }
+    return { ok: false, errors: { _form: [error.message] } };
+  }
+
+  revalidatePath("/stock");
+  revalidatePath("/products");
+  return { ok: true, errors: {} };
+}

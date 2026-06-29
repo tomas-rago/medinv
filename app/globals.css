@@ -1,26 +1,393 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-madimi);
+  --color-primary:     var(--c-primary);
+  --color-primaryd:    var(--c-primary-d);
+  --color-primaryt:    var(--c-primary-t);
+  --color-accent:      var(--c-accent);
+  --color-accentsoft:  var(--c-accent-soft);
+  --color-ink:         var(--c-ink);
+  --color-ink2:        var(--c-ink-2);
+  --color-ink3:        var(--c-ink-3);
+  --color-page:        var(--c-page);
+  --color-surface:     var(--c-surface);
+  --color-surface2:    var(--c-surface-2);
+  --color-sidebar:     var(--c-sidebar);
+  --color-line:        var(--c-line);
+  --color-line2:       var(--c-line-2);
+  --color-info:        var(--c-info);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ===========================================================================
+   Med+Inv — design system
+   =========================================================================== */
+
+/* ---- Theme: Boticario (default, warm) ---------------------------------- */
+:root,
+[data-theme="boticario"] {
+  --c-primary:    #4B813D;
+  --c-primary-d:  #3C6B31;
+  --c-primary-t:  #E8EFE1;
+  --c-accent:     #E0A12E;
+  --c-accent-soft:#FAEAC8;
+  --c-ink:        #2A2B2A;
+  --c-ink-2:      #6B6C66;
+  --c-ink-3:      #9A9B91;
+  --c-page:       #EFEEE4;
+  --c-surface:    #FBFAF3;
+  --c-surface-2:  #F4F2E7;
+  --c-sidebar:    #F6EDD9;
+  --c-line:       #E4E0CF;
+  --c-line-2:     #ECE9DB;
+  --c-info:       #6E97B2;
+  --c-info-soft:  #DEE9EF;
+  --c-ok:         #4B813D;
+  --c-ok-soft:    #E2EDDB;
+  --c-warn:       #C98A1E;
+  --c-warn-soft:  #F8EBCC;
+  --c-danger:     #B4462F;
+  --c-danger-soft:#F3DED8;
 }
 
+/* ---- Theme: Clínico (cool, clinical) ----------------------------------- */
+[data-theme="clinico"] {
+  --c-primary:    #3F7E63;
+  --c-primary-d:  #316451;
+  --c-primary-t:  #E0ECE7;
+  --c-accent:     #5C88A6;
+  --c-accent-soft:#DCE8F0;
+  --c-ink:        #20302E;
+  --c-ink-2:      #5E6C6A;
+  --c-ink-3:      #93A09D;
+  --c-page:       #ECEEEC;
+  --c-surface:    #FBFCFB;
+  --c-surface-2:  #F0F3F2;
+  --c-sidebar:    #E7EEEC;
+  --c-line:       #DBE2E0;
+  --c-line-2:     #E6ECEA;
+  --c-info:       #5C88A6;
+  --c-info-soft:  #DCE8F0;
+  --c-ok:         #3F7E63;
+  --c-ok-soft:    #DFEDE7;
+  --c-warn:       #C08A33;
+  --c-warn-soft:  #F1E7D2;
+  --c-danger:     #B0503C;
+  --c-danger-soft:#F0DFDB;
+}
+
+/* ---- Theme: Esmeralda (deep, premium) ---------------------------------- */
+[data-theme="esmeralda"] {
+  --c-primary:    #2F6B43;
+  --c-primary-d:  #245434;
+  --c-primary-t:  #DFEBE2;
+  --c-accent:     #C79532;
+  --c-accent-soft:#F3E6C7;
+  --c-ink:        #232925;
+  --c-ink-2:      #62685F;
+  --c-ink-3:      #969A8F;
+  --c-page:       #F0EDE3;
+  --c-surface:    #FBF9F1;
+  --c-surface-2:  #F2EFE3;
+  --c-sidebar:    #ECE6D6;
+  --c-line:       #E2DCC9;
+  --c-line-2:     #EAE5D6;
+  --c-info:       #6E97B2;
+  --c-info-soft:  #DEE9EF;
+  --c-ok:         #2F6B43;
+  --c-ok-soft:    #DEEAE1;
+  --c-warn:       #B5841E;
+  --c-warn-soft:  #F2E7C9;
+  --c-danger:     #A8442F;
+  --c-danger-soft:#EEDBD5;
+}
+
+/* ---- Density -------------------------------------------------------------- */
+:root,
+[data-density="comfortable"] {
+  --d-field-py:        12px;
+  --d-row-py:          16px;
+  --d-card-pad:        28px;
+  --d-nav-py:          11px;
+  --d-table-cell-py:   15px;
+  --d-section-gap:     24px;
+  --d-control-h:       44px;
+}
+[data-density="compact"] {
+  --d-field-py:        8px;
+  --d-row-py:          10px;
+  --d-card-pad:        20px;
+  --d-nav-py:          7px;
+  --d-table-cell-py:   9px;
+  --d-section-gap:     16px;
+  --d-control-h:       36px;
+}
+
+/* ===========================================================================
+   Base
+   =========================================================================== */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--c-ink);
+  background: var(--c-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+.font-display {
+  font-family: var(--font-madimi), "Madimi One", system-ui, sans-serif;
+  font-weight: 400;
+}
+
+::selection { background: var(--c-primary-t); }
+
+/* ===========================================================================
+   Buttons
+   =========================================================================== */
+.mi-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: var(--d-control-h);
+  padding: 0 18px;
+  border-radius: 10px;
+  font-weight: 600; font-size: 14px;
+  border: 1px solid transparent;
+  cursor: pointer; user-select: none;
+  transition: background .15s, color .15s, border-color .15s, transform .04s, box-shadow .15s;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.mi-btn:active { transform: translateY(0.5px); }
+.mi-btn svg { width: 17px; height: 17px; flex: none; }
+
+.mi-btn--primary { background: var(--c-primary); color: #fff; }
+.mi-btn--primary:hover { background: var(--c-primary-d); }
+.mi-btn--accent  { background: var(--c-accent); color: #3a2c08; }
+.mi-btn--accent:hover { filter: brightness(.96); }
+.mi-btn--ghost   { background: transparent; color: var(--c-ink); border-color: var(--c-line); }
+.mi-btn--ghost:hover { background: var(--c-surface-2); border-color: var(--c-ink-3); }
+.mi-btn--soft    { background: var(--c-primary-t); color: var(--c-primary-d); }
+.mi-btn--soft:hover { filter: brightness(.97); }
+.mi-btn--block { width: 100%; }
+.mi-btn--lg { min-height: calc(var(--d-control-h) + 6px); font-size: 15px; padding: 0 22px; }
+.mi-btn--sm { min-height: 32px; padding: 0 12px; font-size: 13px; border-radius: 8px; }
+.mi-btn--icon { padding: 0; width: var(--d-control-h); min-height: var(--d-control-h); }
+.mi-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.mi-btn:disabled:hover { filter: none; }
+
+/* ===========================================================================
+   Form fields
+   =========================================================================== */
+.mi-label { display: block; font-size: 13px; font-weight: 600; color: var(--c-ink); margin-bottom: 7px; }
+.mi-input {
+  width: 100%;
+  padding: var(--d-field-py) 14px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-size: 14px; font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+.mi-input::placeholder { color: var(--c-ink-3); }
+.mi-input:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-primary) 18%, transparent);
+}
+.mi-field + .mi-field { margin-top: 16px; }
+.mi-input-group { position: relative; }
+.mi-input-group .mi-input { padding-left: 40px; }
+.mi-input-group > svg {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  width: 17px; height: 17px; color: var(--c-ink-3); pointer-events: none;
+}
+.mi-field-error { font-size: 12px; color: var(--c-danger); margin-top: 5px; }
+.mi-input--error { border-color: var(--c-danger); }
+
+select.mi-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239A9B91' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+  padding-right: 36px;
+}
+
+/* ===========================================================================
+   Cards & surfaces
+   =========================================================================== */
+.mi-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: 16px;
+}
+.mi-card-pad { padding: var(--d-card-pad); }
+.mi-shadow { box-shadow: 0 1px 2px rgba(42,43,42,.04), 0 8px 24px -16px rgba(42,43,42,.18); }
+.mi-shadow-lg { box-shadow: 0 2px 4px rgba(42,43,42,.05), 0 24px 60px -28px rgba(42,43,42,.30); }
+
+/* ===========================================================================
+   Badges
+   =========================================================================== */
+.mi-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 9px; border-radius: 99px;
+  font-size: 12px; font-weight: 600; line-height: 1.4;
+  white-space: nowrap;
+}
+.mi-badge--green  { background: var(--c-ok-soft);     color: var(--c-primary-d); }
+.mi-badge--amber  { background: var(--c-accent-soft);  color: var(--c-warn); }
+.mi-badge--blue   { background: var(--c-info-soft);    color: var(--c-info); }
+.mi-badge--gray   { background: var(--c-surface-2);    color: var(--c-ink-2); border: 1px solid var(--c-line); }
+.mi-badge--danger { background: var(--c-danger-soft);  color: var(--c-danger); }
+
+/* ===========================================================================
+   Sidebar / nav
+   =========================================================================== */
+.mi-nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: var(--d-nav-py) 12px;
+  border-radius: 10px;
+  color: var(--c-ink-2);
+  font-size: 14px; font-weight: 500;
+  cursor: pointer;
+  transition: background .14s, color .14s;
+  text-decoration: none;
+}
+.mi-nav-item svg { width: 19px; height: 19px; flex: none; color: var(--c-ink-3); transition: color .14s; }
+.mi-nav-item:hover { background: color-mix(in srgb, var(--c-primary) 7%, transparent); color: var(--c-ink); }
+.mi-nav-item:hover svg { color: var(--c-ink-2); }
+.mi-nav-item.is-active { background: var(--c-primary); color: #fff; font-weight: 600; }
+.mi-nav-item.is-active svg { color: #fff; }
+.mi-nav-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--c-ink-3); padding: 0 12px;
+}
+
+/* ===========================================================================
+   Table
+   =========================================================================== */
+.mi-table { width: 100%; border-collapse: collapse; }
+.mi-table thead th {
+  text-align: left;
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--c-ink-2);
+  padding: 12px 16px;
+  background: var(--c-surface-2);
+  border-bottom: 1px solid var(--c-line);
+  white-space: nowrap;
+}
+.mi-table thead th:first-child { border-top-left-radius: 14px; }
+.mi-table thead th:last-child { border-top-right-radius: 14px; text-align: right; }
+.mi-table tbody td {
+  padding: var(--d-table-cell-py) 16px;
+  border-bottom: 1px solid var(--c-line-2);
+  font-size: 14px; vertical-align: middle;
+}
+.mi-table tbody tr:last-child td { border-bottom: none; }
+.mi-table tbody tr { transition: background .12s; }
+.mi-table tbody tr:hover { background: color-mix(in srgb, var(--c-primary) 4%, transparent); }
+.mi-table td:last-child { text-align: right; }
+
+.mi-avatar {
+  width: 36px; height: 36px; border-radius: 99px; flex: none;
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 13px; color: #fff;
+}
+
+.mi-iconbtn {
+  width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent;
+  display: inline-grid; place-items: center; cursor: pointer; color: var(--c-ink-2);
+  background: transparent;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.mi-iconbtn:hover { background: var(--c-surface-2); border-color: var(--c-line); color: var(--c-ink); }
+.mi-iconbtn svg { width: 17px; height: 17px; }
+
+/* ===========================================================================
+   Auth layout — split with branded panel
+   =========================================================================== */
+.mi-auth { display: grid; grid-template-columns: minmax(420px, 44%) 1fr; min-height: 100vh; }
+@media (max-width: 900px) { .mi-auth { grid-template-columns: 1fr; } .mi-auth-art { display: none; } }
+.mi-auth-panel { background: var(--c-sidebar); display: flex; flex-direction: column; padding: 40px 48px; overflow-y: auto; }
+.mi-auth-art { position: relative; overflow: hidden; background: var(--c-primary); }
+
+.mi-tilewall {
+  position: absolute; inset: 0; opacity: .14;
+  display: grid; grid-template-columns: repeat(auto-fill, 120px); grid-auto-rows: 120px;
+  gap: 14px; padding: 24px;
+  transform: rotate(-8deg) scale(1.25); transform-origin: center;
+}
+.mi-tilewall span {
+  display: grid; place-items: center; border-radius: 18px;
+  border: 2px solid rgba(255,255,255,.5); color: rgba(255,255,255,.85);
+  font-family: var(--font-madimi), "Madimi One", sans-serif; font-size: 56px;
+}
+
+/* ===========================================================================
+   Modal
+   =========================================================================== */
+.mi-overlay {
+  position: fixed; inset: 0; background: rgba(34,35,33,.45);
+  backdrop-filter: blur(2px); display: grid; place-items: center; z-index: 60; padding: 24px;
+}
+.mi-modal {
+  width: 100%; max-width: 460px;
+  background: var(--c-surface);
+  border-radius: 18px; border: 1px solid var(--c-line);
+}
+
+/* ===========================================================================
+   Plan cards
+   =========================================================================== */
+.mi-plan { display: flex; flex-direction: column; }
+.mi-plan.is-featured {
+  border-color: var(--c-primary);
+  box-shadow: 0 2px 4px rgba(42,43,42,.05), 0 28px 70px -30px rgba(75,129,61,.55);
+}
+.mi-seg {
+  display: inline-flex; padding: 4px;
+  background: var(--c-surface-2); border: 1px solid var(--c-line);
+  border-radius: 99px; gap: 2px;
+}
+.mi-seg button {
+  border: none; background: transparent; padding: 7px 18px; border-radius: 99px;
+  font-size: 13px; font-weight: 600; color: var(--c-ink-2); cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.mi-seg button.is-on {
+  background: var(--c-surface); color: var(--c-ink);
+  box-shadow: 0 1px 2px rgba(0,0,0,.08);
+}
+.mi-feat { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--c-ink-2); }
+.mi-feat svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+.mi-feat.is-on svg { color: var(--c-primary); }
+.mi-feat.is-off { color: var(--c-ink-3); }
+.mi-feat.is-off svg { color: var(--c-ink-3); }
+
+/* ===========================================================================
+   Misc
+   =========================================================================== */
+.mi-divider { height: 1px; background: var(--c-line); border: none; margin: 0; }
+.mi-fade { animation: miFade .3s ease both; }
+@keyframes miFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .mi-fade { animation: none; } }
+
+/* Logo */
+.mi-logo { display: inline-flex; align-items: center; gap: 10px; }
+.mi-iso {
+  display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr);
+  gap: 3px; flex: none;
+}
+.mi-iso span {
+  display: grid; place-items: center;
+  font-family: var(--font-madimi), "Madimi One", sans-serif;
+  color: #fff; border-radius: 7px; font-size: 0.92em; line-height: 1; padding-bottom: 2px;
+}
+.mi-iso .t-m    { background: var(--c-primary); border-radius: 7px 7px 7px 13px; }
+.mi-iso .t-plus { background: var(--c-accent); }
+.mi-iso .t-i    { background: var(--c-primary); border-radius: 7px 13px 7px 7px; }
+.mi-iso .t-empty { background: transparent; }
+.mi-word { font-family: var(--font-madimi), "Madimi One", sans-serif; letter-spacing: -0.01em; line-height: 1; }
+.mi-word .w-med  { color: var(--c-ink); }
+.mi-word .w-plus { color: var(--c-accent); }
+.mi-word .w-inv  { color: var(--c-primary); }
