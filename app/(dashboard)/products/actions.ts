@@ -80,6 +80,10 @@ export async function createProduct(
     .single();
 
   if (error) {
+    // Unique violation on (organization_id, ean) → friendly per-field message.
+    if (error.code === "23505" && error.message.includes("ean")) {
+      return { ok: false, errors: { ean: ["ean_duplicate"] } };
+    }
     console.error("[createProduct] insert error:", error.message);
     return { ok: false, errors: { _form: [error.message] } };
   }
@@ -150,6 +154,9 @@ export async function updateProduct(
     .eq("organization_id", organizationId);
 
   if (error) {
+    if (error.code === "23505" && error.message.includes("ean")) {
+      return { ok: false, errors: { ean: ["ean_duplicate"] } };
+    }
     console.error("[updateProduct] update error:", error.message);
     return { ok: false, errors: { _form: [error.message] } };
   }
