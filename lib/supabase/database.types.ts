@@ -354,8 +354,54 @@ export type Database = {
           },
         ]
       }
+      stock_batches: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          organization_id: string
+          product_id: string
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          organization_id: string
+          product_id: string
+          quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          organization_id?: string
+          product_id?: string
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_batches_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_batches_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
+          corrects_movement_id: string | null
           created_at: string
           expiry_date: string | null
           id: string
@@ -367,6 +413,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          corrects_movement_id?: string | null
           created_at?: string
           expiry_date?: string | null
           id?: string
@@ -378,6 +425,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          corrects_movement_id?: string | null
           created_at?: string
           expiry_date?: string | null
           id?: string
@@ -389,6 +437,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "stock_movements_corrects_movement_id_fkey"
+            columns: ["corrects_movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stock_movements_organization_id_fkey"
             columns: ["organization_id"]
@@ -482,8 +537,30 @@ export type Database = {
       }
     }
     Functions: {
+      _apply_batch_delta: {
+        Args: {
+          p_delta: number
+          p_expiry: string
+          p_org: string
+          p_product: string
+        }
+        Returns: undefined
+      }
       current_organization_id: { Args: never; Returns: string }
       current_role: { Args: never; Returns: string }
+      rectify_stock_movement: {
+        Args: {
+          p_movement_id: string
+          p_new_expiry_date?: string
+          p_new_quantity: number
+          p_reason?: string
+        }
+        Returns: undefined
+      }
+      register_stock_exit: {
+        Args: { p_notes?: string; p_product_id: string; p_quantity: number }
+        Returns: undefined
+      }
       register_stock_movement: {
         Args: {
           p_expiry_date?: string
