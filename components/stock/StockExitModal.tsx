@@ -34,6 +34,7 @@ export function StockExitModal({ onClose }: StockExitModalProps) {
   const [searched, setSearched] = useState(false);
   const [selected, setSelected] = useState<ProductMatch | null>(null);
   const [available, setAvailable] = useState<number | null>(null);
+  const [qty, setQty] = useState("");
 
   const [showScanner, setShowScanner] = useState(false);
   const [createEan, setCreateEan] = useState<string | null>(null); // non-null => create modal open
@@ -82,17 +83,23 @@ export function StockExitModal({ onClose }: StockExitModalProps) {
     setResults([]);
     setSearched(false);
     setAvailable(null);
-    const qty = await getProductStock(p.id);
-    setAvailable(qty);
+    setQty("");
+    const stockQty = await getProductStock(p.id);
+    setAvailable(stockQty);
   }
 
   function clearSelection() {
     setSelected(null);
     setQuery("");
     setAvailable(null);
+    setQty("");
   }
 
   const numericQuery = /^\d{6,14}$/.test(query.trim());
+
+  // Live validation against on-hand stock so the user finds out before submitting.
+  const qtyNum = Number(qty);
+  const exceeds = available !== null && qty.trim() !== "" && Number.isFinite(qtyNum) && qtyNum > available;
 
   return (
     <div className="mi-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -268,8 +275,13 @@ export function StockExitModal({ onClose }: StockExitModalProps) {
                 placeholder={t("quantity_placeholder")}
                 disabled={!selected}
                 autoComplete="off"
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
               />
-              {state.errors.quantity?.map((e) => (
+              {exceeds && (
+                <p className="mi-field-error">{t("exit_exceeds", { qty: available })}</p>
+              )}
+              {!exceeds && state.errors.quantity?.map((e) => (
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 <p key={e} className="mi-field-error">{tVal(e as any)}</p>
               ))}
@@ -296,7 +308,7 @@ export function StockExitModal({ onClose }: StockExitModalProps) {
           <button type="button" className="mi-btn mi-btn--ghost" onClick={onClose}>
             {t("cancel")}
           </button>
-          <button type="submit" form="stock-exit-form" disabled={isPending || !selected} className="mi-btn mi-btn--primary">
+          <button type="submit" form="stock-exit-form" disabled={isPending || !selected || exceeds} className="mi-btn mi-btn--primary">
             {isPending ? t("saving") : t("register_exit")}
           </button>
         </div>

@@ -462,6 +462,7 @@
     "exit_title": "Egresar stock",
     "exit_subtitle": "Registrá la salida de un producto",
     "available_qty": "Disponible: {qty}",
+    "exit_exceeds": "La cantidad supera la existencia disponible ({qty})",
     "register_exit": "Registrar egreso",
     "rectify_title": "Rectificar movimiento",
     "rectify_help": "No se modifica el registro original: se genera un movimiento de ajuste para reflejar la corrección.",
