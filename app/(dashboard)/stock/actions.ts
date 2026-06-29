@@ -192,12 +192,14 @@ export async function rectifyStockMovement(
   _prevState: RectifyResult,
   formData: FormData
 ): Promise<RectifyResult> {
+  // Disabled inputs (when "nullify" is checked) are omitted from FormData, so
+  // get() returns null — normalize to undefined so the optional fields validate.
   const raw = {
     movement_id: formData.get("movement_id"),
     nullify: formData.get("nullify") === "on" || formData.get("nullify") === "true",
-    quantity: formData.get("quantity"),
-    expiry_date: formData.get("expiry_date"),
-    reason: formData.get("reason"),
+    quantity: formData.get("quantity") ?? undefined,
+    expiry_date: formData.get("expiry_date") ?? undefined,
+    reason: formData.get("reason") ?? undefined,
   };
 
   const result = RectifySchema.safeParse(raw);
