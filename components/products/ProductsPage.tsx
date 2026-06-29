@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ProductModal } from "./ProductModal";
@@ -36,6 +36,7 @@ export function ProductsPage({ products, count, page, pageSize, q, category, can
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState(q);
   const [cat, setCat] = useState(category);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
   const rangeFrom = count === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -53,9 +54,10 @@ export function ProductsPage({ products, count, page, pageSize, q, category, can
     router.push(qs ? `/products?${qs}` : "/products");
   }
 
-  function onSearchSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    navigate({ page: 1 });
+  function onSearchChange(value: string) {
+    setSearch(value);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => navigate({ q: value, page: 1 }), 400);
   }
 
   return (
@@ -88,8 +90,7 @@ export function ProductsPage({ products, count, page, pageSize, q, category, can
 
       {/* Table */}
       <div className="mi-card mi-shadow overflow-hidden">
-        <form
-          onSubmit={onSearchSubmit}
+        <div
           className="flex flex-wrap items-center gap-3 p-4 border-b"
           style={{ borderColor: "var(--c-line)" }}
         >
@@ -106,7 +107,7 @@ export function ProductsPage({ products, count, page, pageSize, q, category, can
               style={{ paddingLeft: 40, paddingTop: 8, paddingBottom: 8 }}
               placeholder={t("search_placeholder")}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => onSearchChange(e.target.value)}
             />
           </div>
           <select
@@ -120,12 +121,11 @@ export function ProductsPage({ products, count, page, pageSize, q, category, can
               <option key={c} value={c}>{tCat(c)}</option>
             ))}
           </select>
-          <button type="submit" className="mi-btn mi-btn--soft">{t("search_button")}</button>
           <div className="flex-1" />
           <span className="text-ink3" style={{ fontSize: 13 }}>
             {t("product_count", { count })}
           </span>
-        </form>
+        </div>
 
         <div className="overflow-x-auto">
           <table className="mi-table">

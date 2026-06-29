@@ -4,8 +4,15 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { registerStockEntry, searchProducts } from "@/app/(dashboard)/stock/actions";
 import type { ProductMatch, StockEntryResult } from "@/app/(dashboard)/stock/actions";
+import dynamic from "next/dynamic";
 import { ProductModal } from "@/components/products/ProductModal";
-import { BarcodeScanner } from "@/components/scanner/BarcodeScanner";
+
+// Loaded on demand so the heavy @zxing barcode lib never blocks this modal
+// (or the page that opens it) — important for older mobile browsers.
+const BarcodeScanner = dynamic(
+  () => import("@/components/scanner/BarcodeScanner").then((m) => m.BarcodeScanner),
+  { ssr: false }
+);
 
 const initialState: StockEntryResult = { ok: false, errors: {} };
 
@@ -134,6 +141,7 @@ export function StockEntryModal({ onClose }: StockEntryModalProps) {
           ) : (
             <div className="mi-field" style={{ marginTop: 0 }}>
               <label htmlFor="stk-search" className="mi-label">{t("product_label")}</label>
+              <div className="relative">
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <svg
@@ -162,18 +170,30 @@ export function StockEntryModal({ onClose }: StockEntryModalProps) {
                 </button>
               </div>
 
-              {/* Results dropdown */}
+              {/* Results dropdown — floats over form content, scrollable when > 4 items */}
               {results.length > 0 && (
                 <div
-                  className="mt-2 rounded-xl overflow-hidden"
-                  style={{ border: "1px solid var(--c-line)" }}
+                  className="rounded-xl overflow-hidden"
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    zIndex: 50,
+                    marginTop: 4,
+                    border: "1px solid var(--c-line)",
+                    background: "var(--c-surface)",
+                    maxHeight: 220,
+                    overflowY: "auto",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+                  }}
                 >
                   {results.map((p) => (
                     <button
                       key={p.id}
                       type="button"
                       className="w-full text-left px-3 py-2 flex items-center gap-3"
-                      style={{ borderBottom: "1px solid var(--c-line)", background: "var(--c-surface)" }}
+                      style={{ borderBottom: "1px solid var(--c-line)" }}
                       onClick={() => pick(p)}
                     >
                       <div className="flex-1 min-w-0">
@@ -187,6 +207,7 @@ export function StockEntryModal({ onClose }: StockEntryModalProps) {
                   ))}
                 </div>
               )}
+              </div>{/* end relative anchor */}
 
               {searching && (
                 <p className="text-ink3 mt-2" style={{ fontSize: 13 }}>{t("searching")}</p>

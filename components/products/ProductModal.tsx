@@ -4,8 +4,15 @@ import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createProduct } from "@/app/(dashboard)/products/actions";
 import type { CreateProductResult, ProductRow } from "@/app/(dashboard)/products/actions";
+import dynamic from "next/dynamic";
 import { PRODUCT_CATEGORIES } from "@/lib/constants/categories";
-import { BarcodeScanner } from "@/components/scanner/BarcodeScanner";
+
+// Loaded on demand so the heavy @zxing barcode lib never blocks this modal
+// (or the page that opens it) — important for older mobile browsers.
+const BarcodeScanner = dynamic(
+  () => import("@/components/scanner/BarcodeScanner").then((m) => m.BarcodeScanner),
+  { ssr: false }
+);
 
 const UNIT_OPTIONS = ["unit", "box", "blister", "ampoule", "ml", "mg", "g"] as const;
 
