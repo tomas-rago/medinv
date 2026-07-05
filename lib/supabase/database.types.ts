@@ -229,6 +229,99 @@ export type Database = {
           },
         ]
       }
+      provider_products: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          product_id: string
+          provider_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          product_id: string
+          provider_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          product_id?: string
+          provider_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_products_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_products_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      providers: {
+        Row: {
+          active: boolean
+          address: string | null
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          organization_id: string
+          phone: string | null
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          organization_id: string
+          phone?: string | null
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "providers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchase_items: {
         Row: {
           expiry_date: string | null
@@ -278,8 +371,9 @@ export type Database = {
           id: string
           notes: string | null
           organization_id: string
+          provider_id: string | null
           received_at: string | null
-          status: string
+          status: "draft" | "confirmed" | "received" | "cancelled"
           supplier: string | null
         }
         Insert: {
@@ -288,8 +382,9 @@ export type Database = {
           id?: string
           notes?: string | null
           organization_id: string
+          provider_id?: string | null
           received_at?: string | null
-          status?: string
+          status?: "draft" | "confirmed" | "received" | "cancelled"
           supplier?: string | null
         }
         Update: {
@@ -298,8 +393,9 @@ export type Database = {
           id?: string
           notes?: string | null
           organization_id?: string
+          provider_id?: string | null
           received_at?: string | null
-          status?: string
+          status?: "draft" | "confirmed" | "received" | "cancelled"
           supplier?: string | null
         }
         Relationships: [
@@ -308,6 +404,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
             referencedColumns: ["id"]
           },
         ]
@@ -459,27 +562,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      supplies: {
-        Row: {
-          created_at: string
-          expire_date: string | null
-          id: number
-          name: string | null
-        }
-        Insert: {
-          created_at?: string
-          expire_date?: string | null
-          id?: number
-          name?: string | null
-        }
-        Update: {
-          created_at?: string
-          expire_date?: string | null
-          id?: number
-          name?: string | null
-        }
-        Relationships: []
       }
       token_usage: {
         Row: {
