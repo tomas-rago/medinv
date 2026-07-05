@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { CreatePurchaseSchema, ReceivePurchaseSchema } from "@/lib/schemas/purchases/purchase";
 import { canManagePurchases } from "@/lib/constants/roles";
+import { searchProducts, type ProductMatch } from "@/app/(dashboard)/stock/actions";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
@@ -200,6 +201,44 @@ export async function getPurchaseItems(purchaseId: string): Promise<PurchaseItem
     accepted_quantity: r.accepted_quantity,
     expiry_date: r.expiry_date,
   }));
+}
+
+// Product search for order creation: when the order is tied to a provider,
+// only products that provider provides (provider_products) are offered —
+// mirrors the create_purchase RPC validation. No provider → full catalog.
+export async function searchOrderProducts(
+  query: string,
+  providerId?: string
+): Promise<ProductMatch[]> {
+  if (!providerId) return searchProducts(query);
+
+  const term = query.trim();
+  if (term.length < 2) return [];
+
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const safe = term.replace(/[,()*]/g, " ").trim();
+  if (!safe) return [];
+
+  const { data } = await supabase
+    .from("provider_products")
+    .select("products!inner(id, name, ean, category, presentation, unit)")
+    .eq("provider_id", providerId)
+    .eq("products.active", true)
+    .or(`name.ilike.%${safe}%,ean.ilike.%${safe}%,category.ilike.%${safe}%`, {
+      referencedTable: "products",
+    })
+    .limit(10);
+
+  return (data ?? [])
+    .map((r) => r.products)
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export type ProviderOption = {

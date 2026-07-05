@@ -2,9 +2,9 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { createPurchase } from "@/app/(dashboard)/purchases/actions";
+import { createPurchase, searchOrderProducts } from "@/app/(dashboard)/purchases/actions";
 import type { CreatePurchaseResult, ProviderOption } from "@/app/(dashboard)/purchases/actions";
-import { searchProducts } from "@/app/(dashboard)/stock/actions";
+import { getProviderProducts } from "@/app/(dashboard)/providers/actions";
 import type { ProductMatch } from "@/app/(dashboard)/stock/actions";
 
 const initialState: CreatePurchaseResult = { ok: false, errors: {} };
@@ -29,9 +29,12 @@ export function PurchaseModal({ providers, onClose }: PurchaseModalProps) {
 
   const [state, action, isPending] = useActionState(createPurchase, initialState);
   const [items, setItems] = useState<LineItem[]>([]);
+  const [providerId, setProviderId] = useState("");
+  const [removedCount, setRemovedCount] = useState(0);
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<ProductMatch[]>([]);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const providerRef = useRef("");
 
   useEffect(() => {
     if (state.ok) onClose();
@@ -45,9 +48,30 @@ export function PurchaseModal({ providers, onClose }: PurchaseModalProps) {
       return;
     }
     searchTimer.current = setTimeout(async () => {
-      const results = await searchProducts(value);
-      setMatches(results);
+      const providerAtSearch = providerRef.current;
+      const results = await searchOrderProducts(value, providerAtSearch || undefined);
+      // Discard results if the provider changed while the search was in flight.
+      if (providerRef.current === providerAtSearch) setMatches(results);
     }, 300);
+  }
+
+  // Switching provider restricts the searchable catalog; lines the new
+  // provider doesn't supply are dropped (with a visible notice), mirroring
+  // the server-side validation in create_purchase.
+  async function onProviderChange(value: string) {
+    setProviderId(value);
+    providerRef.current = value;
+    setQuery("");
+    setMatches([]);
+    setRemovedCount(0);
+    if (!value || items.length === 0) return;
+    const provided = await getProviderProducts(value);
+    const providedIds = new Set(provided.map((p) => p.id));
+    setItems((prev) => {
+      const kept = prev.filter((i) => providedIds.has(i.product_id));
+      setRemovedCount(prev.length - kept.length);
+      return kept;
+    });
   }
 
   function addProduct(p: ProductMatch) {
@@ -113,12 +137,24 @@ export function PurchaseModal({ providers, onClose }: PurchaseModalProps) {
 
             <div className="mi-field" style={{ marginTop: 0 }}>
               <label htmlFor="pur-provider" className="mi-label">{t("field_provider")}</label>
-              <select id="pur-provider" name="provider_id" className="mi-input" defaultValue="">
+              <select
+                id="pur-provider"
+                name="provider_id"
+                className="mi-input"
+                value={providerId}
+                onChange={(e) => onProviderChange(e.target.value)}
+              >
                 <option value="">{t("provider_none")}</option>
                 {providers.map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
+              {providerId && (
+                <p className="text-ink3 mt-1" style={{ fontSize: 12 }}>{t("provider_filter_hint")}</p>
+              )}
+              {removedCount > 0 && (
+                <p className="mi-field-error mt-1">{t("items_removed_for_provider", { count: removedCount })}</p>
+              )}
               {state.errors.provider_id?.map((e) => (
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 <p key={e} className="mi-field-error">{tVal(e as any)}</p>

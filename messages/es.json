@@ -333,6 +333,7 @@
     "invalid_price": "Precio inválido",
     "provider_not_found": "No se encontró el proveedor",
     "product_not_found": "No se encontró el insumo",
+    "product_not_provided": "El proveedor seleccionado no provee uno de los insumos de la orden",
     "unexpected": "Error inesperado"
   },
   "Categories": {
@@ -518,6 +519,8 @@
     "modal_subtitle": "Elegí los insumos, cantidades y proveedor",
     "field_provider": "Proveedor",
     "provider_none": "Sin proveedor (reposición informal)",
+    "provider_filter_hint": "Solo vas a poder agregar insumos asociados a este proveedor.",
+    "items_removed_for_provider": "{count, plural, one {Se quitó # insumo que este proveedor no provee} other {Se quitaron # insumos que este proveedor no provee}}",
     "add_product_label": "Agregar insumo",
     "add_product_placeholder": "Buscar por nombre, EAN o categoría…",
     "items_empty": "Todavía no agregaste insumos a la orden.",

@@ -199,6 +199,36 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
     expect(error!.message).toContain("purchase_not_receivable");
   });
 
+  it("provider-tied orders only accept products the provider provides", async () => {
+    const { data: provider, error: providerError } = await admin
+      .from("providers")
+      .insert({ organization_id: orgA, name: `${runId}-provider` })
+      .select("id")
+      .single();
+    expect(providerError).toBeNull();
+
+    // Not associated yet → rejected.
+    const { error: rejected } = await doctorA.rpc("create_purchase", {
+      p_provider_id: provider!.id,
+      p_notes: `${runId} provider-order`,
+      p_items: [{ product_id: productA, quantity: 2, unit_price: null }],
+    });
+    expect(rejected).not.toBeNull();
+    expect(rejected!.message).toContain("product_not_provided");
+
+    // Associate and retry → accepted.
+    await admin
+      .from("provider_products")
+      .insert({ organization_id: orgA, provider_id: provider!.id, product_id: productA });
+
+    const { error: accepted } = await doctorA.rpc("create_purchase", {
+      p_provider_id: provider!.id,
+      p_notes: `${runId} provider-order`,
+      p_items: [{ product_id: productA, quantity: 2, unit_price: null }],
+    });
+    expect(accepted).toBeNull();
+  });
+
   it("cancelling a draft leaves stock untouched", async () => {
     const { data: purchaseId } = await doctorA.rpc("create_purchase", {
       p_provider_id: null,
