@@ -324,6 +324,7 @@ export type Database = {
       }
       purchase_items: {
         Row: {
+          accepted_quantity: number | null
           expiry_date: string | null
           id: string
           product_id: string
@@ -332,6 +333,7 @@ export type Database = {
           unit_price: number | null
         }
         Insert: {
+          accepted_quantity?: number | null
           expiry_date?: string | null
           id?: string
           product_id: string
@@ -340,6 +342,7 @@ export type Database = {
           unit_price?: number | null
         }
         Update: {
+          accepted_quantity?: number | null
           expiry_date?: string | null
           id?: string
           product_id?: string
@@ -628,8 +631,23 @@ export type Database = {
         }
         Returns: undefined
       }
+      create_purchase: {
+        Args: {
+          p_provider_id: string | null
+          p_notes: string | null
+          p_items: Json
+        }
+        Returns: string
+      }
       current_organization_id: { Args: never; Returns: string }
       current_role: { Args: never; Returns: string }
+      receive_purchase: {
+        Args: {
+          p_purchase_id: string
+          p_items: Json
+        }
+        Returns: undefined
+      }
       rectify_stock_movement: {
         Args: {
           p_movement_id: string
