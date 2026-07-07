@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { hasAiAccess } from "@/lib/ai/access";
 
 export default async function AsistenciaIAPage() {
   const cookieStore = await cookies();
@@ -15,24 +16,9 @@ export default async function AsistenciaIAPage() {
   const orgId = user.app_metadata?.organization_id as string | undefined;
   if (!orgId) redirect("/onboarding");
 
-  // Check if the org's plan includes AI (token_limit_per_month > 0)
-  const { data: org } = await supabase
-    .from("organizations")
-    .select("plan_id")
-    .eq("id", orgId)
-    .single();
+  const aiAccess = await hasAiAccess(supabase, orgId);
 
-  let hasAiAccess = false;
-  if (org?.plan_id) {
-    const { data: plan } = await supabase
-      .from("plans")
-      .select("token_limit_per_month")
-      .eq("id", org.plan_id)
-      .single();
-    hasAiAccess = (plan?.token_limit_per_month ?? 0) > 0;
-  }
-
-  if (!hasAiAccess) {
+  if (!aiAccess) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center" style={{ maxWidth: 420 }}>

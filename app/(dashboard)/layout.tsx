@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { hasAiAccess } from "@/lib/ai/access";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { IconSprite } from "@/components/ui/Icons";
 
@@ -24,22 +25,17 @@ export default async function DashboardLayout({
     .single();
   if (!profile?.organization_id) redirect("/onboarding");
 
-  // Fetch org plan to determine AI feature access
-  let hasAiAccess = false;
-  const { data: org } = await supabase
-    .from("organizations")
-    .select("plan_id")
-    .eq("id", profile.organization_id)
-    .single();
+  const aiAccess = await hasAiAccess(supabase, profile.organization_id);
 
-  if (org?.plan_id) {
-    const { data: plan } = await supabase
-      .from("plans")
-      .select("token_limit_per_month")
-      .eq("id", org.plan_id)
-      .single();
-    hasAiAccess = (plan?.token_limit_per_month ?? 0) > 0;
-  }
+  // Refresh expiry alerts (in-app only, no scheduler), then count unread
+  // for the sidebar badge. Cheap at this scale; pg_cron can take over the
+  // sweep if email notifications land.
+  await supabase.rpc("sweep_alerts");
+  const { count: alertCount } = await supabase
+    .from("alerts")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "active")
+    .is("acknowledged_at", null);
 
   return (
     <>
@@ -47,8 +43,9 @@ export default async function DashboardLayout({
       <div className="h-screen flex overflow-hidden">
         <Sidebar
           activeSection="panel"
-          profile={{ full_name: profile.full_name ?? "", role: profile.role ?? "read_only" }}
-          hasAiAccess={hasAiAccess}
+          profile={{ full_name: profile.full_name ?? "", role: profile.role ?? "administrative" }}
+          hasAiAccess={aiAccess}
+          alertCount={alertCount ?? 0}
         />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {children}

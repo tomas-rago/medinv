@@ -6,6 +6,7 @@ interface SidebarProps {
   activeSection: string;
   profile: { full_name: string | null; role: string };
   hasAiAccess?: boolean;
+  alertCount?: number;
 }
 
 interface NavItem {
@@ -24,6 +25,8 @@ function Icon({ id }: { id: string }) {
     "i-pill": <><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(45 12 12)"/><path d="m9 9 6 6"/></>,
     "i-box": <><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/></>,
     "i-cart": <><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2.2l2.1 12.4a1.5 1.5 0 0 0 1.5 1.2h8.8a1.5 1.5 0 0 0 1.5-1.2L21 7H5.3"/></>,
+    "i-truck": <><path d="M1 5h13v11H1z"/><path d="M14 9h4l3 3v4h-7"/><circle cx="5.5" cy="18.5" r="1.8"/><circle cx="17.5" cy="18.5" r="1.8"/></>,
+    "i-bell": <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></>,
     "i-users": <><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3.2 3.2 0 0 1 0 6"/><path d="M17.5 14.2A6 6 0 0 1 21 20"/></>,
     "i-card": <><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/></>,
     "i-spark": <><path d="M12 3l1.6 4.6L18 9l-4.4 1.4L12 15l-1.6-4.6L6 9l4.4-1.4z"/><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></>,
@@ -42,7 +45,7 @@ function initials(name: string | null) {
   return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 }
 
-export async function Sidebar({ activeSection, profile, hasAiAccess = false }: SidebarProps) {
+export async function Sidebar({ activeSection, profile, hasAiAccess = false, alertCount = 0 }: SidebarProps) {
   const t = await getTranslations("Sidebar");
 
   const ROLE_LABELS: Record<string, string> = {
@@ -62,7 +65,15 @@ export async function Sidebar({ activeSection, profile, hasAiAccess = false }: S
       items: [
         { id: "insumos", href: "/products", icon: "i-box", label: t("nav.products") },
         { id: "inventario", href: "/stock", icon: "i-pill", label: t("nav.inventory") },
+        {
+          id: "alertas",
+          href: "/alerts",
+          icon: "i-bell",
+          label: t("nav.alerts"),
+          ...(alertCount > 0 ? { badge: String(alertCount), badgeTone: "danger" } : {}),
+        } as NavItem,
         { id: "compras", href: "/purchases", icon: "i-cart", label: t("nav.purchases") },
+        { id: "proveedores", href: "/providers", icon: "i-truck", label: t("nav.providers") },
         { id: "personal", href: "/users", icon: "i-users", label: t("nav.users"), adminOnly: true },
       ],
     },

@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_settings: {
+        Row: {
+          expiry_days_ahead: number
+          expiry_enabled: boolean
+          low_stock_enabled: boolean
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          expiry_days_ahead?: number
+          expiry_enabled?: boolean
+          low_stock_enabled?: boolean
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          expiry_days_ahead?: number
+          expiry_enabled?: boolean
+          low_stock_enabled?: boolean
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          expiry_date: string | null
+          id: string
+          organization_id: string
+          product_id: string
+          quantity: number | null
+          resolved_at: string | null
+          status: "active" | "resolved"
+          threshold: number | null
+          triggered_at: string
+          type: "low_stock" | "expiry"
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          expiry_date?: string | null
+          id?: string
+          organization_id: string
+          product_id: string
+          quantity?: number | null
+          resolved_at?: string | null
+          status?: "active" | "resolved"
+          threshold?: number | null
+          triggered_at?: string
+          type: "low_stock" | "expiry"
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          expiry_date?: string | null
+          id?: string
+          organization_id?: string
+          product_id?: string
+          quantity?: number | null
+          resolved_at?: string | null
+          status?: "active" | "resolved"
+          threshold?: number | null
+          triggered_at?: string
+          type?: "low_stock" | "expiry"
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ean_lookup: {
         Row: {
           created_at: string
@@ -229,8 +328,102 @@ export type Database = {
           },
         ]
       }
+      provider_products: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          product_id: string
+          provider_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          product_id: string
+          provider_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          product_id?: string
+          provider_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_products_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_products_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      providers: {
+        Row: {
+          active: boolean
+          address: string | null
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          organization_id: string
+          phone: string | null
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          organization_id: string
+          phone?: string | null
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "providers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchase_items: {
         Row: {
+          accepted_quantity: number | null
           expiry_date: string | null
           id: string
           product_id: string
@@ -239,6 +432,7 @@ export type Database = {
           unit_price: number | null
         }
         Insert: {
+          accepted_quantity?: number | null
           expiry_date?: string | null
           id?: string
           product_id: string
@@ -247,6 +441,7 @@ export type Database = {
           unit_price?: number | null
         }
         Update: {
+          accepted_quantity?: number | null
           expiry_date?: string | null
           id?: string
           product_id?: string
@@ -278,8 +473,9 @@ export type Database = {
           id: string
           notes: string | null
           organization_id: string
+          provider_id: string | null
           received_at: string | null
-          status: string
+          status: "draft" | "confirmed" | "received" | "cancelled"
           supplier: string | null
         }
         Insert: {
@@ -288,8 +484,9 @@ export type Database = {
           id?: string
           notes?: string | null
           organization_id: string
+          provider_id?: string | null
           received_at?: string | null
-          status?: string
+          status?: "draft" | "confirmed" | "received" | "cancelled"
           supplier?: string | null
         }
         Update: {
@@ -298,8 +495,9 @@ export type Database = {
           id?: string
           notes?: string | null
           organization_id?: string
+          provider_id?: string | null
           received_at?: string | null
-          status?: string
+          status?: "draft" | "confirmed" | "received" | "cancelled"
           supplier?: string | null
         }
         Relationships: [
@@ -308,6 +506,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
             referencedColumns: ["id"]
           },
         ]
@@ -460,27 +665,6 @@ export type Database = {
           },
         ]
       }
-      supplies: {
-        Row: {
-          created_at: string
-          expire_date: string | null
-          id: number
-          name: string | null
-        }
-        Insert: {
-          created_at?: string
-          expire_date?: string | null
-          id?: number
-          name?: string | null
-        }
-        Update: {
-          created_at?: string
-          expire_date?: string | null
-          id?: number
-          name?: string | null
-        }
-        Relationships: []
-      }
       token_usage: {
         Row: {
           created_at: string
@@ -546,8 +730,23 @@ export type Database = {
         }
         Returns: undefined
       }
+      create_purchase: {
+        Args: {
+          p_provider_id: string | null
+          p_notes: string | null
+          p_items: Json
+        }
+        Returns: string
+      }
       current_organization_id: { Args: never; Returns: string }
       current_role: { Args: never; Returns: string }
+      receive_purchase: {
+        Args: {
+          p_purchase_id: string
+          p_items: Json
+        }
+        Returns: undefined
+      }
       rectify_stock_movement: {
         Args: {
           p_movement_id: string
@@ -583,6 +782,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      sweep_alerts: {
+        Args: never
+        Returns: undefined
       }
     }
     Enums: {
