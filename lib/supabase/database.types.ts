@@ -246,6 +246,38 @@ export type Database = {
         }
         Relationships: []
       }
+      predictive_settings: {
+        Row: {
+          holding_cost_rate: number
+          lead_time_days: number
+          ordering_cost: number
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          holding_cost_rate: number
+          lead_time_days?: number
+          ordering_cost: number
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          holding_cost_rate?: number
+          lead_time_days?: number
+          ordering_cost?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "predictive_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           active: boolean

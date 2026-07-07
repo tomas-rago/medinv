@@ -18,6 +18,13 @@ export function canManageAlerts(role: string | null | undefined): boolean {
   return role === "chief_doctor";
 }
 
+// Predictive/EOQ configuration (ordering cost, holding rate, lead time) is
+// the org-owner's call. Must stay in sync with the RLS policy on
+// predictive_settings.
+export function canManagePredictive(role: string | null | undefined): boolean {
+  return role === "chief_doctor";
+}
+
 // Purchase orders are managed by doctors and up. Must stay in sync with the
 // RLS policies on purchases/purchase_items.
 const PURCHASE_WRITER_ROLES = ["chief_doctor", "doctor"] as const;
