@@ -12,6 +12,12 @@ export function canManageProviders(role: string | null | undefined): boolean {
   return role === "chief_doctor";
 }
 
+// Alert configuration (org settings + per-product thresholds) is the
+// org-owner's call. Must stay in sync with the RLS policy on alert_settings.
+export function canManageAlerts(role: string | null | undefined): boolean {
+  return role === "chief_doctor";
+}
+
 // Purchase orders are managed by doctors and up. Must stay in sync with the
 // RLS policies on purchases/purchase_items.
 const PURCHASE_WRITER_ROLES = ["chief_doctor", "doctor"] as const;

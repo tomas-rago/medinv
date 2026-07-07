@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_settings: {
+        Row: {
+          expiry_days_ahead: number
+          expiry_enabled: boolean
+          low_stock_enabled: boolean
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          expiry_days_ahead?: number
+          expiry_enabled?: boolean
+          low_stock_enabled?: boolean
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          expiry_days_ahead?: number
+          expiry_enabled?: boolean
+          low_stock_enabled?: boolean
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          expiry_date: string | null
+          id: string
+          organization_id: string
+          product_id: string
+          quantity: number | null
+          resolved_at: string | null
+          status: "active" | "resolved"
+          threshold: number | null
+          triggered_at: string
+          type: "low_stock" | "expiry"
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          expiry_date?: string | null
+          id?: string
+          organization_id: string
+          product_id: string
+          quantity?: number | null
+          resolved_at?: string | null
+          status?: "active" | "resolved"
+          threshold?: number | null
+          triggered_at?: string
+          type: "low_stock" | "expiry"
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          expiry_date?: string | null
+          id?: string
+          organization_id?: string
+          product_id?: string
+          quantity?: number | null
+          resolved_at?: string | null
+          status?: "active" | "resolved"
+          threshold?: number | null
+          triggered_at?: string
+          type?: "low_stock" | "expiry"
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ean_lookup: {
         Row: {
           created_at: string
@@ -683,6 +782,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      sweep_alerts: {
+        Args: never
+        Returns: undefined
       }
     }
     Enums: {
