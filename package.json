@@ -12,6 +12,7 @@
     "seed:mp-plans": "tsx --env-file=.env.local scripts/seed-mp-plans.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0",
     "@mercadopago/sdk-react": "^1.0.7",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.107.0",
