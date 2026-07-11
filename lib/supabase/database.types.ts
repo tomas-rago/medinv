@@ -20,6 +20,7 @@ export type Database = {
           expiry_enabled: boolean
           low_stock_enabled: boolean
           organization_id: string
+          reorder_enabled: boolean
           updated_at: string
         }
         Insert: {
@@ -27,6 +28,7 @@ export type Database = {
           expiry_enabled?: boolean
           low_stock_enabled?: boolean
           organization_id: string
+          reorder_enabled?: boolean
           updated_at?: string
         }
         Update: {
@@ -34,6 +36,7 @@ export type Database = {
           expiry_enabled?: boolean
           low_stock_enabled?: boolean
           organization_id?: string
+          reorder_enabled?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -59,7 +62,7 @@ export type Database = {
           status: "active" | "resolved"
           threshold: number | null
           triggered_at: string
-          type: "low_stock" | "expiry"
+          type: "low_stock" | "expiry" | "reorder_suggested"
         }
         Insert: {
           acknowledged_at?: string | null
@@ -73,7 +76,7 @@ export type Database = {
           status?: "active" | "resolved"
           threshold?: number | null
           triggered_at?: string
-          type: "low_stock" | "expiry"
+          type: "low_stock" | "expiry" | "reorder_suggested"
         }
         Update: {
           acknowledged_at?: string | null
@@ -87,7 +90,7 @@ export type Database = {
           status?: "active" | "resolved"
           threshold?: number | null
           triggered_at?: string
-          type?: "low_stock" | "expiry"
+          type?: "low_stock" | "expiry" | "reorder_suggested"
         }
         Relationships: [
           {
@@ -248,24 +251,30 @@ export type Database = {
       }
       predictive_settings: {
         Row: {
-          holding_cost_rate: number
-          lead_time_days: number
-          ordering_cost: number
+          coverage_days: number
+          lead_time_days: number | null
           organization_id: string
+          safety_days_desirable: number
+          safety_days_essential: number
+          safety_days_vital: number
           updated_at: string
         }
         Insert: {
-          holding_cost_rate: number
-          lead_time_days?: number
-          ordering_cost: number
+          coverage_days?: number
+          lead_time_days?: number | null
           organization_id: string
+          safety_days_desirable?: number
+          safety_days_essential?: number
+          safety_days_vital?: number
           updated_at?: string
         }
         Update: {
-          holding_cost_rate?: number
-          lead_time_days?: number
-          ordering_cost?: number
+          coverage_days?: number
+          lead_time_days?: number | null
           organization_id?: string
+          safety_days_desirable?: number
+          safety_days_essential?: number
+          safety_days_vital?: number
           updated_at?: string
         }
         Relationships: [
@@ -283,6 +292,7 @@ export type Database = {
           active: boolean
           category: string | null
           created_at: string
+          criticality: string | null
           description: string | null
           ean: string | null
           id: string
@@ -295,6 +305,7 @@ export type Database = {
           active?: boolean
           category?: string | null
           created_at?: string
+          criticality?: string | null
           description?: string | null
           ean?: string | null
           id?: string
@@ -307,6 +318,7 @@ export type Database = {
           active?: boolean
           category?: string | null
           created_at?: string
+          criticality?: string | null
           description?: string | null
           ean?: string | null
           id?: string
@@ -817,6 +829,10 @@ export type Database = {
       }
       sweep_alerts: {
         Args: never
+        Returns: undefined
+      }
+      sync_reorder_alerts: {
+        Args: { p_items: Json }
         Returns: undefined
       }
     }

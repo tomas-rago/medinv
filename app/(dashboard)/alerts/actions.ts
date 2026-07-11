@@ -55,6 +55,7 @@ export async function saveAlertSettings(
   const raw = {
     low_stock_enabled: formData.get("low_stock_enabled") === "on",
     expiry_enabled: formData.get("expiry_enabled") === "on",
+    reorder_enabled: formData.get("reorder_enabled") === "on",
     expiry_days_ahead: formData.get("expiry_days_ahead"),
   };
 
@@ -84,6 +85,7 @@ export async function saveAlertSettings(
     organization_id: organizationId,
     low_stock_enabled: result.data.low_stock_enabled,
     expiry_enabled: result.data.expiry_enabled,
+    reorder_enabled: result.data.reorder_enabled,
     expiry_days_ahead: result.data.expiry_days_ahead,
     updated_at: new Date().toISOString(),
   });

@@ -41,8 +41,12 @@ function linearRegression(series: number[]): { slope: number; intercept: number 
   return { slope, intercept: meanY - slope * meanX };
 }
 
-export class RegressionEoqModel implements PredictiveModel {
-  readonly id = "regression-eoq";
+// Reorder-point model: regression (or average) demand estimate, ROP =
+// demand x lead time + safety floor, and a coverage-days suggested order
+// quantity. No cost inputs — holding cost is effectively zero for small
+// health institutions, so EOQ was dropped in favor of this.
+export class RegressionRopModel implements PredictiveModel {
+  readonly id = "regression-rop";
 
   async predict(
     history: ProductHistory,
@@ -54,10 +58,10 @@ export class RegressionEoqModel implements PredictiveModel {
       method: "insufficient_data",
       dailyDemand: null,
       trendPerDay: null,
+      safetyStock: null,
       reorderPoint: null,
       daysUntilReorder: null,
-      eoq: null,
-      orderIntervalDays: null,
+      suggestedQuantity: null,
     };
 
     const points = history.consumption.filter((p) => p.quantity > 0);
@@ -88,31 +92,20 @@ export class RegressionEoqModel implements PredictiveModel {
       dailyDemand = total / span;
     }
 
-    const reorderPoint = Math.ceil(dailyDemand * inputs.leadTimeDays + history.minQuantity);
+    // Criticality buffer scales with demand; a manually raised per-product
+    // min_quantity still wins when it is the larger of the two.
+    const safetyStock = Math.max(history.minQuantity, dailyDemand * history.safetyStockDays);
+    const reorderPoint = Math.ceil(dailyDemand * inputs.leadTimeDays + safetyStock);
 
     let daysUntilReorder: number | null = null;
+    let suggestedQuantity: number | null = null;
     if (dailyDemand > 0) {
       daysUntilReorder = Math.max(
         0,
         Math.floor((history.currentStock - reorderPoint) / dailyDemand)
       );
-    }
-
-    let eoq: number | null = null;
-    let orderIntervalDays: number | null = null;
-    if (
-      dailyDemand > 0 &&
-      inputs.orderingCost !== null &&
-      inputs.orderingCost > 0 &&
-      inputs.holdingCostRate !== null &&
-      inputs.holdingCostRate > 0 &&
-      history.unitCost !== null &&
-      history.unitCost > 0
-    ) {
-      const annualDemand = dailyDemand * 365;
-      const holdingCostPerUnit = inputs.holdingCostRate * history.unitCost;
-      eoq = Math.ceil(Math.sqrt((2 * annualDemand * inputs.orderingCost) / holdingCostPerUnit));
-      orderIntervalDays = Math.max(1, Math.round(eoq / dailyDemand));
+      const target = dailyDemand * (inputs.leadTimeDays + inputs.coverageDays) + safetyStock;
+      suggestedQuantity = Math.max(0, Math.ceil(target - history.currentStock));
     }
 
     return {
@@ -120,10 +113,10 @@ export class RegressionEoqModel implements PredictiveModel {
       method,
       dailyDemand,
       trendPerDay,
+      safetyStock,
       reorderPoint,
       daysUntilReorder,
-      eoq,
-      orderIntervalDays,
+      suggestedQuantity,
     };
   }
 }

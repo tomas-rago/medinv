@@ -3,6 +3,7 @@ import { z } from "zod";
 export const AlertSettingsSchema = z.object({
   low_stock_enabled: z.boolean(),
   expiry_enabled: z.boolean(),
+  reorder_enabled: z.boolean(),
   expiry_days_ahead: z.coerce
     .number()
     .int("expiry_days_range")

@@ -10,6 +10,7 @@ const initialState: SaveAlertSettingsResult = { ok: false, errors: {} };
 export type AlertSettings = {
   low_stock_enabled: boolean;
   expiry_enabled: boolean;
+  reorder_enabled: boolean;
   expiry_days_ahead: number;
 };
 
@@ -92,6 +93,23 @@ export function AlertSettingsModal({ settings, onClose }: AlertSettingsModalProp
                 </span>
                 <span className="text-ink3" style={{ fontSize: 13 }}>
                   {t("settings_expiry_hint")}
+                </span>
+              </span>
+            </label>
+
+            <label className="flex items-center gap-3" style={{ cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                name="reorder_enabled"
+                defaultChecked={settings.reorder_enabled}
+                style={{ width: 16, height: 16, accentColor: "var(--c-primary)" }}
+              />
+              <span>
+                <span className="text-ink font-medium" style={{ display: "block", fontSize: 14 }}>
+                  {t("settings_reorder")}
+                </span>
+                <span className="text-ink3" style={{ fontSize: 13 }}>
+                  {t("settings_reorder_hint")}
                 </span>
               </span>
             </label>

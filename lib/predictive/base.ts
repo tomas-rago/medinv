@@ -18,17 +18,17 @@ export interface ProductHistory {
   currentStock: number;
   // Per-product safety floor (stock.min_quantity, same value alerts use).
   minQuantity: number;
-  // Average purchase price, null when the product was never bought.
-  unitCost: number | null;
+  // Days of demand held as criticality safety buffer (resolved by the data
+  // layer from products.criticality + org settings); 0 when unclassified.
+  safetyStockDays: number;
 }
 
+// Resolved per product by the data layer (lead time may come from the org
+// setting or from the product's average purchase delivery time).
 export interface PredictionInputs {
   leadTimeDays: number;
-  // Both null while the org has not configured predictive_settings;
-  // EOQ-derived outputs are null in that case.
-  orderingCost: number | null;
-  // Annual holding cost as a fraction of unit cost (0.25 = 25 %/year).
-  holdingCostRate: number | null;
+  // Days of consumption each order should cover beyond the lead time.
+  coverageDays: number;
 }
 
 export interface ProductPrediction {
@@ -38,13 +38,16 @@ export interface ProductPrediction {
   dailyDemand: number | null;
   // Regression slope (units/day per day); null for non-regression methods.
   trendPerDay: number | null;
+  // max(minQuantity, dailyDemand x safetyStockDays); null when no estimate.
+  safetyStock: number | null;
   // Stock level at which a new order should be placed.
   reorderPoint: number | null;
   // Days until stock reaches the reorder point; 0 = order now.
   daysUntilReorder: number | null;
-  // Economic order quantity and the reorder cycle it implies.
-  eoq: number | null;
-  orderIntervalDays: number | null;
+  // Coverage-target order size: what tops stock back up to
+  // demand x (lead time + coverage days) + minQuantity. Clamped at 0 when
+  // stock already exceeds the target; null when demand is unknown or zero.
+  suggestedQuantity: number | null;
 }
 
 export interface PredictiveModel {

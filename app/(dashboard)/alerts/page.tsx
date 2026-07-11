@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { canManageAlerts } from "@/lib/constants/roles";
+import { syncReorderAlerts } from "@/lib/predictive/alerts";
 import { AlertsPage } from "@/components/alerts/AlertsPage";
 
 const PAGE_SIZE = 20;
@@ -22,11 +23,12 @@ export default async function AlertsServerPage({
 
   const canManage = canManageAlerts(user.app_metadata?.role as string);
 
-  // Refresh expiry alerts (and clear disabled types) before reading.
+  // Refresh expiry + reorder alerts (and clear disabled types) before reading.
   await supabase.rpc("sweep_alerts");
+  await syncReorderAlerts(supabase);
 
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
-  const type = (sp.type ?? "").trim(); // "" (all) | "low_stock" | "expiry"
+  const type = (sp.type ?? "").trim(); // "" (all) | "low_stock" | "expiry" | "reorder_suggested"
   const status = (sp.status ?? "active").trim(); // "active" | "resolved" | "all"
 
   const from = (page - 1) * PAGE_SIZE;
@@ -41,7 +43,8 @@ export default async function AlertsServerPage({
     .order("triggered_at", { ascending: false })
     .range(from, to);
 
-  if (type === "low_stock" || type === "expiry") query = query.eq("type", type);
+  if (type === "low_stock" || type === "expiry" || type === "reorder_suggested")
+    query = query.eq("type", type);
   if (status === "active" || status === "resolved") query = query.eq("status", status);
 
   const { data, count } = await query;
@@ -61,11 +64,12 @@ export default async function AlertsServerPage({
 
   const { data: settingsRow } = await supabase
     .from("alert_settings")
-    .select("low_stock_enabled, expiry_enabled, expiry_days_ahead")
+    .select("low_stock_enabled, expiry_enabled, reorder_enabled, expiry_days_ahead")
     .maybeSingle();
   const settings = settingsRow ?? {
     low_stock_enabled: true,
     expiry_enabled: true,
+    reorder_enabled: true,
     expiry_days_ahead: 30,
   };
 

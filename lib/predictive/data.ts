@@ -1,57 +1,79 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
+import type { ProductCriticality } from "@/lib/constants/criticality";
 import { predictiveModel } from "./index";
+import { DEFAULT_LEAD_TIME_DAYS, fetchAutoLeadTimes } from "./lead-time";
 import type { ConsumptionPoint, ProductPrediction } from "./base";
 
-const DEFAULT_LEAD_TIME_DAYS = 7;
+// Fallbacks while the org has no predictive_settings row; values must match
+// the DB column defaults (migrations 20260707000001-2).
+const DEFAULT_COVERAGE_DAYS = 30;
+export const DEFAULT_SAFETY_DAYS: Record<ProductCriticality, number> = {
+  vital: 7,
+  essential: 3,
+  desirable: 0,
+};
 
 export type PredictiveSettingsRow = {
-  ordering_cost: number;
-  holding_cost_rate: number; // percent per year, as stored
-  lead_time_days: number;
+  // null = auto: per-product average delivery time from received purchases.
+  lead_time_days: number | null;
+  coverage_days: number;
+  safety_days_vital: number;
+  safety_days_essential: number;
+  safety_days_desirable: number;
 };
 
 export type PredictionRow = {
   product_id: string;
   product_name: string;
+  criticality: ProductCriticality | null;
   current_stock: number;
   min_quantity: number;
-  unit_cost: number | null;
+  // Effective value fed to the model, and whether it was derived from
+  // purchase history (vs. the org's explicit setting).
+  lead_time_days: number;
+  lead_time_auto: boolean;
   prediction: ProductPrediction;
 };
 
-// Assembles org-scoped inputs (RLS does the scoping — the caller's client
-// carries the user's JWT) and runs the active predictive model per product.
-// Shared seam for the page today and the dashboard/chatbot later.
-export async function getPredictions(supabase: SupabaseClient<Database>): Promise<{
-  rows: PredictionRow[];
-  settings: PredictiveSettingsRow | null;
-}> {
-  const [{ data: settings }, { data: stockRows }, { data: movements }, { data: priceRows }] =
-    await Promise.all([
-      supabase
-        .from("predictive_settings")
-        .select("ordering_cost, holding_cost_rate, lead_time_days")
-        .maybeSingle(),
-      supabase.from("stock").select("product_id, quantity, min_quantity, products(name)"),
-      supabase
-        .from("stock_movements")
-        .select("id, product_id, type, quantity, created_at, corrects_movement_id")
-        .in("type", ["entry", "exit"])
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("purchase_items")
-        .select("product_id, unit_price, purchases!inner(status)")
-        .not("unit_price", "is", null)
-        .neq("purchases.status", "cancelled"),
-    ]);
+export const PREDICTIVE_SETTINGS_COLUMNS =
+  "lead_time_days, coverage_days, safety_days_vital, safety_days_essential, safety_days_desirable";
 
-  // Demand = exit movements, netting rectification pairs: a compensating
-  // movement (corrects_movement_id set) adjusts the exit it corrects in
-  // place, attributed to the original date. Compensators of entries fall
-  // out naturally — only exits seed the map.
+export function safetyDaysFor(
+  settings: PredictiveSettingsRow | null,
+  criticality: ProductCriticality | null
+): number {
+  if (!criticality) return 0;
+  if (!settings) return DEFAULT_SAFETY_DAYS[criticality];
+  switch (criticality) {
+    case "vital":
+      return settings.safety_days_vital;
+    case "essential":
+      return settings.safety_days_essential;
+    case "desirable":
+      return settings.safety_days_desirable;
+  }
+}
+
+type MovementRow = {
+  id: string;
+  product_id: string;
+  type: string;
+  quantity: number;
+  created_at: string;
+  corrects_movement_id: string | null;
+};
+
+// Demand = exit movements, netting rectification pairs: a compensating
+// movement (corrects_movement_id set) adjusts the exit it corrects in
+// place, attributed to the original date. Compensators of entries fall
+// out naturally — only exits seed the map. Returns per-product daily
+// consumption series, ascending by date.
+export function buildConsumptionSeries(
+  movements: MovementRow[]
+): Map<string, ConsumptionPoint[]> {
   const exitEvents = new Map<string, { productId: string; date: string; quantity: number }>();
-  for (const m of movements ?? []) {
+  for (const m of movements) {
     if (m.type === "exit" && m.corrects_movement_id === null) {
       exitEvents.set(m.id, {
         productId: m.product_id,
@@ -60,14 +82,13 @@ export async function getPredictions(supabase: SupabaseClient<Database>): Promis
       });
     }
   }
-  for (const m of movements ?? []) {
+  for (const m of movements) {
     if (m.corrects_movement_id === null) continue;
     const original = exitEvents.get(m.corrects_movement_id);
     if (!original) continue;
     original.quantity += m.type === "entry" ? -m.quantity : m.quantity;
   }
 
-  // Per-product daily consumption series.
   const byProduct = new Map<string, Map<string, number>>();
   for (const e of exitEvents.values()) {
     if (e.quantity <= 0) continue;
@@ -76,50 +97,74 @@ export async function getPredictions(supabase: SupabaseClient<Database>): Promis
     days.set(e.date, (days.get(e.date) ?? 0) + e.quantity);
   }
 
-  // Average purchase price per product (accepted EOQ input).
-  const priceAgg = new Map<string, { total: number; n: number }>();
-  for (const p of priceRows ?? []) {
-    if (p.unit_price === null) continue;
-    const agg = priceAgg.get(p.product_id) ?? { total: 0, n: 0 };
-    agg.total += p.unit_price;
-    agg.n += 1;
-    priceAgg.set(p.product_id, agg);
+  const series = new Map<string, ConsumptionPoint[]>();
+  for (const [productId, days] of byProduct) {
+    series.set(
+      productId,
+      [...days]
+        .map(([date, quantity]) => ({ date, quantity }))
+        .sort((a, b) => a.date.localeCompare(b.date))
+    );
   }
+  return series;
+}
 
-  const inputs = {
-    leadTimeDays: settings?.lead_time_days ?? DEFAULT_LEAD_TIME_DAYS,
-    orderingCost: settings?.ordering_cost ?? null,
-    holdingCostRate: settings ? settings.holding_cost_rate / 100 : null,
-  };
+// Assembles org-scoped inputs (RLS does the scoping — the caller's client
+// carries the user's JWT) and runs the active predictive model per product.
+// Shared seam for the page today and the dashboard/chatbot later.
+export async function getPredictions(supabase: SupabaseClient<Database>): Promise<{
+  rows: PredictionRow[];
+  settings: PredictiveSettingsRow | null;
+}> {
+  const [{ data: settings }, { data: stockRows }, { data: movements }] = await Promise.all([
+    supabase.from("predictive_settings").select(PREDICTIVE_SETTINGS_COLUMNS).maybeSingle(),
+    supabase
+      .from("stock")
+      .select("product_id, quantity, min_quantity, products(name, criticality)"),
+    supabase
+      .from("stock_movements")
+      .select("id, product_id, type, quantity, created_at, corrects_movement_id")
+      .in("type", ["entry", "exit"])
+      .order("created_at", { ascending: true }),
+  ]);
+
+  const consumptionByProduct = buildConsumptionSeries(movements ?? []);
+
+  // Only pay the purchases query when lead time is on auto (explicit null
+  // or no settings row at all).
+  const leadTimeAuto = settings?.lead_time_days == null;
+  const autoLeadTimes = leadTimeAuto ? await fetchAutoLeadTimes(supabase) : new Map<string, number>();
+
+  const coverageDays = settings?.coverage_days ?? DEFAULT_COVERAGE_DAYS;
   const asOf = new Date();
 
   const rows = await Promise.all(
     (stockRows ?? []).map(async (s): Promise<PredictionRow> => {
-      const days = byProduct.get(s.product_id);
-      const consumption: ConsumptionPoint[] = [...(days ?? new Map<string, number>())]
-        .map(([date, quantity]) => ({ date, quantity }))
-        .sort((a, b) => a.date.localeCompare(b.date));
-      const agg = priceAgg.get(s.product_id);
-      const unitCost = agg ? agg.total / agg.n : null;
+      const criticality = (s.products?.criticality ?? null) as ProductCriticality | null;
+      const leadTimeDays = leadTimeAuto
+        ? autoLeadTimes.get(s.product_id) ?? DEFAULT_LEAD_TIME_DAYS
+        : settings!.lead_time_days!;
 
       const prediction = await predictiveModel.predict(
         {
           productId: s.product_id,
-          consumption,
+          consumption: consumptionByProduct.get(s.product_id) ?? [],
           currentStock: s.quantity,
           minQuantity: s.min_quantity,
-          unitCost,
+          safetyStockDays: safetyDaysFor(settings ?? null, criticality),
         },
-        inputs,
+        { leadTimeDays, coverageDays },
         asOf
       );
 
       return {
         product_id: s.product_id,
         product_name: s.products?.name ?? "",
+        criticality,
         current_stock: s.quantity,
         min_quantity: s.min_quantity,
-        unit_cost: unitCost,
+        lead_time_days: leadTimeDays,
+        lead_time_auto: leadTimeAuto,
         prediction,
       };
     })
