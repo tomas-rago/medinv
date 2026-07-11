@@ -7,9 +7,11 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 type PredictiveSettingsFieldErrors = {
-  ordering_cost?: string[];
-  holding_cost_rate?: string[];
   lead_time_days?: string[];
+  coverage_days?: string[];
+  safety_days_vital?: string[];
+  safety_days_essential?: string[];
+  safety_days_desirable?: string[];
   _form?: string[];
 };
 
@@ -23,9 +25,11 @@ export async function savePredictiveSettings(
   formData: FormData
 ): Promise<SavePredictiveSettingsResult> {
   const raw = {
-    ordering_cost: formData.get("ordering_cost"),
-    holding_cost_rate: formData.get("holding_cost_rate"),
     lead_time_days: formData.get("lead_time_days"),
+    coverage_days: formData.get("coverage_days"),
+    safety_days_vital: formData.get("safety_days_vital"),
+    safety_days_essential: formData.get("safety_days_essential"),
+    safety_days_desirable: formData.get("safety_days_desirable"),
   };
 
   const result = PredictiveSettingsSchema.safeParse(raw);
@@ -52,9 +56,11 @@ export async function savePredictiveSettings(
 
   const { error } = await supabase.from("predictive_settings").upsert({
     organization_id: organizationId,
-    ordering_cost: result.data.ordering_cost,
-    holding_cost_rate: result.data.holding_cost_rate,
     lead_time_days: result.data.lead_time_days,
+    coverage_days: result.data.coverage_days,
+    safety_days_vital: result.data.safety_days_vital,
+    safety_days_essential: result.data.safety_days_essential,
+    safety_days_desirable: result.data.safety_days_desirable,
     updated_at: new Date().toISOString(),
   });
 

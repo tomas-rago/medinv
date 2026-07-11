@@ -1,12 +1,12 @@
-// Pure math tests for the regression/EOQ model — no credentials needed.
+// Pure math tests for the regression/ROP model — no credentials needed.
 //
 //   npx vitest run tests/predictive
 //
 import { describe, it, expect } from "vitest";
-import { RegressionEoqModel } from "@/lib/predictive/regression-eoq";
+import { RegressionRopModel } from "@/lib/predictive/regression-rop";
 import type { PredictionInputs, ProductHistory } from "@/lib/predictive/base";
 
-const model = new RegressionEoqModel();
+const model = new RegressionRopModel();
 
 // Fixed reference day; consumption dates are built relative to it.
 const AS_OF = new Date("2026-07-06T12:00:00Z");
@@ -23,28 +23,27 @@ function history(overrides: Partial<ProductHistory>): ProductHistory {
     consumption: [],
     currentStock: 100,
     minQuantity: 0,
-    unitCost: null,
+    safetyStockDays: 0,
     ...overrides,
   };
 }
 
-const noCosts: PredictionInputs = {
+const baseInputs: PredictionInputs = {
   leadTimeDays: 7,
-  orderingCost: null,
-  holdingCostRate: null,
+  coverageDays: 30,
 };
 
-describe("RegressionEoqModel", () => {
+describe("RegressionRopModel", () => {
   it("returns insufficient_data below the minimum consumption days", async () => {
     const p = await model.predict(
       history({ consumption: [{ date: daysAgo(5), quantity: 4 }, { date: daysAgo(2), quantity: 3 }] }),
-      noCosts,
+      baseInputs,
       AS_OF
     );
     expect(p.method).toBe("insufficient_data");
     expect(p.dailyDemand).toBeNull();
     expect(p.reorderPoint).toBeNull();
-    expect(p.eoq).toBeNull();
+    expect(p.suggestedQuantity).toBeNull();
   });
 
   it("ignores fully rectified (zero-quantity) days", async () => {
@@ -56,7 +55,7 @@ describe("RegressionEoqModel", () => {
           { date: daysAgo(2), quantity: 3 },
         ],
       }),
-      noCosts,
+      baseInputs,
       AS_OF
     );
     expect(p.method).toBe("insufficient_data");
@@ -72,7 +71,7 @@ describe("RegressionEoqModel", () => {
           { date: daysAgo(1), quantity: 2 },
         ],
       }),
-      noCosts,
+      baseInputs,
       AS_OF
     );
     expect(p.method).toBe("average");
@@ -86,7 +85,7 @@ describe("RegressionEoqModel", () => {
       date: daysAgo(19 - i),
       quantity: 2,
     }));
-    const p = await model.predict(history({ consumption }), noCosts, AS_OF);
+    const p = await model.predict(history({ consumption }), baseInputs, AS_OF);
     expect(p.method).toBe("regression");
     expect(p.dailyDemand).toBeCloseTo(2, 10);
     expect(p.trendPerDay).toBeCloseTo(0, 10);
@@ -98,7 +97,7 @@ describe("RegressionEoqModel", () => {
       date: daysAgo(13 - i),
       quantity: i + 1,
     }));
-    const p = await model.predict(history({ consumption }), noCosts, AS_OF);
+    const p = await model.predict(history({ consumption }), baseInputs, AS_OF);
     expect(p.method).toBe("regression");
     expect(p.trendPerDay).toBeCloseTo(1, 10);
     expect(p.dailyDemand).toBeCloseTo(14, 10);
@@ -110,15 +109,15 @@ describe("RegressionEoqModel", () => {
       date: daysAgo(40 - i),
       quantity: 10,
     }));
-    const p = await model.predict(history({ consumption }), noCosts, AS_OF);
+    const p = await model.predict(history({ consumption }), baseInputs, AS_OF);
     expect(p.method).toBe("regression");
     expect(p.dailyDemand).toBe(0);
-    // No demand → no stockout horizon, no EOQ.
+    // No demand → no stockout horizon, no suggested quantity.
     expect(p.daysUntilReorder).toBeNull();
-    expect(p.eoq).toBeNull();
+    expect(p.suggestedQuantity).toBeNull();
   });
 
-  it("computes reorder point, days-until-reorder and the EOQ formula", async () => {
+  it("computes reorder point, days-until-reorder and the coverage-target quantity", async () => {
     // 30 units on each of 3 days, first 8 days ago → 90 / 9 = 10/day.
     const h = history({
       consumption: [
@@ -128,12 +127,10 @@ describe("RegressionEoqModel", () => {
       ],
       currentStock: 130,
       minQuantity: 10,
-      unitCost: 40,
     });
     const inputs: PredictionInputs = {
       leadTimeDays: 5,
-      orderingCost: 100,
-      holdingCostRate: 0.25,
+      coverageDays: 30,
     };
     const p = await model.predict(h, inputs, AS_OF);
     expect(p.method).toBe("average");
@@ -142,10 +139,8 @@ describe("RegressionEoqModel", () => {
     expect(p.reorderPoint).toBe(60);
     // floor((130 - 60) / 10)
     expect(p.daysUntilReorder).toBe(7);
-    // ceil(sqrt(2 * 3650 * 100 / (0.25 * 40))) = ceil(270.18…)
-    expect(p.eoq).toBe(271);
-    // round(271 / 10)
-    expect(p.orderIntervalDays).toBe(27);
+    // ceil(10 * (5 + 30) + 10 - 130)
+    expect(p.suggestedQuantity).toBe(230);
   });
 
   it("flags order-now when stock is already at the reorder point", async () => {
@@ -158,27 +153,59 @@ describe("RegressionEoqModel", () => {
       currentStock: 40, // below reorder point of 60
       minQuantity: 10,
     });
-    const p = await model.predict(h, { ...noCosts, leadTimeDays: 5 }, AS_OF);
+    const p = await model.predict(h, { ...baseInputs, leadTimeDays: 5 }, AS_OF);
     expect(p.daysUntilReorder).toBe(0);
   });
 
-  it("leaves EOQ null without cost configuration or unit cost", async () => {
-    const consumption = [
-      { date: daysAgo(8), quantity: 30 },
-      { date: daysAgo(7), quantity: 30 },
-      { date: daysAgo(6), quantity: 30 },
-    ];
-    // No org cost settings.
-    const p1 = await model.predict(history({ consumption, unitCost: 40 }), noCosts, AS_OF);
-    expect(p1.eoq).toBeNull();
-    expect(p1.reorderPoint).not.toBeNull(); // reorder point works regardless
+  it("clamps the suggested quantity at zero when stock exceeds the coverage target", async () => {
+    const h = history({
+      consumption: [
+        { date: daysAgo(8), quantity: 30 },
+        { date: daysAgo(7), quantity: 30 },
+        { date: daysAgo(6), quantity: 30 },
+      ],
+      currentStock: 1000, // far above the 360-unit coverage target
+      minQuantity: 10,
+    });
+    const p = await model.predict(h, { leadTimeDays: 5, coverageDays: 30 }, AS_OF);
+    expect(p.suggestedQuantity).toBe(0);
+    expect(p.reorderPoint).toBe(60); // reorder point unaffected by coverage
+  });
 
-    // Costs configured but the product has no purchase price on record.
-    const p2 = await model.predict(
-      history({ consumption, unitCost: null }),
-      { leadTimeDays: 7, orderingCost: 100, holdingCostRate: 0.25 },
-      AS_OF
-    );
-    expect(p2.eoq).toBeNull();
+  it("criticality safety days scale the safety stock with demand", async () => {
+    // 10/day demand; 3 safety days beat the 10-unit floor: safety stock 30.
+    const h = history({
+      consumption: [
+        { date: daysAgo(8), quantity: 30 },
+        { date: daysAgo(7), quantity: 30 },
+        { date: daysAgo(6), quantity: 30 },
+      ],
+      currentStock: 130,
+      minQuantity: 10,
+      safetyStockDays: 3,
+    });
+    const p = await model.predict(h, { leadTimeDays: 5, coverageDays: 30 }, AS_OF);
+    expect(p.safetyStock).toBe(30);
+    // ceil(10 * 5 + 30)
+    expect(p.reorderPoint).toBe(80);
+    // ceil(10 * (5 + 30) + 30 - 130)
+    expect(p.suggestedQuantity).toBe(250);
+  });
+
+  it("a larger manual min_quantity still wins over the criticality buffer", async () => {
+    const h = history({
+      consumption: [
+        { date: daysAgo(8), quantity: 30 },
+        { date: daysAgo(7), quantity: 30 },
+        { date: daysAgo(6), quantity: 30 },
+      ],
+      currentStock: 500,
+      minQuantity: 100, // > 10/day x 3 days
+      safetyStockDays: 3,
+    });
+    const p = await model.predict(h, { leadTimeDays: 5, coverageDays: 30 }, AS_OF);
+    expect(p.safetyStock).toBe(100);
+    // ceil(10 * 5 + 100)
+    expect(p.reorderPoint).toBe(150);
   });
 });

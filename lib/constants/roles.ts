@@ -18,8 +18,8 @@ export function canManageAlerts(role: string | null | undefined): boolean {
   return role === "chief_doctor";
 }
 
-// Predictive/EOQ configuration (ordering cost, holding rate, lead time) is
-// the org-owner's call. Must stay in sync with the RLS policy on
+// Predictive/ROP configuration (lead time, coverage, safety days) is the
+// org-owner's call. Must stay in sync with the RLS policy on
 // predictive_settings.
 export function canManagePredictive(role: string | null | undefined): boolean {
   return role === "chief_doctor";

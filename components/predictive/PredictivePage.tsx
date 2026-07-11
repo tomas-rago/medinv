@@ -1,9 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { PredictionRow, PredictiveSettingsRow } from "@/lib/predictive/data";
+import type { ProductCriticality } from "@/lib/constants/criticality";
 import { PredictiveSettingsModal } from "./PredictiveSettingsModal";
+
+const CRITICALITY_BADGE: Record<ProductCriticality, string> = {
+  vital: "mi-badge--danger",
+  essential: "mi-badge--amber",
+  desirable: "mi-badge--gray",
+};
 
 interface PredictivePageProps {
   rows: PredictionRow[];
@@ -17,6 +25,7 @@ function fmtQty(n: number) {
 
 export function PredictivePage({ rows, settings, canManage }: PredictivePageProps) {
   const t = useTranslations("Predictive");
+  const tCrit = useTranslations("Criticality");
   const [showSettings, setShowSettings] = useState(false);
 
   return (
@@ -49,22 +58,6 @@ export function PredictivePage({ rows, settings, canManage }: PredictivePageProp
         )}
       </div>
 
-      {/* EOQ needs the org-level cost inputs; until they exist the quantity
-          column stays empty, so surface why. */}
-      {!settings && (
-        <div
-          className="mi-card p-4 flex items-center gap-3"
-          style={{ background: "color-mix(in srgb,var(--c-warning, #b45309) 8%,transparent)" }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink2" style={{ flexShrink: 0 }}>
-            <path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
-          </svg>
-          <span className="text-ink2" style={{ fontSize: 14 }}>
-            {canManage ? t("configure_costs_banner_manager") : t("configure_costs_banner")}
-          </span>
-        </div>
-      )}
-
       {/* Table */}
       <div className="mi-card mi-shadow overflow-hidden">
         <div className="overflow-x-auto">
@@ -76,7 +69,7 @@ export function PredictivePage({ rows, settings, canManage }: PredictivePageProp
                 <th>{t("table_demand")}</th>
                 <th>{t("table_reorder_point")}</th>
                 <th>{t("table_suggestion")}</th>
-                <th>{t("table_eoq")}</th>
+                <th>{t("table_suggested_qty")}</th>
               </tr>
             </thead>
             <tbody>
@@ -93,7 +86,19 @@ export function PredictivePage({ rows, settings, canManage }: PredictivePageProp
                   return (
                     <tr key={r.product_id}>
                       <td>
-                        <span className="font-semibold text-ink">{r.product_name}</span>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/predictive/${r.product_id}`}
+                            className="font-semibold text-ink hover:underline"
+                          >
+                            {r.product_name}
+                          </Link>
+                          {r.criticality && (
+                            <span className={`mi-badge ${CRITICALITY_BADGE[r.criticality]}`}>
+                              {tCrit(r.criticality)}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="text-ink2">{fmtQty(r.current_stock)}</td>
                       <td>
@@ -136,21 +141,18 @@ export function PredictivePage({ rows, settings, canManage }: PredictivePageProp
                           <span className="text-ink3">—</span>
                         )}
                       </td>
+                      {/* Coverage-target quantity, shown only once the
+                          reorder point is reached — earlier it would invite
+                          over-ordering. */}
                       <td>
-                        {p.eoq !== null ? (
-                          <div>
-                            <span className="text-ink font-medium">{t("eoq_units", { quantity: fmtQty(p.eoq) })}</span>
-                            {p.orderIntervalDays !== null && (
-                              <div className="text-ink3" style={{ fontSize: 12 }}>
-                                {t("eoq_interval", { days: p.orderIntervalDays })}
-                              </div>
-                            )}
-                          </div>
+                        {p.daysUntilReorder === 0 &&
+                        p.suggestedQuantity !== null &&
+                        p.suggestedQuantity > 0 ? (
+                          <span className="text-ink font-medium">
+                            {t("suggested_units", { quantity: fmtQty(p.suggestedQuantity) })}
+                          </span>
                         ) : (
-                          <span
-                            className="text-ink3"
-                            title={!settings ? t("eoq_needs_settings") : t("eoq_needs_cost")}
-                          >
+                          <span className="text-ink3" title={t("suggested_qty_hint")}>
                             —
                           </span>
                         )}

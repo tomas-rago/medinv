@@ -6,6 +6,7 @@ import { createProduct } from "@/app/(dashboard)/products/actions";
 import type { CreateProductResult, ProductRow } from "@/app/(dashboard)/products/actions";
 import dynamic from "next/dynamic";
 import { PRODUCT_CATEGORIES } from "@/lib/constants/categories";
+import { PRODUCT_CRITICALITIES } from "@/lib/constants/criticality";
 
 // Loaded on demand so the heavy @zxing barcode lib never blocks this modal
 // (or the page that opens it) — important for older mobile browsers.
@@ -27,6 +28,7 @@ interface ProductModalProps {
 export function ProductModal({ onClose, onCreated, initialEan }: ProductModalProps) {
   const t = useTranslations("Products");
   const tCat = useTranslations("Categories");
+  const tCrit = useTranslations("Criticality");
   const tUnit = useTranslations("Units");
   const tVal = useTranslations("Validation");
   const tErr = useTranslations("Errors");
@@ -92,6 +94,19 @@ export function ProductModal({ onClose, onCreated, initialEan }: ProductModalPro
                   <option key={c} value={c}>{tCat(c)}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="mi-field">
+              <label htmlFor="prod-criticality" className="mi-label">{t("field_criticality")}</label>
+              <select id="prod-criticality" name="criticality" className="mi-input" defaultValue="">
+                <option value="">{t("criticality_none")}</option>
+                {PRODUCT_CRITICALITIES.map((c) => (
+                  <option key={c} value={c}>{tCrit(c)}</option>
+                ))}
+              </select>
+              <p className="text-ink3 mt-1" style={{ fontSize: 12 }}>
+                {t("field_criticality_hint")}
+              </p>
             </div>
 
             <div className="mi-field">

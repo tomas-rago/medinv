@@ -34,7 +34,7 @@ export default async function ProductsServerPage({
 
   let query = supabase
     .from("products")
-    .select("id, name, ean, presentation, category, unit, description, active, created_at", { count: "exact" })
+    .select("id, name, ean, presentation, category, criticality, unit, description, active, created_at", { count: "exact" })
     .order("name")
     .range(from, to);
 

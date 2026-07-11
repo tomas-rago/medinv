@@ -11,7 +11,7 @@ import type { ThresholdRow } from "./ThresholdsModal";
 
 type AlertRow = {
   id: string;
-  type: "low_stock" | "expiry";
+  type: "low_stock" | "expiry" | "reorder_suggested";
   status: "active" | "resolved";
   quantity: number | null;
   threshold: number | null;
@@ -147,6 +147,7 @@ export function AlertsPage({
             <option value="">{t("all_types")}</option>
             <option value="low_stock">{t("type_low_stock")}</option>
             <option value="expiry">{t("type_expiry")}</option>
+            <option value="reorder_suggested">{t("type_reorder")}</option>
           </select>
           <select
             className="mi-input"
@@ -209,6 +210,8 @@ export function AlertsPage({
                       <td>
                         {a.type === "low_stock" ? (
                           <span className="mi-badge mi-badge--amber">{t("type_low_stock")}</span>
+                        ) : a.type === "reorder_suggested" ? (
+                          <span className="mi-badge mi-badge--blue">{t("type_reorder")}</span>
                         ) : (
                           <span className={`mi-badge ${expired ? "mi-badge--danger" : "mi-badge--blue"}`}>
                             {expired ? t("type_expired") : t("type_expiry")}
@@ -218,10 +221,12 @@ export function AlertsPage({
                       <td className="text-ink2" style={{ fontSize: 13 }}>
                         {a.type === "low_stock"
                           ? t("detail_low_stock", { quantity: a.quantity ?? 0, threshold: a.threshold ?? 0 })
-                          : t("detail_expiry", {
-                              date: a.expiry_date ? fmtDate(a.expiry_date) : "—",
-                              quantity: a.quantity ?? 0,
-                            })}
+                          : a.type === "reorder_suggested"
+                            ? t("detail_reorder", { quantity: a.quantity ?? 0, threshold: a.threshold ?? 0 })
+                            : t("detail_expiry", {
+                                date: a.expiry_date ? fmtDate(a.expiry_date) : "—",
+                                quantity: a.quantity ?? 0,
+                              })}
                       </td>
                       <td className="text-ink3" style={{ fontSize: 13 }}>{fmtDate(a.triggered_at)}</td>
                       <td>

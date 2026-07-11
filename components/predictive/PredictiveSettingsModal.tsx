@@ -15,6 +15,7 @@ interface PredictiveSettingsModalProps {
 
 export function PredictiveSettingsModal({ settings, onClose }: PredictiveSettingsModalProps) {
   const t = useTranslations("Predictive");
+  const tCrit = useTranslations("Criticality");
   const tVal = useTranslations("Validation");
   const tErr = useTranslations("Errors");
 
@@ -58,57 +59,6 @@ export function PredictiveSettingsModal({ settings, onClose }: PredictiveSetting
           {/* Body */}
           <div className="p-5" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
-              <label className="mi-label" htmlFor="ordering_cost">
-                {t("settings_ordering_cost")}
-              </label>
-              <input
-                id="ordering_cost"
-                name="ordering_cost"
-                type="number"
-                min={0.01}
-                step="0.01"
-                defaultValue={settings?.ordering_cost}
-                className="mi-input"
-                style={{ maxWidth: 180 }}
-              />
-              <p className="text-ink3 mt-1" style={{ fontSize: 12 }}>
-                {t("settings_ordering_cost_hint")}
-              </p>
-              {state.errors.ordering_cost && (
-                <p className="mi-field-error mt-1">
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {tVal(state.errors.ordering_cost[0] as any)}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="mi-label" htmlFor="holding_cost_rate">
-                {t("settings_holding_rate")}
-              </label>
-              <input
-                id="holding_cost_rate"
-                name="holding_cost_rate"
-                type="number"
-                min={0.1}
-                max={100}
-                step="0.1"
-                defaultValue={settings?.holding_cost_rate}
-                className="mi-input"
-                style={{ maxWidth: 140 }}
-              />
-              <p className="text-ink3 mt-1" style={{ fontSize: 12 }}>
-                {t("settings_holding_rate_hint")}
-              </p>
-              {state.errors.holding_cost_rate && (
-                <p className="mi-field-error mt-1">
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {tVal(state.errors.holding_cost_rate[0] as any)}
-                </p>
-              )}
-            </div>
-
-            <div>
               <label className="mi-label" htmlFor="lead_time_days">
                 {t("settings_lead_time")}
               </label>
@@ -118,7 +68,8 @@ export function PredictiveSettingsModal({ settings, onClose }: PredictiveSetting
                 type="number"
                 min={1}
                 max={365}
-                defaultValue={settings?.lead_time_days ?? 7}
+                defaultValue={settings?.lead_time_days ?? ""}
+                placeholder={t("settings_lead_time_auto_placeholder")}
                 className="mi-input"
                 style={{ maxWidth: 140 }}
               />
@@ -131,6 +82,69 @@ export function PredictiveSettingsModal({ settings, onClose }: PredictiveSetting
                   {tVal(state.errors.lead_time_days[0] as any)}
                 </p>
               )}
+            </div>
+
+            <div>
+              <label className="mi-label" htmlFor="coverage_days">
+                {t("settings_coverage_days")}
+              </label>
+              <input
+                id="coverage_days"
+                name="coverage_days"
+                type="number"
+                min={1}
+                max={365}
+                defaultValue={settings?.coverage_days ?? 30}
+                className="mi-input"
+                style={{ maxWidth: 140 }}
+              />
+              <p className="text-ink3 mt-1" style={{ fontSize: 12 }}>
+                {t("settings_coverage_days_hint")}
+              </p>
+              {state.errors.coverage_days && (
+                <p className="mi-field-error mt-1">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {tVal(state.errors.coverage_days[0] as any)}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <span className="mi-label">{t("settings_safety_title")}</span>
+              <p className="text-ink3 mb-2" style={{ fontSize: 12 }}>
+                {t("settings_safety_hint")}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {(
+                  [
+                    ["safety_days_vital", "vital", 7],
+                    ["safety_days_essential", "essential", 3],
+                    ["safety_days_desirable", "desirable", 0],
+                  ] as const
+                ).map(([field, level, fallback]) => (
+                  <div key={field}>
+                    <label className="text-ink2" htmlFor={field} style={{ fontSize: 13, display: "block", marginBottom: 4 }}>
+                      {tCrit(level)}
+                    </label>
+                    <input
+                      id={field}
+                      name={field}
+                      type="number"
+                      min={0}
+                      max={365}
+                      defaultValue={settings?.[field] ?? fallback}
+                      className="mi-input"
+                      style={{ maxWidth: 90 }}
+                    />
+                    {state.errors[field] && (
+                      <p className="mi-field-error mt-1">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {tVal(state.errors[field][0] as any)}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {state.errors._form && (
