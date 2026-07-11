@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { canManageAlerts } from "@/lib/constants/roles";
+import { hasAiAccess } from "@/lib/ai/access";
 import { syncReorderAlerts } from "@/lib/predictive/alerts";
 import { AlertsPage } from "@/components/alerts/AlertsPage";
 
@@ -22,6 +23,9 @@ export default async function AlertsServerPage({
   if (!user) redirect("/login");
 
   const canManage = canManageAlerts(user.app_metadata?.role as string);
+
+  const orgId = user.app_metadata?.organization_id as string | undefined;
+  const aiExplain = orgId ? await hasAiAccess(supabase, orgId) : false;
 
   // Refresh expiry + reorder alerts (and clear disabled types) before reading.
   await supabase.rpc("sweep_alerts");
@@ -100,6 +104,7 @@ export default async function AlertsServerPage({
       settings={settings}
       thresholds={thresholds}
       canManage={canManage}
+      aiExplain={aiExplain}
     />
   );
 }

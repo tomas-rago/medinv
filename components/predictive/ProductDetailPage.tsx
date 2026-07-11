@@ -5,9 +5,11 @@ import { useTranslations } from "next-intl";
 import type { ProductDetail } from "@/lib/predictive/detail";
 import type { ProductCriticality } from "@/lib/constants/criticality";
 import { ConsumptionChart } from "./ConsumptionChart";
+import { ExplainButton } from "@/components/asistencia-ia/ExplainButton";
 
 interface ProductDetailPageProps {
   detail: ProductDetail;
+  aiExplain: boolean;
 }
 
 function fmtQty(n: number) {
@@ -20,7 +22,7 @@ const CRITICALITY_BADGE: Record<ProductCriticality, string> = {
   desirable: "mi-badge--gray",
 };
 
-export function ProductDetailPage({ detail }: ProductDetailPageProps) {
+export function ProductDetailPage({ detail, aiExplain }: ProductDetailPageProps) {
   const t = useTranslations("Predictive");
   const tCrit = useTranslations("Criticality");
 
@@ -104,6 +106,9 @@ export function ProductDetailPage({ detail }: ProductDetailPageProps) {
             )}
           </div>
         </div>
+        {aiExplain && (
+          <ExplainButton screen="predictive_detail" productId={row.product_id} />
+        )}
       </div>
 
       {/* Stat tiles */}

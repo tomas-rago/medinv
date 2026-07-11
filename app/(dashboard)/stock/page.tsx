@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { canWriteInventory } from "@/lib/constants/roles";
+import { hasAiAccess } from "@/lib/ai/access";
 import { StockPage } from "@/components/stock/StockPage";
 
 const PAGE_SIZE = 20;
@@ -28,6 +29,9 @@ export default async function StockServerPage({
   if (!user) redirect("/login");
 
   const canWrite = canWriteInventory(user.app_metadata?.role as string);
+
+  const orgId = user.app_metadata?.organization_id as string | undefined;
+  const aiExplain = orgId ? await hasAiAccess(supabase, orgId) : false;
 
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
   const from = (page - 1) * PAGE_SIZE;
@@ -130,6 +134,7 @@ export default async function StockServerPage({
       canWrite={canWrite}
       rectifiedIds={rectifiedIds}
       existencias={existencias}
+      aiExplain={aiExplain}
     />
   );
 }

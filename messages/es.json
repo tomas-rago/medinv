@@ -347,6 +347,7 @@
     "ai_refusal": "El asistente no puede responder a esa consulta",
     "ai_response_truncated": "La respuesta se cortó por longitud; probá con una pregunta más acotada",
     "ai_tool_loop_limit": "La consulta resultó demasiado compleja; probá dividirla en preguntas más simples",
+    "ai_explain_failed": "No se pudo analizar la pantalla; probá de nuevo",
     "unexpected": "Error inesperado"
   },
   "Categories": {
@@ -781,7 +782,13 @@
     "tool_get_product_prediction_detail": "Analizando producto…",
     "assistant_thinking": "Pensando…",
     "usage_meter": "{used} / {limit} tokens usados este mes",
-    "disclaimer": "El asistente solo consulta datos y puede equivocarse; verificá antes de decidir."
+    "disclaimer": "El asistente solo consulta datos y puede equivocarse; verificá antes de decidir.",
+    "explain_button": "Analizar con IA",
+    "explain_title": "Análisis IA",
+    "explain_subtitle": "Resumen generado a partir de los datos de esta pantalla",
+    "explain_loading": "Analizando los datos de la pantalla…",
+    "explain_retry": "Volver a analizar",
+    "close": "Cerrar"
   },
   "Scanner": {
     "title": "Escanear código",
