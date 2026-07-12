@@ -91,6 +91,71 @@
     "user_fallback": "Usuario",
     "logout": "Cerrar sesión"
   },
+  "Home": {
+    "breadcrumb": "General",
+    "greeting": "¡Hola, {name}!",
+    "greeting_fallback": "¡Hola!",
+    "subheading": "¿Qué querés hacer hoy?",
+    "kpi": {
+      "alerts": "Alertas activas",
+      "reorder": "Para reponer pronto",
+      "purchases": "Compras pendientes"
+    },
+    "risk": {
+      "title": "Insumos que conviene reponer",
+      "subtitle": "Según el consumo reciente y el tiempo de entrega de tus compras.",
+      "col_product": "Insumo",
+      "col_stock": "Stock actual",
+      "col_when": "Cuándo pedir",
+      "col_qty": "Cantidad sugerida",
+      "order_now": "Pedir ahora",
+      "in_days": "En {days, plural, one {# día} other {# días}}",
+      "qty_units": "{quantity} u.",
+      "empty": "Todo en orden por ahora: ningún insumo necesita reposición en los próximos días.",
+      "view_all": "Ver análisis completo"
+    },
+    "shortcuts": {
+      "title": "Accesos rápidos",
+      "stock": {
+        "title": "Inventario",
+        "desc_write": "Consultá el stock y registrá entradas y salidas.",
+        "desc_read": "Mirá cuánto stock queda de cada insumo."
+      },
+      "products": {
+        "title": "Insumos",
+        "desc": "El catálogo de insumos de tu institución."
+      },
+      "alerts": {
+        "title": "Alertas",
+        "desc": "Avisos de stock bajo y vencimientos próximos."
+      },
+      "purchases": {
+        "title": "Compras",
+        "desc_write": "Registrá pedidos a proveedores y su recepción.",
+        "desc_read": "Seguí el estado de los pedidos a proveedores."
+      },
+      "providers": {
+        "title": "Proveedores",
+        "desc": "Tus proveedores y los insumos que ofrece cada uno."
+      },
+      "predictive": {
+        "title": "Predicción",
+        "desc": "Cuándo y cuánto conviene pedir de cada insumo."
+      },
+      "users": {
+        "title": "Personal",
+        "desc": "Invitá y administrá al equipo de tu institución."
+      },
+      "subscription": {
+        "title": "Suscripción",
+        "desc": "Tu plan y la facturación de Med+Inv."
+      },
+      "ai": {
+        "title": "Asistente IA",
+        "desc": "Preguntá sobre stock, alertas y reposición en lenguaje natural."
+      }
+    }
+  },
   "Onboarding": {
     "heading": "Elegí el plan para tu institución",
     "subheading": "Todos los planes incluyen inventario, compras y gestión de personal. El Asistente IA se desbloquea desde el plan intermedio.",
