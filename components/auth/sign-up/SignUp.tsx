@@ -89,7 +89,7 @@ export function SignUp() {
             </p>
 
             <form action={action}>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="mi-field" style={{ marginTop: 0 }}>
                   <label htmlFor="firstName" className="mi-label">{t("first_name")}</label>
                   <input

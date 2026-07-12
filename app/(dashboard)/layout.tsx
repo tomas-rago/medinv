@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hasAiAccess } from "@/lib/ai/access";
 import { syncReorderAlerts } from "@/lib/predictive/alerts";
 import { Sidebar } from "@/components/dashboard/Sidebar";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { IconSprite } from "@/components/ui/Icons";
 
 export default async function DashboardLayout({
@@ -42,17 +43,18 @@ export default async function DashboardLayout({
   return (
     <>
       <IconSprite />
-      <div className="h-screen flex overflow-hidden">
-        <Sidebar
-          activeSection="panel"
-          profile={{ full_name: profile.full_name ?? "", role: profile.role ?? "administrative" }}
-          hasAiAccess={aiAccess}
-          alertCount={alertCount ?? 0}
-        />
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {children}
-        </div>
-      </div>
+      <DashboardShell
+        alertCount={alertCount ?? 0}
+        sidebar={
+          <Sidebar
+            profile={{ full_name: profile.full_name ?? "", role: profile.role ?? "administrative" }}
+            hasAiAccess={aiAccess}
+            alertCount={alertCount ?? 0}
+          />
+        }
+      >
+        {children}
+      </DashboardShell>
     </>
   );
 }

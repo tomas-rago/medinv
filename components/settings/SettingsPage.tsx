@@ -28,7 +28,7 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
 
   return (
     <div
-      className="flex-1 overflow-y-auto px-7 py-7"
+      className="flex-1 overflow-y-auto px-4 py-5 md:px-7 md:py-7"
       style={{ display: "flex", flexDirection: "column", gap: "var(--d-section-gap)" }}
     >
       {/* Page header */}
@@ -64,7 +64,7 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
         )}
 
         <form action={profileAction}>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="mi-field" style={{ marginTop: 0 }}>
               <label htmlFor="firstName" className="mi-label">{t("first_name")}</label>
               <input

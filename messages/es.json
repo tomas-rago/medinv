@@ -89,7 +89,8 @@
       "administrative": "Administrativo/a"
     },
     "user_fallback": "Usuario",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "open_menu": "Abrir menú"
   },
   "Home": {
     "breadcrumb": "General",
