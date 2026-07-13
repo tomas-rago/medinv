@@ -3,12 +3,16 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { canWriteInventory } from "@/lib/constants/roles";
 import { hasAiAccess } from "@/lib/ai/access";
+import { parseMovementFilters } from "@/lib/schemas/stock/filters";
+import { buildMovementsQuery } from "./query";
 import { StockPage } from "@/components/stock/StockPage";
 
 const PAGE_SIZE = 20;
 
-type ProductJoin = { name: string; category: string | null };
+type ProductJoin = { name: string; category: string | null; criticality: string | null };
 type StockProductJoin = { name: string; category: string | null; unit: string };
+type NameJoin = { name: string };
+type PurchaseJoin = { provider_id: string | null; providers: NameJoin | NameJoin[] | null };
 
 function one<T>(value: T | T[] | null): T | null {
   return Array.isArray(value) ? value[0] ?? null : value;
@@ -17,7 +21,7 @@ function one<T>(value: T | T[] | null): T | null {
 export default async function StockServerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
   const cookieStore = await cookies();
@@ -33,18 +37,14 @@ export default async function StockServerPage({
   const orgId = user.app_metadata?.organization_id as string | undefined;
   const aiExplain = orgId ? await hasAiAccess(supabase, orgId) : false;
 
+  const filters = parseMovementFilters(sp);
+  const initialTab = sp.tab === "movements" ? ("movements" as const) : ("stock" as const);
+
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
-  const { data: movements, count } = await supabase
-    .from("stock_movements")
-    .select(
-      "id, type, quantity, expiry_date, notes, created_at, user_id, corrects_movement_id, products(name, category)",
-      { count: "exact" }
-    )
-    .order("created_at", { ascending: false })
-    .range(from, to);
+  const { data: movements, count } = await buildMovementsQuery(supabase, filters).range(from, to);
 
   // Set of movement ids that have already been rectified (a child references them),
   // so their rollback action can be disabled.
@@ -70,6 +70,9 @@ export default async function StockServerPage({
 
   const rows = (movements ?? []).map((m) => {
     const product = one<ProductJoin>(m.products as ProductJoin | ProductJoin[] | null);
+    const receptor = one<NameJoin>(m.receptors as NameJoin | NameJoin[] | null);
+    const purchase = one<PurchaseJoin>(m.purchases as PurchaseJoin | PurchaseJoin[] | null);
+    const provider = purchase ? one<NameJoin>(purchase.providers) : null;
     return {
       id: m.id,
       type: m.type,
@@ -80,9 +83,40 @@ export default async function StockServerPage({
       corrects_movement_id: m.corrects_movement_id,
       product_name: product?.name ?? "—",
       category: product?.category ?? null,
+      criticality: product?.criticality ?? null,
       user_name: names[m.user_id] ?? "—",
+      provider_name: provider?.name ?? null,
+      receptor_name: receptor?.name ?? null,
     };
   });
+
+  // Filter-bar data: providers for the select; names behind uuid params so
+  // the product/receptor combobox chips survive a reload.
+  const { data: providerRows } = await supabase
+    .from("providers")
+    .select("id, name")
+    .eq("active", true)
+    .order("name");
+
+  let selectedProductName: string | null = null;
+  if (filters.product) {
+    const { data: p } = await supabase
+      .from("products")
+      .select("name")
+      .eq("id", filters.product)
+      .maybeSingle();
+    selectedProductName = p?.name ?? null;
+  }
+
+  let selectedReceptorName: string | null = null;
+  if (filters.receptor) {
+    const { data: r } = await supabase
+      .from("receptors")
+      .select("name")
+      .eq("id", filters.receptor)
+      .maybeSingle();
+    selectedReceptorName = r?.name ?? null;
+  }
 
   // Current on-hand stock (Existencias): aggregate per product + per-batch breakdown.
   const { data: stockRows } = await supabase
@@ -135,6 +169,11 @@ export default async function StockServerPage({
       rectifiedIds={rectifiedIds}
       existencias={existencias}
       aiExplain={aiExplain}
+      filters={filters}
+      initialTab={initialTab}
+      providers={providerRows ?? []}
+      selectedProductName={selectedProductName}
+      selectedReceptorName={selectedReceptorName}
     />
   );
 }

@@ -25,6 +25,17 @@ export function canManagePredictive(role: string | null | undefined): boolean {
   return role === "chief_doctor";
 }
 
+// Receptors (egress destinations): any inventory writer can create one inline
+// from the stock exit modal; editing/deactivating is the org-owner's call.
+// Must stay in sync with the RLS policies on receptors.
+export function canCreateReceptors(role: string | null | undefined): boolean {
+  return canWriteInventory(role);
+}
+
+export function canManageReceptors(role: string | null | undefined): boolean {
+  return role === "chief_doctor";
+}
+
 // Purchase orders are managed by doctors and up. Must stay in sync with the
 // RLS policies on purchases/purchase_items.
 const PURCHASE_WRITER_ROLES = ["chief_doctor", "doctor"] as const;

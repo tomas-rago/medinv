@@ -176,12 +176,13 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
 
     const { data: movements } = await doctorA
       .from("stock_movements")
-      .select("type, quantity, notes")
+      .select("type, quantity, notes, purchase_id")
       .eq("product_id", productA);
     expect(movements).toHaveLength(1);
     expect(movements![0].type).toBe("entry");
     expect(movements![0].quantity).toBe(7);
-    expect(movements![0].notes).toBe(`purchase:${purchase!.id}`);
+    expect(movements![0].purchase_id).toBe(purchase!.id);
+    expect(movements![0].notes).toBeNull();
   });
 
   it("a received purchase cannot be received again", async () => {

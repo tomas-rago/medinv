@@ -45,6 +45,7 @@ export async function Sidebar({ profile, hasAiAccess = false, alertCount = 0 }: 
         } as NavItem,
         { id: "compras", href: "/purchases", icon: "i-cart", label: t("nav.purchases") },
         { id: "proveedores", href: "/providers", icon: "i-truck", label: t("nav.providers") },
+        { id: "receptores", href: "/receptors", icon: "i-user", label: t("nav.receptors") },
         { id: "prediccion", href: "/predictive", icon: "i-chart", label: t("nav.predictive") },
         { id: "personal", href: "/users", icon: "i-users", label: t("nav.users"), adminOnly: true },
       ],
