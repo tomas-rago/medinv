@@ -561,6 +561,53 @@ export type Database = {
           },
         ]
       }
+      receptors: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string | null
+          external_id: string | null
+          id: string
+          name: string
+          notes: string | null
+          organization_id: string
+          patient_type: string | null
+          phone: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email?: string | null
+          external_id?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          organization_id: string
+          patient_type?: string | null
+          phone?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string | null
+          external_id?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          patient_type?: string | null
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receptors_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock: {
         Row: {
           id: string
@@ -657,7 +704,9 @@ export type Database = {
           notes: string | null
           organization_id: string
           product_id: string
+          purchase_id: string | null
           quantity: number
+          receptor_id: string | null
           type: string
           user_id: string
         }
@@ -669,7 +718,9 @@ export type Database = {
           notes?: string | null
           organization_id: string
           product_id: string
+          purchase_id?: string | null
           quantity: number
+          receptor_id?: string | null
           type: string
           user_id: string
         }
@@ -681,7 +732,9 @@ export type Database = {
           notes?: string | null
           organization_id?: string
           product_id?: string
+          purchase_id?: string | null
           quantity?: number
+          receptor_id?: string | null
           type?: string
           user_id?: string
         }
@@ -705,6 +758,20 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_receptor_id_fkey"
+            columns: ["receptor_id"]
+            isOneToOne: false
+            referencedRelation: "receptors"
             referencedColumns: ["id"]
           },
         ]
@@ -801,7 +868,12 @@ export type Database = {
         Returns: undefined
       }
       register_stock_exit: {
-        Args: { p_notes?: string; p_product_id: string; p_quantity: number }
+        Args: {
+          p_notes?: string
+          p_product_id: string
+          p_quantity: number
+          p_receptor_id?: string
+        }
         Returns: undefined
       }
       register_stock_movement: {
@@ -809,6 +881,7 @@ export type Database = {
           p_expiry_date?: string
           p_notes?: string
           p_product_id: string
+          p_purchase_id?: string
           p_quantity: number
           p_type: string
         }

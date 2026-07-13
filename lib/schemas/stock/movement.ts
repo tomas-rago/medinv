@@ -21,6 +21,13 @@ export type StockEntryInput = z.infer<typeof StockEntrySchema>;
 export const StockExitSchema = z.object({
   product_id: z.string().uuid("product_required"),
   quantity: z.coerce.number().positive("quantity_positive"),
+  // Optional destination (receptor) — empty string means "none".
+  receptor_id: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? undefined : v))
+    .refine((v) => v === undefined || z.uuid().safeParse(v).success, "receptor_invalid")
+    .optional(),
   notes: z
     .string()
     .trim()
