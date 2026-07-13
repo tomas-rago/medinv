@@ -340,6 +340,13 @@
     "provider_not_found": "No se encontró el proveedor",
     "product_not_found": "No se encontró el insumo",
     "product_not_provided": "El proveedor seleccionado no provee uno de los insumos de la orden",
+    "no_ai_access": "Tu plan no incluye el Asistente IA",
+    "ai_invalid_request": "La consulta no es válida",
+    "ai_quota_exceeded": "Alcanzaste el límite mensual de tokens de tu plan",
+    "ai_unavailable": "El asistente no está disponible en este momento; probá más tarde",
+    "ai_refusal": "El asistente no puede responder a esa consulta",
+    "ai_response_truncated": "La respuesta se cortó por longitud; probá con una pregunta más acotada",
+    "ai_tool_loop_limit": "La consulta resultó demasiado compleja; probá dividirla en preguntas más simples",
     "unexpected": "Error inesperado"
   },
   "Categories": {
@@ -753,6 +760,28 @@
     "saving": "Guardando…",
     "cancel": "Cancelar",
     "close": "Cerrar"
+  },
+  "AsistenciaIA": {
+    "heading": "Asistente IA",
+    "subheading": "Consultá el stock, las alertas y las predicciones de reposición en lenguaje natural.",
+    "upsell_title": "Asistente IA",
+    "upsell_body": "Esta función está disponible a partir del plan intermedio. Actualizá tu plan para acceder al chatbot, sugerencias predictivas y más.",
+    "upsell_cta": "Ver planes",
+    "input_placeholder": "Escribí tu consulta… (Enter para enviar, Shift+Enter para salto de línea)",
+    "send": "Enviar",
+    "stop": "Detener",
+    "empty_title": "¿En qué te puedo ayudar?",
+    "empty_hint": "Probá con una de estas consultas:",
+    "suggestion_stock": "¿Qué productos están por debajo del stock mínimo?",
+    "suggestion_expiry": "¿Qué insumos vencen en los próximos 30 días?",
+    "suggestion_predictions": "¿Qué conviene pedir esta semana?",
+    "tool_get_stock_levels": "Consultando stock…",
+    "tool_get_alerts": "Consultando alertas…",
+    "tool_get_predictions": "Consultando predicciones…",
+    "tool_get_product_prediction_detail": "Analizando producto…",
+    "assistant_thinking": "Pensando…",
+    "usage_meter": "{used} / {limit} tokens usados este mes",
+    "disclaimer": "El asistente solo consulta datos y puede equivocarse; verificá antes de decidir."
   },
   "Scanner": {
     "title": "Escanear código",
