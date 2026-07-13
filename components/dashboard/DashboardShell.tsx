@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Logo } from "@/components/ui/Logo";
+import { TutorialProvider } from "@/components/tutorial/TutorialProvider";
 
 interface DashboardShellProps {
   sidebar: React.ReactNode;
@@ -73,6 +74,7 @@ export function DashboardShell({ sidebar, alertCount, children }: DashboardShell
           </Link>
         </header>
         {children}
+        <TutorialProvider />
       </div>
     </div>
   );

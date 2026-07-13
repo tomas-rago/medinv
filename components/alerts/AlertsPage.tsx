@@ -118,7 +118,7 @@ export function AlertsPage({
           </p>
         </div>
         {(canManage || aiExplain) && (
-          <div className="flex items-center gap-2">
+          <div data-tutorial="actions" className="flex items-center gap-2">
             {aiExplain && <ExplainButton screen="alerts" />}
             {canManage && (
               <>
@@ -141,7 +141,7 @@ export function AlertsPage({
       </div>
 
       {/* Table */}
-      <div className="mi-card mi-shadow overflow-hidden">
+      <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden">
         <div
           className="flex flex-wrap items-center gap-3 p-4 border-b"
           style={{ borderColor: "var(--c-line)" }}

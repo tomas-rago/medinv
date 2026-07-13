@@ -13,6 +13,7 @@ export type SignUpResult = {
     lastName?: string[];
     email?: string[];
     password?: string[];
+    terms?: string[];
     _form?: string[];
   };
 };
@@ -26,6 +27,7 @@ export async function signup(
     lastName: formData.get("lastName"),
     email: formData.get("email"),
     password: formData.get("password"),
+    terms: formData.get("terms"),
   };
 
   const result = SignUpSchema.safeParse(raw);
