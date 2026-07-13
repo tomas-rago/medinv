@@ -261,7 +261,7 @@ export function StockPage({
           </p>
         </div>
         {(canWrite || aiExplain) && (
-          <div className="flex items-center gap-2">
+          <div data-tutorial="actions" className="flex items-center gap-2">
             {aiExplain && <ExplainButton screen="stock" />}
             {canWrite && (
               <>
@@ -280,7 +280,7 @@ export function StockPage({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2">
+      <div data-tutorial="tabs" className="flex items-center gap-2">
         <button
           className={tab === "stock" ? "mi-btn mi-btn--soft mi-btn--sm" : "mi-btn mi-btn--ghost mi-btn--sm"}
           onClick={() => setTab("stock")}
@@ -297,7 +297,7 @@ export function StockPage({
 
       {tab === "stock" ? (
         /* Existencias (on-hand) */
-        <div className="mi-card mi-shadow overflow-hidden">
+        <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden">
           <div className="flex flex-wrap items-center gap-3 p-4 border-b" style={{ borderColor: "var(--c-line)" }}>
             <span className="font-semibold text-ink">{t("existencias_title")}</span>
             <div className="flex-1" />

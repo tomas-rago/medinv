@@ -124,7 +124,7 @@ export async function HomePage({
       </div>
 
       {/* KPI tiles */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div data-tutorial="kpis" className="grid gap-4 sm:grid-cols-3">
         {kpis.map((kpi) => (
           <Link
             key={kpi.id}
@@ -150,7 +150,7 @@ export async function HomePage({
 
       {/* Chief-only predictive oversight */}
       {atRisk !== null && (
-        <div className="mi-card mi-shadow overflow-hidden">
+        <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden">
           <div
             className="flex flex-wrap items-center justify-between gap-2 px-5 pt-5 pb-3"
           >

@@ -158,6 +158,29 @@ export function SignUp() {
                 ))}
               </div>
 
+              <div className="mi-field">
+                <label className="mi-check-row">
+                  <input type="checkbox" name="terms" className="mi-check" />
+                  <span>
+                    {t.rich("terms_label", {
+                      link: (chunks) => (
+                        <Link
+                          href="/terms"
+                          target="_blank"
+                          className="font-semibold text-primary hover:text-primaryd"
+                        >
+                          {chunks}
+                        </Link>
+                      ),
+                    })}
+                  </span>
+                </label>
+                {state.errors.terms?.map((e) => (
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  <p key={e} className="mi-field-error">{tVal(e as any)}</p>
+                ))}
+              </div>
+
               {state.errors._form && (
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 <p className="mi-field-error mt-3">{tErr(state.errors._form[0] as any)}</p>

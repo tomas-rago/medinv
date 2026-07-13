@@ -6,6 +6,7 @@ import type { ProductDetail } from "@/lib/predictive/detail";
 import type { ProductCriticality } from "@/lib/constants/criticality";
 import { ConsumptionChart } from "./ConsumptionChart";
 import { ExplainButton } from "@/components/asistencia-ia/ExplainButton";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 interface ProductDetailPageProps {
   detail: ProductDetail;
@@ -32,10 +33,11 @@ export function ProductDetailPage({ detail, aiExplain }: ProductDetailPageProps)
   const hasAnyActual = backtest.days.some((d) => d.actual > 0);
   const hasProjection = backtest.method !== "insufficient_data";
 
-  const stats: { key: string; value: React.ReactNode; extra?: React.ReactNode }[] = [
+  const stats: { key: string; value: React.ReactNode; extra?: React.ReactNode; hint?: string }[] = [
     { key: "detail_stat_stock", value: fmtQty(row.current_stock) },
     {
       key: "detail_stat_demand",
+      hint: t("hint_demand"),
       value:
         noData || p.dailyDemand === null ? (
           <span className="mi-badge mi-badge--gray">{t("method_insufficient")}</span>
@@ -55,6 +57,7 @@ export function ProductDetailPage({ detail, aiExplain }: ProductDetailPageProps)
     {
       key: "detail_stat_reorder_point",
       value: p.reorderPoint !== null ? fmtQty(p.reorderPoint) : "—",
+      hint: t("hint_reorder_point"),
     },
     {
       key: "detail_stat_suggested_qty",
@@ -62,10 +65,12 @@ export function ProductDetailPage({ detail, aiExplain }: ProductDetailPageProps)
         p.daysUntilReorder === 0 && p.suggestedQuantity !== null && p.suggestedQuantity > 0
           ? t("suggested_units", { quantity: fmtQty(p.suggestedQuantity) })
           : "—",
+      hint: t("hint_suggested_qty"),
     },
     {
       key: "detail_stat_lead_time",
       value: t("detail_lead_time_days", { days: row.lead_time_days }),
+      hint: t("hint_lead_time"),
       extra: row.lead_time_auto ? (
         <span className="mi-badge mi-badge--gray" title={t("detail_lead_time_auto_hint")}>
           {t("detail_lead_time_auto")}
@@ -75,6 +80,7 @@ export function ProductDetailPage({ detail, aiExplain }: ProductDetailPageProps)
     {
       key: "detail_stat_safety_stock",
       value: p.safetyStock !== null ? fmtQty(Math.ceil(p.safetyStock)) : "—",
+      hint: t("hint_safety_stock"),
     },
   ];
 
@@ -121,9 +127,10 @@ export function ProductDetailPage({ detail, aiExplain }: ProductDetailPageProps)
       >
         {stats.map((s) => (
           <div key={s.key} className="mi-card mi-shadow p-4">
-            <div className="text-ink3 mb-1" style={{ fontSize: 12 }}>
+            <div className="text-ink3 mb-1 flex items-center gap-1" style={{ fontSize: 12 }}>
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {t(s.key as any)}
+              {s.hint && <InfoTip text={s.hint} />}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-ink font-semibold" style={{ fontSize: 18 }}>

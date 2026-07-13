@@ -26,7 +26,25 @@
     "submitting": "Creando cuenta…",
     "have_account": "¿Ya tenés cuenta?",
     "sign_in": "Iniciá sesión",
+    "terms_label": "Acepto los <link>términos y condiciones</link>",
     "art_caption": "Tu equipo, organizado"
+  },
+  "Terms": {
+    "heading": "Términos y condiciones",
+    "updated_at": "Última actualización: julio 2026",
+    "s1_title": "1. Aceptación de los términos",
+    "s1_body": "[Contenido pendiente] Al crear una cuenta en Med+Inv aceptás estos términos y condiciones. Esta sección describirá el alcance del acuerdo entre vos y Med+Inv.",
+    "s2_title": "2. Descripción del servicio",
+    "s2_body": "[Contenido pendiente] Med+Inv es una plataforma de gestión de inventario de insumos médicos. Esta sección detallará las funcionalidades incluidas y sus limitaciones.",
+    "s3_title": "3. Cuentas y roles",
+    "s3_body": "[Contenido pendiente] Esta sección describirá las responsabilidades del administrador de la cuenta, la gestión de usuarios invitados y los distintos roles disponibles.",
+    "s4_title": "4. Datos y privacidad",
+    "s4_body": "[Contenido pendiente] Esta sección explicará qué datos se almacenan, cómo se protegen y cuáles son tus derechos sobre ellos.",
+    "s5_title": "5. Suscripción y pagos",
+    "s5_body": "[Contenido pendiente] Esta sección detallará los planes disponibles, la facturación, las renovaciones y la política de cancelación.",
+    "s6_title": "6. Responsabilidad",
+    "s6_body": "[Contenido pendiente] Esta sección describirá los límites de responsabilidad del servicio y las obligaciones de cada parte.",
+    "back_to_signup": "Volver al registro"
   },
   "ForgotPassword": {
     "heading": "Olvidaste tu contraseña",
@@ -81,6 +99,7 @@
       "users": "Personal",
       "subscription": "Suscripción",
       "ai": "Asistente IA",
+      "faq": "Preguntas frecuentes",
       "settings": "Ajustes"
     },
     "roles": {
@@ -380,7 +399,176 @@
     "receptor_invalid": "Receptor inválido",
     "receptor_required": "Seleccioná un receptor",
     "receptor_duplicate": "Ya existe un receptor con este nombre",
-    "receptor_external_id_duplicate": "Ya existe un receptor con este ID externo"
+    "receptor_external_id_duplicate": "Ya existe un receptor con este ID externo",
+    "terms_required": "Debés aceptar los términos y condiciones"
+  },
+  "Faq": {
+    "breadcrumb_account": "Cuenta",
+    "breadcrumb_faq": "Preguntas frecuentes",
+    "heading": "Preguntas frecuentes",
+    "subheading": "Respuestas a las dudas más comunes sobre el uso de Med+Inv.",
+    "groups": {
+      "inventory": "Inventario",
+      "alerts_purchases": "Alertas y compras",
+      "predictive": "Predicción",
+      "account": "Cuenta"
+    },
+    "items": {
+      "stock_in": {
+        "q": "¿Cómo ingreso stock de un insumo?",
+        "a": "Desde Inventario, registrá un movimiento de ingreso indicando el insumo, la cantidad y, si corresponde, el lote y su vencimiento. Si el ingreso viene de una orden de compra, al marcar la recepción en Compras el stock se carga automáticamente. Todos los ingresos quedan registrados como movimientos: nunca se edita el stock a mano."
+      },
+      "stock_out": {
+        "q": "¿Cómo registro un egreso o consumo?",
+        "a": "Desde Inventario, registrá un movimiento de egreso indicando el insumo, la cantidad y el receptor (el destino del insumo: un paciente, un sector, etc.). El sistema descuenta primero los lotes que vencen antes, para minimizar vencimientos."
+      },
+      "batches_expiry": {
+        "q": "¿Cómo funcionan los lotes y los vencimientos?",
+        "a": "Cada ingreso puede asociarse a un lote con fecha de vencimiento. El stock se descuenta por lote (primero lo que vence antes) y, cuando un lote está por vencer dentro de la ventana configurada, se genera una alerta de vencimiento para que puedas usarlo o darlo de baja a tiempo."
+      },
+      "min_quantity": {
+        "q": "¿Qué diferencia hay entre el stock mínimo y el punto de pedido?",
+        "a": "El stock mínimo es un umbral fijo que definís por insumo: si el stock cae por debajo, se genera una alerta. El punto de pedido, en cambio, lo calcula la sección Predicción a partir del consumo real, el tiempo de entrega y el stock de seguridad, y se actualiza solo a medida que cambia tu consumo."
+      },
+      "scanner": {
+        "q": "¿Puedo usar un lector de códigos de barras?",
+        "a": "Sí. Los insumos pueden tener un código EAN asociado, y en los formularios de movimiento podés escanear el código con la cámara del dispositivo para seleccionar el insumo sin buscarlo a mano."
+      },
+      "alert_types": {
+        "q": "¿Qué tipos de alertas existen?",
+        "a": "Hay tres tipos: alertas de stock bajo (el stock cayó por debajo del mínimo configurado), alertas de vencimiento (un lote vence dentro de la ventana configurada) y alertas de reposición (el stock llegó al punto de pedido calculado por Predicción)."
+      },
+      "acknowledge_alerts": {
+        "q": "¿Cómo gestiono las alertas?",
+        "a": "En la sección Alertas podés ver el detalle de cada una, marcarlas como leídas y resolverlas. El número que aparece junto a la campana indica cuántas alertas activas tenés pendientes."
+      },
+      "purchase_flow": {
+        "q": "¿Cómo funciona una orden de compra?",
+        "a": "Una orden se crea eligiendo un proveedor y los insumos con sus cantidades. Primero queda como borrador, después se confirma (se envía al proveedor) y por último se registra la recepción cuando llega la mercadería. Recién al recibirla se carga el stock."
+      },
+      "purchase_reception": {
+        "q": "¿Qué pasa si el proveedor entrega menos de lo pedido?",
+        "a": "La recepción admite cantidades parciales: al recibir la orden indicás cuánto llegó realmente de cada insumo, y solo eso se carga al inventario. La diferencia queda registrada en la orden."
+      },
+      "providers": {
+        "q": "¿Para qué sirve cargar proveedores?",
+        "a": "Las órdenes de compra se asocian a un proveedor. Además, el sistema usa el historial de tus compras (días entre pedido y recepción) para estimar automáticamente el tiempo de entrega, que alimenta el cálculo del punto de pedido en Predicción."
+      },
+      "predictive_how": {
+        "q": "¿Cómo calcula el sistema la demanda estimada?",
+        "a": "A partir de los movimientos de egreso recientes de cada insumo. Si hay historial suficiente, usa una regresión lineal que detecta tendencias (consumo en aumento o en baja); si hay pocos datos, usa el promedio diario. El método usado se indica en cada fila."
+      },
+      "reorder_point": {
+        "q": "¿Qué es el punto de pedido y el stock de seguridad?",
+        "a": "El punto de pedido es el nivel de stock a partir del cual conviene pedir: cubre el consumo estimado durante el tiempo de entrega más el stock de seguridad. El stock de seguridad es un colchón extra que depende de la criticidad del insumo (vital, esencial o deseable) y se configura en días de consumo."
+      },
+      "suggested_qty": {
+        "q": "¿Cómo se calcula la cantidad sugerida de compra?",
+        "a": "Cuando el stock llega al punto de pedido, el sistema sugiere una cantidad que cubre los días de cobertura configurados además del tiempo de entrega. Los días de cobertura se ajustan desde el botón «Configurar reposición» en Predicción."
+      },
+      "roles_permissions": {
+        "q": "¿Qué puede hacer cada rol?",
+        "a": "El Médico Jefe administra todo: usuarios, suscripción y configuración de reposición, además de operar el inventario. Los roles Médico, Enfermero/a y Administrativo/a operan el día a día (movimientos, compras, alertas) según sus permisos, pero no gestionan usuarios ni la suscripción."
+      },
+      "ai_assistant": {
+        "q": "¿Qué hace el Asistente IA y por qué no lo veo?",
+        "a": "El Asistente IA responde consultas en lenguaje natural sobre tu stock, alertas y predicciones (solo lee datos, no los modifica). Está disponible a partir del plan intermedio: si tu plan no lo incluye, vas a ver la insignia «Pro» en el menú."
+      },
+      "subscription": {
+        "q": "¿Cómo gestiono la suscripción?",
+        "a": "Desde Cuenta → Suscripción, el Médico Jefe puede ver el plan actual, cambiarlo o actualizar el medio de pago. Los demás roles no tienen acceso a esa sección."
+      }
+    }
+  },
+  "Tutorial": {
+    "next": "Siguiente",
+    "prev": "Anterior",
+    "skip": "Omitir",
+    "done": "Entendido",
+    "step_counter": "{current} de {total}",
+    "help_button": "Ver tutorial de esta pantalla",
+    "dashboard": {
+      "intro_title": "Panel principal",
+      "intro_body": "Este es tu punto de partida: un resumen del estado del inventario y accesos directos a lo que necesitás hacer hoy.",
+      "kpis_title": "Indicadores",
+      "kpis_body": "Estas tarjetas muestran las alertas activas, los insumos que conviene reponer pronto y las compras pendientes. Tocá una para ir al detalle.",
+      "main_title": "Insumos para reponer",
+      "main_body": "Esta lista destaca los insumos que conviene pedir pronto, según el consumo reciente y el tiempo de entrega de tus compras."
+    },
+    "products": {
+      "intro_title": "Insumos",
+      "intro_body": "Acá administrás el catálogo de insumos: nombre, categoría, unidad, criticidad, stock mínimo y código EAN.",
+      "main_title": "Catálogo",
+      "main_body": "La tabla lista todos los insumos de tu organización. Podés buscar por nombre y filtrar por categoría, y editar cada insumo desde su fila.",
+      "actions_title": "Nuevo insumo",
+      "actions_body": "Con este botón agregás un insumo nuevo al catálogo. Después vas a poder registrar sus movimientos de stock desde Inventario."
+    },
+    "stock": {
+      "intro_title": "Inventario",
+      "intro_body": "Acá ves las existencias de cada insumo y registrás los movimientos de ingreso y egreso. El stock nunca se edita a mano: siempre a través de movimientos.",
+      "main_title": "Existencias",
+      "main_body": "Cada fila muestra el stock disponible de un insumo. Si tiene lotes con vencimiento, podés expandir la fila para ver el detalle por lote.",
+      "tabs_title": "Existencias y movimientos",
+      "tabs_body": "Con estas pestañas alternás entre las existencias actuales y el historial de movimientos, donde queda registrado cada ingreso y egreso con su usuario.",
+      "actions_title": "Registrar movimientos",
+      "actions_body": "Con estos botones registrás ingresos (compras, donaciones) y egresos (consumos, bajas). Los egresos requieren indicar el receptor de destino."
+    },
+    "alerts": {
+      "intro_title": "Alertas",
+      "intro_body": "Acá se concentran los avisos del sistema: stock bajo, lotes por vencer y sugerencias de reposición.",
+      "main_title": "Listado de alertas",
+      "main_body": "Podés filtrar por tipo y estado, ver el detalle de cada alerta y marcarla como leída o resuelta cuando la atiendas.",
+      "actions_title": "Configuración",
+      "actions_body": "Desde acá ajustás los umbrales de stock mínimo y la ventana de días para las alertas de vencimiento."
+    },
+    "purchases": {
+      "intro_title": "Compras",
+      "intro_body": "Acá gestionás las órdenes de compra a tus proveedores, desde el borrador hasta la recepción de la mercadería.",
+      "main_title": "Órdenes de compra",
+      "main_body": "La tabla muestra cada orden con su estado: borrador, confirmada o recibida. Al registrar la recepción, el stock ingresa automáticamente al inventario.",
+      "actions_title": "Nueva orden",
+      "actions_body": "Con este botón creás una orden nueva: elegís el proveedor, los insumos y las cantidades. La recepción admite cantidades parciales."
+    },
+    "providers": {
+      "intro_title": "Proveedores",
+      "intro_body": "Acá administrás los proveedores a los que les comprás insumos.",
+      "main_title": "Listado de proveedores",
+      "main_body": "Cada proveedor puede asociarse a órdenes de compra. El sistema usa el historial de entregas para estimar automáticamente los tiempos de entrega.",
+      "actions_title": "Nuevo proveedor",
+      "actions_body": "Con este botón agregás un proveedor con sus datos de contacto para poder asignarle órdenes de compra."
+    },
+    "receptors": {
+      "intro_title": "Receptores",
+      "intro_body": "Los receptores son los destinos de los egresos de stock: pacientes, sectores u otros destinos de tu institución.",
+      "main_title": "Listado de receptores",
+      "main_body": "Cada egreso de inventario se asocia a un receptor, así queda trazabilidad de adónde fue cada insumo.",
+      "actions_title": "Nuevo receptor",
+      "actions_body": "Con este botón agregás un receptor nuevo, con su tipo y un ID externo opcional para vincularlo con otros sistemas."
+    },
+    "predictive": {
+      "intro_title": "Predicción de stock",
+      "intro_body": "Esta pantalla estima la demanda de cada insumo a partir del consumo real y te sugiere cuándo y cuánto pedir.",
+      "main_title": "Tabla de predicción",
+      "main_body": "Por cada insumo ves la demanda diaria estimada, el punto de pedido y la sugerencia de compra. Los íconos de información junto a cada columna explican cómo se calcula. Tocá un insumo para ver su detalle con gráfico.",
+      "actions_title": "Parámetros de reposición",
+      "actions_body": "Desde acá configurás el tiempo de entrega, los días de cobertura y el stock de seguridad por criticidad, que definen los cálculos de esta pantalla."
+    },
+    "users": {
+      "intro_title": "Personal",
+      "intro_body": "Acá administrás a las personas de tu organización y sus roles.",
+      "main_title": "Listado del equipo",
+      "main_body": "Cada persona tiene un rol (Médico Jefe, Médico, Enfermero/a o Administrativo/a) que define qué puede hacer en el sistema.",
+      "actions_title": "Invitar",
+      "actions_body": "Con este botón invitás a alguien por email: recibe un enlace para crear su contraseña y entrar con el rol que le asignes."
+    },
+    "settings": {
+      "intro_title": "Ajustes",
+      "intro_body": "Acá gestionás tu perfil personal y tu contraseña.",
+      "main_title": "Mi perfil",
+      "main_body": "Podés actualizar tu nombre y apellido, que se muestran en el menú y en los registros de movimientos.",
+      "password_title": "Contraseña",
+      "password_body": "Para cambiar tu contraseña, ingresá la actual y la nueva. La nueva debe tener al menos 8 caracteres."
+    }
   },
   "InviteCallback": {
     "invalid_link": "El enlace de invitación no es válido o ya fue usado.",
@@ -898,6 +1086,12 @@
     "suggestion_order_in": "Pedir en ~{days, plural, one {# día} other {# días}}",
     "suggested_units": "{quantity} u.",
     "suggested_qty_hint": "La cantidad sugerida aparece cuando el stock llega al punto de pedido",
+    "hint_demand": "Cuánto se consume por día, estimado a partir de los movimientos de stock recientes (por tendencia o promedio, según el historial disponible).",
+    "hint_reorder_point": "Nivel de stock a partir del cual conviene pedir: cubre la demanda durante el tiempo de entrega más el stock de seguridad.",
+    "hint_suggestion": "Cuándo conviene hacer el pedido, según la demanda estimada y el stock actual respecto del punto de pedido.",
+    "hint_suggested_qty": "Cantidad a pedir para cubrir los días de cobertura configurados. Aparece cuando el stock llega al punto de pedido.",
+    "hint_lead_time": "Días que tarda un pedido en llegar desde que se hace. Puede calcularse automáticamente a partir de tus compras recibidas.",
+    "hint_safety_stock": "Colchón de unidades extra para absorber picos de consumo o demoras de entrega, según la criticidad del insumo.",
     "empty": "No hay insumos con existencias registradas.",
     "settings_title": "Parámetros de reposición",
     "settings_subtitle": "Definen el punto de pedido y la cantidad sugerida",

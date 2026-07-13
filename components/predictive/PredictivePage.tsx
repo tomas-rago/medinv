@@ -7,6 +7,7 @@ import type { PredictionRow, PredictiveSettingsRow } from "@/lib/predictive/data
 import type { ProductCriticality } from "@/lib/constants/criticality";
 import { PredictiveSettingsModal } from "./PredictiveSettingsModal";
 import { ExplainButton } from "@/components/asistencia-ia/ExplainButton";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 const CRITICALITY_BADGE: Record<ProductCriticality, string> = {
   vital: "mi-badge--danger",
@@ -36,7 +37,7 @@ export function PredictivePage({ rows, settings, canManage, aiExplain }: Predict
       style={{ display: "flex", flexDirection: "column", gap: "var(--d-section-gap)" }}
     >
       {/* Page header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div data-tutorial="page-header" className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-ink3 mb-1" style={{ fontSize: 13 }}>
             <span>{t("breadcrumb_operation")}</span>
@@ -51,7 +52,7 @@ export function PredictivePage({ rows, settings, canManage, aiExplain }: Predict
           </p>
         </div>
         {(canManage || aiExplain) && (
-          <div className="flex items-center gap-2">
+          <div data-tutorial="actions" className="flex items-center gap-2">
             {aiExplain && <ExplainButton screen="predictive" />}
             {canManage && (
               <button className="mi-btn mi-btn--primary" onClick={() => setShowSettings(true)}>
@@ -66,17 +67,37 @@ export function PredictivePage({ rows, settings, canManage, aiExplain }: Predict
       </div>
 
       {/* Table */}
-      <div className="mi-card mi-shadow overflow-hidden">
+      <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="mi-table">
             <thead>
               <tr>
                 <th>{t("table_product")}</th>
                 <th>{t("table_stock")}</th>
-                <th>{t("table_demand")}</th>
-                <th>{t("table_reorder_point")}</th>
-                <th>{t("table_suggestion")}</th>
-                <th>{t("table_suggested_qty")}</th>
+                <th>
+                  <span className="inline-flex items-center gap-1">
+                    {t("table_demand")}
+                    <InfoTip text={t("hint_demand")} />
+                  </span>
+                </th>
+                <th>
+                  <span className="inline-flex items-center gap-1">
+                    {t("table_reorder_point")}
+                    <InfoTip text={t("hint_reorder_point")} />
+                  </span>
+                </th>
+                <th>
+                  <span className="inline-flex items-center gap-1">
+                    {t("table_suggestion")}
+                    <InfoTip text={t("hint_suggestion")} />
+                  </span>
+                </th>
+                <th>
+                  <span className="inline-flex items-center gap-1">
+                    {t("table_suggested_qty")}
+                    <InfoTip text={t("hint_suggested_qty")} />
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>

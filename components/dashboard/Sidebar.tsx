@@ -86,6 +86,9 @@ export async function Sidebar({ profile, hasAiAccess = false, alertCount = 0 }: 
 
       <div className="p-3 border-t" style={{ borderColor: "color-mix(in srgb,var(--c-line) 70%,transparent)" }}>
         <SidebarNavLink
+          item={{ id: "faq", href: "/faq", icon: "i-help", label: t("nav.faq") }}
+        />
+        <SidebarNavLink
           item={{ id: "ajustes", href: "/settings", icon: "i-settings", label: t("nav.settings") }}
         />
         <div
