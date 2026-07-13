@@ -7,6 +7,7 @@ import { StockEntryModal } from "./StockEntryModal";
 import { StockExitModal } from "./StockExitModal";
 import { RectifyMovementModal } from "./RectifyMovementModal";
 import type { RectifiableMovement } from "./RectifyMovementModal";
+import { ExplainButton } from "@/components/asistencia-ia/ExplainButton";
 
 type MovementRow = {
   id: string;
@@ -40,6 +41,7 @@ interface StockPageProps {
   canWrite: boolean;
   rectifiedIds: string[];
   existencias: ExistenciaRow[];
+  aiExplain: boolean;
 }
 
 const TYPE_TONES: Record<string, string> = {
@@ -53,7 +55,7 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export function StockPage({ movements, count, page, pageSize, canWrite, rectifiedIds, existencias }: StockPageProps) {
+export function StockPage({ movements, count, page, pageSize, canWrite, rectifiedIds, existencias, aiExplain }: StockPageProps) {
   const t = useTranslations("Stock");
   const tCat = useTranslations("Categories");
   const tUnit = useTranslations("Units");
@@ -87,7 +89,7 @@ export function StockPage({ movements, count, page, pageSize, canWrite, rectifie
 
   return (
     <div
-      className="flex-1 overflow-y-auto px-7 py-7"
+      className="flex-1 overflow-y-auto px-4 py-5 md:px-7 md:py-7"
       style={{ display: "flex", flexDirection: "column", gap: "var(--d-section-gap)" }}
     >
       {/* Page header */}
@@ -105,16 +107,21 @@ export function StockPage({ movements, count, page, pageSize, canWrite, rectifie
             {t("subheading")}
           </p>
         </div>
-        {canWrite && (
+        {(canWrite || aiExplain) && (
           <div className="flex items-center gap-2">
-            <button className="mi-btn mi-btn--soft" onClick={() => setShowExit(true)}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>
-              {t("exit_button")}
-            </button>
-            <button className="mi-btn mi-btn--primary" onClick={() => setShowEntry(true)}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-              {t("entry_button")}
-            </button>
+            {aiExplain && <ExplainButton screen="stock" />}
+            {canWrite && (
+              <>
+                <button className="mi-btn mi-btn--soft" onClick={() => setShowExit(true)}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>
+                  {t("exit_button")}
+                </button>
+                <button className="mi-btn mi-btn--primary" onClick={() => setShowEntry(true)}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                  {t("entry_button")}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

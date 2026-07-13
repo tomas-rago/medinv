@@ -335,6 +335,37 @@ select.mi-input {
   background: var(--c-surface);
   border-radius: 18px; border: 1px solid var(--c-line);
 }
+@media (max-width: 640px) { .mi-overlay { padding: 12px; } }
+
+/* ===========================================================================
+   Responsive shell — off-canvas sidebar drawer + mobile top bar (< 1024px)
+   =========================================================================== */
+.mi-topbar { display: none; }
+@media (max-width: 1023px) {
+  .mi-topbar {
+    display: flex; align-items: center; gap: 10px;
+    height: 56px; padding: 0 12px; flex: none;
+    background: var(--c-surface); border-bottom: 1px solid var(--c-line);
+  }
+  /* Drawer stays below .mi-overlay (60) so modals always win. */
+  .mi-drawer {
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 56;
+    transform: translateX(-100%);
+    transition: transform .2s ease;
+  }
+  .mi-drawer.is-open { transform: none; box-shadow: 0 0 40px rgba(0,0,0,.25); }
+  .mi-drawer > aside { height: 100%; }
+  .mi-drawer-scrim {
+    position: fixed; inset: 0; z-index: 55;
+    background: rgba(34,35,33,.45); backdrop-filter: blur(2px);
+  }
+}
+@media (min-width: 1024px) {
+  /* The aside participates in the shell flex row exactly as before. */
+  .mi-drawer { display: contents; }
+  .mi-drawer-scrim { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .mi-drawer { transition: none; } }
 
 /* ===========================================================================
    Plan cards

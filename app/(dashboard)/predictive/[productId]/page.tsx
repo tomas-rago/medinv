@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { hasAiAccess } from "@/lib/ai/access";
 import { getProductDetail } from "@/lib/predictive/detail";
 import { ProductDetailPage } from "@/components/predictive/ProductDetailPage";
 
@@ -18,8 +19,11 @@ export default async function ProductDetailServerPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const orgId = user.app_metadata?.organization_id as string | undefined;
+  const aiExplain = orgId ? await hasAiAccess(supabase, orgId) : false;
+
   const detail = await getProductDetail(supabase, productId);
   if (!detail) notFound();
 
-  return <ProductDetailPage detail={detail} />;
+  return <ProductDetailPage detail={detail} aiExplain={aiExplain} />;
 }

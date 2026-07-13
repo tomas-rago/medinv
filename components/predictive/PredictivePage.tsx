@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import type { PredictionRow, PredictiveSettingsRow } from "@/lib/predictive/data";
 import type { ProductCriticality } from "@/lib/constants/criticality";
 import { PredictiveSettingsModal } from "./PredictiveSettingsModal";
+import { ExplainButton } from "@/components/asistencia-ia/ExplainButton";
 
 const CRITICALITY_BADGE: Record<ProductCriticality, string> = {
   vital: "mi-badge--danger",
@@ -17,20 +18,21 @@ interface PredictivePageProps {
   rows: PredictionRow[];
   settings: PredictiveSettingsRow | null;
   canManage: boolean;
+  aiExplain: boolean;
 }
 
 function fmtQty(n: number) {
   return n.toLocaleString("es-AR", { maximumFractionDigits: 2 });
 }
 
-export function PredictivePage({ rows, settings, canManage }: PredictivePageProps) {
+export function PredictivePage({ rows, settings, canManage, aiExplain }: PredictivePageProps) {
   const t = useTranslations("Predictive");
   const tCrit = useTranslations("Criticality");
   const [showSettings, setShowSettings] = useState(false);
 
   return (
     <div
-      className="flex-1 overflow-y-auto px-7 py-7"
+      className="flex-1 overflow-y-auto px-4 py-5 md:px-7 md:py-7"
       style={{ display: "flex", flexDirection: "column", gap: "var(--d-section-gap)" }}
     >
       {/* Page header */}
@@ -48,13 +50,18 @@ export function PredictivePage({ rows, settings, canManage }: PredictivePageProp
             {t("subheading")}
           </p>
         </div>
-        {canManage && (
-          <button className="mi-btn mi-btn--primary" onClick={() => setShowSettings(true)}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.5M12 19v2.5M4.5 12H2M22 12h-2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8"/>
-            </svg>
-            {t("settings_button")}
-          </button>
+        {(canManage || aiExplain) && (
+          <div className="flex items-center gap-2">
+            {aiExplain && <ExplainButton screen="predictive" />}
+            {canManage && (
+              <button className="mi-btn mi-btn--primary" onClick={() => setShowSettings(true)}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.5M12 19v2.5M4.5 12H2M22 12h-2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8"/>
+                </svg>
+                {t("settings_button")}
+              </button>
+            )}
+          </div>
         )}
       </div>
 
