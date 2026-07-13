@@ -12,6 +12,7 @@ export type ProductRow = {
   name: string;
   ean: string | null;
   category: string | null;
+  criticality: string | null;
   presentation: string | null;
   unit: string;
 };
@@ -22,6 +23,7 @@ export type CreateProductResult = {
     name?: string[];
     ean?: string[];
     category?: string[];
+    criticality?: string[];
     presentation?: string[];
     unit?: string[];
     description?: string[];
@@ -38,6 +40,7 @@ export async function createProduct(
     name: formData.get("name"),
     ean: formData.get("ean"),
     category: formData.get("category"),
+    criticality: formData.get("criticality"),
     presentation: formData.get("presentation"),
     unit: formData.get("unit"),
     description: formData.get("description"),
@@ -72,11 +75,12 @@ export async function createProduct(
       name: result.data.name,
       ean: result.data.ean ?? null,
       category: result.data.category ?? null,
+      criticality: result.data.criticality ?? null,
       presentation: result.data.presentation ?? null,
       unit: result.data.unit,
       description: result.data.description ?? null,
     })
-    .select("id, name, ean, category, presentation, unit")
+    .select("id, name, ean, category, criticality, presentation, unit")
     .single();
 
   if (error) {
@@ -90,6 +94,7 @@ export async function createProduct(
 
   revalidatePath("/products");
   revalidatePath("/stock");
+  revalidatePath("/predictive");
   return { ok: true, errors: {}, product: data };
 }
 
@@ -98,6 +103,7 @@ export type UpdateProductResult = {
   errors: {
     ean?: string[];
     category?: string[];
+    criticality?: string[];
     presentation?: string[];
     unit?: string[];
     description?: string[];
@@ -113,6 +119,7 @@ export async function updateProduct(
     id: formData.get("id"),
     ean: formData.get("ean"),
     category: formData.get("category"),
+    criticality: formData.get("criticality"),
     presentation: formData.get("presentation"),
     unit: formData.get("unit"),
     description: formData.get("description"),
@@ -146,6 +153,7 @@ export async function updateProduct(
     .update({
       ean: result.data.ean ?? null,
       category: result.data.category ?? null,
+      criticality: result.data.criticality ?? null,
       presentation: result.data.presentation ?? null,
       unit: result.data.unit,
       description: result.data.description ?? null,
@@ -163,6 +171,7 @@ export async function updateProduct(
 
   revalidatePath("/products");
   revalidatePath("/stock");
+  revalidatePath("/predictive");
   return { ok: true, errors: {} };
 }
 

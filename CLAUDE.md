@@ -13,7 +13,9 @@ npm run lint     # ESLint
 npm start        # serve production build
 ```
 
-No test runner is configured.
+```bash
+npx vitest run tests/rls   # RLS/flow integration tests (live project; self-skip without SUPABASE_SERVICE_ROLE_KEY in .env.local)
+```
 
 ## Stack
 
@@ -57,6 +59,18 @@ Note: the key env var is `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, not `NEXT_PUBLI
 ### Client Components
 
 Any component using React hooks (`useState`, `useEffect`, etc.) or browser APIs must have `"use client"` as its **first line**. Components in `components/` are client components by convention in this project.
+
+## Conventions
+
+- **Roles**: `chief_doctor` / `doctor` / `nurse` / `administrative` (JWT `app_metadata` is the source of truth). Permission helpers live in `lib/constants/roles.ts` and must stay in sync with the RLS policies they mirror.
+- **Module layout**: each dashboard module is `app/(dashboard)/<module>/{page.tsx,actions.ts}` (Server Actions + `useActionState`) plus `components/<module>/`. Zod schemas in `lib/schemas/<module>/`; validation/error message *keys* (snake_case) resolve via the `Validation`/`Errors` namespaces in `messages/es.json`.
+- **Atomic DB writes** go through `security invoker` RPCs (RLS still applies); `raise exception 'snake_case_key'` messages double as i18n error keys. Stock ingress must go through `register_stock_movement` (keeps `stock`, `stock_batches`, `stock_movements` consistent) — never write those tables directly.
+- **Migrations**: applied to the live project via `mcp__supabase__apply_migration` AND checked into `supabase/migrations/` as a matching file. Update `lib/supabase/database.types.ts` by hand-merging — the raw generator drops the hand-tightened literal union types.
+- **AI plan gating**: `hasAiAccess()` in `lib/ai/access.ts` (`plans.token_limit_per_month > 0`). All LLM features sit behind it.
+
+## Current feature work
+
+`docs/feature-spec-alerts-orders-predictive.md` is the active spec (alerts, orders, providers, predictive, LLM chatbot/explain, home/UI). Providers and Orders are built; accepted decisions and progress live in the auto-memory index.
 
 ## Debugging
 

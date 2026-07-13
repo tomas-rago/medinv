@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PRODUCT_CATEGORIES } from "@/lib/constants/categories";
+import { PRODUCT_CRITICALITIES } from "@/lib/constants/criticality";
 
 // Empty-string form fields become `undefined` so optional values stay clean.
 const optionalText = z
@@ -18,6 +19,10 @@ export const ProductSchema = z.object({
     .optional(),
   category: z
     .enum(PRODUCT_CATEGORIES)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  criticality: z
+    .enum(PRODUCT_CRITICALITIES)
     .optional()
     .or(z.literal("").transform(() => undefined)),
   presentation: optionalText,

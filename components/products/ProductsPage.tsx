@@ -8,6 +8,13 @@ import { EditProductModal } from "./EditProductModal";
 import type { EditableProduct } from "./EditProductModal";
 import { ProductActiveModal } from "./ProductActiveModal";
 import { PRODUCT_CATEGORIES } from "@/lib/constants/categories";
+import type { ProductCriticality } from "@/lib/constants/criticality";
+
+const CRITICALITY_BADGE: Record<ProductCriticality, string> = {
+  vital: "mi-badge--danger",
+  essential: "mi-badge--amber",
+  desirable: "mi-badge--gray",
+};
 
 type Product = {
   id: string;
@@ -15,6 +22,7 @@ type Product = {
   ean: string | null;
   presentation: string | null;
   category: string | null;
+  criticality: string | null;
   unit: string;
   description: string | null;
   active: boolean;
@@ -35,6 +43,7 @@ interface ProductsPageProps {
 export function ProductsPage({ products, count, page, pageSize, q, category, status, canWrite }: ProductsPageProps) {
   const t = useTranslations("Products");
   const tCat = useTranslations("Categories");
+  const tCrit = useTranslations("Criticality");
   const tUnit = useTranslations("Units");
   const router = useRouter();
 
@@ -50,7 +59,7 @@ export function ProductsPage({ products, count, page, pageSize, q, category, sta
   const rangeFrom = count === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeTo = Math.min(page * pageSize, count);
 
-  const colCount = canWrite ? 6 : 5;
+  const colCount = canWrite ? 7 : 6;
 
   function navigate(next: { q?: string; category?: string; status?: string; page?: number }) {
     const params = new URLSearchParams();
@@ -155,6 +164,7 @@ export function ProductsPage({ products, count, page, pageSize, q, category, sta
               <tr>
                 <th>{t("table_name")}</th>
                 <th>{t("table_category")}</th>
+                <th>{t("table_criticality")}</th>
                 <th>{t("table_presentation")}</th>
                 <th>{t("table_ean")}</th>
                 <th>{t("table_unit")}</th>
@@ -182,6 +192,15 @@ export function ProductsPage({ products, count, page, pageSize, q, category, sta
                     <td>
                       {p.category ? (
                         <span className="mi-badge mi-badge--gray">{tCat(p.category)}</span>
+                      ) : (
+                        <span className="text-ink3">—</span>
+                      )}
+                    </td>
+                    <td>
+                      {p.criticality ? (
+                        <span className={`mi-badge ${CRITICALITY_BADGE[p.criticality as ProductCriticality]}`}>
+                          {tCrit(p.criticality)}
+                        </span>
                       ) : (
                         <span className="text-ink3">—</span>
                       )}
@@ -265,6 +284,7 @@ export function ProductsPage({ products, count, page, pageSize, q, category, sta
             name: editing.name,
             ean: editing.ean,
             category: editing.category,
+            criticality: editing.criticality,
             presentation: editing.presentation,
             unit: editing.unit,
             description: editing.description,
