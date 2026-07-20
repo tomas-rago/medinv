@@ -16,15 +16,14 @@ export function Logo({ size = "md", href = "/" }: LogoProps) {
 
   const inner = (
     <span className="mi-logo">
-      <span
+      {/* eslint-disable-next-line @next/next/no-img-element -- static SVG; next/image adds no optimization for SVGs */}
+      <img
+        src="/isotype.svg"
+        alt=""
+        width={iso}
+        height={iso}
         className="mi-iso"
-        style={{ width: iso, height: iso }}
-      >
-        <span className="t-m">M</span>
-        <span className="t-plus">+</span>
-        <span className="t-i">i</span>
-        <span className="t-empty" />
-      </span>
+      />
       <span className="mi-word" style={{ fontSize: word }}>
         <span className="w-med">Med</span>
         <span className="w-plus">+</span>

@@ -538,19 +538,7 @@ select.mi-input {
 
 /* Logo */
 .mi-logo { display: inline-flex; align-items: center; gap: 10px; }
-.mi-iso {
-  display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr);
-  gap: 3px; flex: none;
-}
-.mi-iso span {
-  display: grid; place-items: center;
-  font-family: var(--font-madimi), "Madimi One", sans-serif;
-  color: #fff; border-radius: 7px; font-size: 0.92em; line-height: 1; padding-bottom: 2px;
-}
-.mi-iso .t-m    { background: var(--c-primary); border-radius: 7px 7px 7px 13px; }
-.mi-iso .t-plus { background: var(--c-accent); }
-.mi-iso .t-i    { background: var(--c-primary); border-radius: 7px 13px 7px 7px; }
-.mi-iso .t-empty { background: transparent; }
+.mi-iso { display: block; flex: none; }
 .mi-word { font-family: var(--font-madimi), "Madimi One", sans-serif; letter-spacing: -0.01em; line-height: 1; }
 .mi-word .w-med  { color: var(--c-ink); }
 .mi-word .w-plus { color: var(--c-accent); }
