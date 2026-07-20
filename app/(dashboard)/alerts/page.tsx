@@ -10,7 +10,7 @@ import { resolvePage, resolvePageSize } from "@/lib/pagination";
 export default async function AlertsServerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; size?: string; type?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; size?: string; type?: string; view?: string }>;
 }) {
   const sp = await searchParams;
   const cookieStore = await cookies();
@@ -33,7 +33,9 @@ export default async function AlertsServerPage({
   const page = resolvePage(sp.page);
   const pageSize = resolvePageSize(sp.size);
   const type = (sp.type ?? "").trim(); // "" (all) | "low_stock" | "expiry" | "reorder_suggested"
-  const status = (sp.status ?? "active").trim(); // "active" | "resolved" | "all"
+  // Default view is "unread" = still-active alerts that haven't been read yet.
+  // "active" = every still-true alert (read or not); "resolved" = cleared ones.
+  const view = (sp.view ?? "unread").trim(); // "unread" | "active" | "resolved"
 
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -49,7 +51,9 @@ export default async function AlertsServerPage({
 
   if (type === "low_stock" || type === "expiry" || type === "reorder_suggested")
     query = query.eq("type", type);
-  if (status === "active" || status === "resolved") query = query.eq("status", status);
+  if (view === "resolved") query = query.eq("status", "resolved");
+  else if (view === "active") query = query.eq("status", "active");
+  else query = query.eq("status", "active").is("acknowledged_at", null); // unread (default)
 
   const { data, count } = await query;
 
@@ -100,7 +104,7 @@ export default async function AlertsServerPage({
       page={page}
       pageSize={pageSize}
       type={type}
-      status={status}
+      view={view}
       settings={settings}
       thresholds={thresholds}
       canManage={canManage}

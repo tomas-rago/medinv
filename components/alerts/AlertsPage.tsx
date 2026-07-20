@@ -32,7 +32,7 @@ interface AlertsPageProps {
   page: number;
   pageSize: number;
   type: string;
-  status: string;
+  view: string;
   settings: AlertSettings;
   thresholds: ThresholdRow[];
   canManage: boolean;
@@ -56,7 +56,7 @@ export function AlertsPage({
   page,
   pageSize,
   type,
-  status,
+  view,
   settings,
   thresholds,
   canManage,
@@ -69,19 +69,19 @@ export function AlertsPage({
   const [showSettings, setShowSettings] = useState(false);
   const [showThresholds, setShowThresholds] = useState(false);
   const [typeFilter, setTypeFilter] = useState(type);
-  const [statusFilter, setStatusFilter] = useState(status || "active");
+  const [viewFilter, setViewFilter] = useState(view || "unread");
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [ackingId, setAckingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  function navigate(next: { type?: string; status?: string; page?: number; size?: number }) {
+  function navigate(next: { type?: string; view?: string; page?: number; size?: number }) {
     const params = new URLSearchParams();
     const nt = next.type ?? typeFilter;
-    const ns = next.status ?? statusFilter;
+    const nv = next.view ?? viewFilter;
     const np = next.page ?? 1;
     const nsize = next.size ?? pageSize;
     if (nt) params.set("type", nt);
-    if (ns && ns !== "active") params.set("status", ns);
+    if (nv && nv !== "unread") params.set("view", nv);
     if (np > 1) params.set("page", String(np));
     if (nsize !== 20) params.set("size", String(nsize));
     const qs = params.toString();
@@ -193,7 +193,7 @@ export function AlertsPage({
 
       {/* Table */}
       <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden flex flex-col flex-1 min-h-0">
-        <FilterBar hasActive={Boolean(typeFilter) || statusFilter !== "active"}>
+        <FilterBar hasActive={Boolean(typeFilter) || viewFilter !== "unread"}>
         <div
           className="flex flex-wrap items-center gap-3 p-4 border-b"
           style={{ borderColor: "var(--c-line)" }}
@@ -212,12 +212,12 @@ export function AlertsPage({
           <select
             className="mi-input"
             style={{ maxWidth: 190, paddingTop: 8, paddingBottom: 8 }}
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); navigate({ status: e.target.value, page: 1 }); }}
+            value={viewFilter}
+            onChange={(e) => { setViewFilter(e.target.value); navigate({ view: e.target.value, page: 1 }); }}
           >
-            <option value="active">{t("status_active")}</option>
-            <option value="resolved">{t("status_resolved")}</option>
-            <option value="all">{t("all_statuses")}</option>
+            <option value="unread">{t("view_unread")}</option>
+            <option value="active">{t("view_active")}</option>
+            <option value="resolved">{t("view_resolved")}</option>
           </select>
           <div className="flex-1" />
           <span className="text-ink3" style={{ fontSize: 13 }}>
