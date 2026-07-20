@@ -391,6 +391,7 @@
     "quantity_positive": "Ingresá una cantidad mayor a cero",
     "quantity_non_negative": "La cantidad no puede ser negativa",
     "quantity_required": "Ingresá una cantidad",
+    "expiry_date_in_past": "El vencimiento no puede ser una fecha pasada",
     "price_non_negative": "El precio no puede ser negativo",
     "items_required": "Agregá al menos un insumo a la orden",
     "items_duplicate_product": "No repitas el mismo insumo en la orden",

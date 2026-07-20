@@ -28,6 +28,13 @@ export function RectifyMovementModal({ movement, onClose }: RectifyMovementModal
   const [state, action, isPending] = useActionState(rectifyStockMovement, initialState);
   const [nullify, setNullify] = useState(false);
 
+  // This edits an existing movement whose stored expiry may already be in the
+  // past — don't block an unrelated correction. Floor the picker at the lesser
+  // of today and the existing value so past dates stay only as loose as needed.
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const minExpiry =
+    movement.expiry_date && movement.expiry_date < todayISO ? movement.expiry_date : todayISO;
+
   useEffect(() => {
     if (state.ok) onClose();
   }, [state.ok, onClose]);
@@ -110,6 +117,7 @@ export function RectifyMovementModal({ movement, onClose }: RectifyMovementModal
                 name="expiry_date"
                 type="date"
                 className="mi-input"
+                min={minExpiry}
                 defaultValue={movement.expiry_date ?? ""}
                 disabled={nullify}
               />
