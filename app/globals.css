@@ -297,6 +297,11 @@ select.mi-input {
 .mi-table tbody tr:hover { background: color-mix(in srgb, var(--c-primary) 4%, transparent); }
 .mi-table td:last-child { text-align: right; }
 
+/* Scrollable table body: the wrapper scrolls (flex-1 inside a column-flex card)
+   while the header stays pinned so the pagination footer never leaves the
+   viewport. */
+.mi-table-scroll thead th { position: sticky; top: 0; z-index: 1; }
+
 .mi-avatar {
   width: 36px; height: 36px; border-radius: 99px; flex: none;
   display: grid; place-items: center;
@@ -311,6 +316,43 @@ select.mi-input {
 }
 .mi-iconbtn:hover { background: var(--c-surface-2); border-color: var(--c-line); color: var(--c-ink); }
 .mi-iconbtn svg { width: 17px; height: 17px; }
+
+/* ===========================================================================
+   Data cards — mobile replacement for tables (md:hidden lists)
+   =========================================================================== */
+.mi-datacard {
+  border: 1px solid var(--c-line);
+  border-radius: 12px;
+  background: var(--c-surface);
+  overflow: hidden;
+}
+.mi-datacard + .mi-datacard { margin-top: 10px; }
+.mi-datacard-head {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 12px 14px;
+  background: transparent; border: none; cursor: pointer; text-align: left;
+  color: inherit; font: inherit;
+  transition: background .12s;
+}
+.mi-datacard-head:hover { background: color-mix(in srgb, var(--c-primary) 4%, transparent); }
+.mi-datacard-head > .mi-datacard-title { flex: 1; min-width: 0; }
+.mi-datacard-chevron {
+  flex: none; color: var(--c-ink-3);
+  transition: transform .16s;
+}
+.mi-datacard[data-open="true"] .mi-datacard-chevron { transform: rotate(180deg); }
+.mi-datacard-body {
+  padding: 4px 14px 14px;
+  border-top: 1px solid var(--c-line-2);
+}
+/* Label/value detail rows inside a card body */
+.mi-dl { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; }
+.mi-dl-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.mi-dl-row dt {
+  flex: none; color: var(--c-ink-3);
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+}
+.mi-dl-row dd { text-align: right; font-size: 14px; color: var(--c-ink); min-width: 0; }
 
 /* ===========================================================================
    Auth layout — split with branded panel

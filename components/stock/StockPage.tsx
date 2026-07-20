@@ -10,6 +10,8 @@ import type { RectifiableMovement } from "./RectifyMovementModal";
 import { MovementsFilterBar } from "./MovementsFilterBar";
 import { movementsUrl } from "./movements-url";
 import { ExplainButton } from "@/components/asistencia-ia/ExplainButton";
+import { Pagination } from "@/components/ui/Pagination";
+import { DataCard, DataRow } from "@/components/ui/DataCard";
 import { fetchMovementsForExport } from "@/app/(dashboard)/stock/actions";
 import type { MovementFilters, MovementSortKey } from "@/lib/schemas/stock/filters";
 import type { MovementExportRow } from "@/lib/export/movements-types";
@@ -137,12 +139,12 @@ export function StockPage({
 
   const rectifiedSet = new Set(rectifiedIds);
 
-  const totalPages = Math.max(1, Math.ceil(count / pageSize));
-  const rangeFrom = count === 0 ? 0 : (page - 1) * pageSize + 1;
-  const rangeTo = Math.min(page * pageSize, count);
-
   function goto(p: number) {
-    router.push(movementsUrl(filters, p));
+    router.push(movementsUrl(filters, p, pageSize));
+  }
+
+  function setSize(s: number) {
+    router.push(movementsUrl(filters, 1, s));
   }
 
   function toggleExpand(id: string) {
@@ -240,6 +242,40 @@ export function StockPage({
 
   const colSpanMovements = canWrite ? 10 : 9;
 
+  function movementTypeBadge(m: MovementRow, isRectification: boolean) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className={`mi-badge mi-badge--${TYPE_TONES[m.type] ?? "gray"}`}>
+          {t.has(`type_${m.type}`) ? t(`type_${m.type}`) : m.type}
+        </span>
+        {isRectification && <span className="mi-badge mi-badge--blue">{t("type_rectification")}</span>}
+      </div>
+    );
+  }
+
+  function signedQuantity(m: MovementRow) {
+    const sign = m.type === "entry" ? "+" : m.type === "exit" || m.type === "expiry" ? "−" : "";
+    return `${sign}${m.quantity}`;
+  }
+
+  function rectifyControl(m: MovementRow, canRollback: boolean, alreadyRectified: boolean) {
+    return canRollback ? (
+      <button
+        type="button"
+        className="mi-iconbtn"
+        aria-label={t("rectify_action")}
+        title={t("rectify_action")}
+        onClick={() => setRectifying({ id: m.id, type: m.type, quantity: m.quantity, expiry_date: m.expiry_date, product_name: m.product_name })}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
+        </svg>
+      </button>
+    ) : (
+      <span className="text-ink3" style={{ fontSize: 13 }}>{alreadyRectified ? t("rectified_tag") : "—"}</span>
+    );
+  }
+
   return (
     <div
       className="flex-1 overflow-y-auto px-4 py-5 md:px-7 md:py-7"
@@ -297,7 +333,7 @@ export function StockPage({
 
       {tab === "stock" ? (
         /* Existencias (on-hand) */
-        <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden">
+        <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden flex flex-col flex-1 min-h-0">
           <div className="flex flex-wrap items-center gap-3 p-4 border-b" style={{ borderColor: "var(--c-line)" }}>
             <span className="font-semibold text-ink">{t("existencias_title")}</span>
             <div className="flex-1" />
@@ -305,7 +341,7 @@ export function StockPage({
               {t("existencias_count", { count: existencias.length })}
             </span>
           </div>
-          <div className="overflow-x-auto">
+          <div className="hidden md:block md:flex-1 md:min-h-0 overflow-auto mi-table-scroll">
             <table className="mi-table">
               <thead>
                 <tr>
@@ -369,10 +405,59 @@ export function StockPage({
               </tbody>
             </table>
           </div>
+
+          {/* Mobile cards */}
+          <div className="flex-1 min-h-0 overflow-auto md:hidden p-3">
+            {existencias.length === 0 ? (
+              <div className="text-ink3" style={{ textAlign: "center", padding: "24px 0", fontSize: 14 }}>
+                {t("existencias_empty")}
+              </div>
+            ) : (
+              existencias.map((s) => {
+                const unitLabel = tUnit.has(s.unit) ? tUnit(s.unit) : s.unit;
+                return (
+                  <DataCard
+                    key={s.product_id}
+                    header={
+                      <span className="flex items-center gap-2">
+                        <span className="font-semibold text-ink">{s.product_name}</span>
+                        {s.low && <span className="mi-badge mi-badge--amber">{t("existencias_low")}</span>}
+                      </span>
+                    }
+                    meta={
+                      <span className="text-ink" style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600, fontSize: 14 }}>
+                        {s.quantity} <span className="text-ink3" style={{ fontWeight: 400, fontSize: 12 }}>{unitLabel}</span>
+                      </span>
+                    }
+                  >
+                    <dl className="mi-dl">
+                      <DataRow label={t("table_product_category")}>
+                        {s.category ? <span className="mi-badge mi-badge--gray">{tCat(s.category)}</span> : "—"}
+                      </DataRow>
+                      {s.batches.length > 0 && (
+                        <div className="mi-dl-row" style={{ alignItems: "flex-start" }}>
+                          <dt>{t("existencias_expiry")}</dt>
+                          <dd>
+                            <span className="flex flex-col gap-1">
+                              {s.batches.map((b, i) => (
+                                <span key={`${s.product_id}-m-${i}`} style={{ fontVariantNumeric: "tabular-nums" }}>
+                                  {b.expiry_date ? fmtDate(b.expiry_date) : t("existencias_no_expiry")} · {b.quantity}
+                                </span>
+                              ))}
+                            </span>
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                  </DataCard>
+                );
+              })
+            )}
+          </div>
         </div>
       ) : (
         /* Movements log */
-        <div className="mi-card mi-shadow overflow-hidden">
+        <div className="mi-card mi-shadow overflow-hidden flex flex-col flex-1 min-h-0">
           <div className="flex flex-wrap items-center gap-3 p-4 border-b" style={{ borderColor: "var(--c-line)" }}>
             <span className="font-semibold text-ink">{t("movements_title")}</span>
             <div className="flex-1" />
@@ -432,7 +517,7 @@ export function StockPage({
             selectedReceptorName={selectedReceptorName}
           />
 
-          <div className="overflow-x-auto">
+          <div className="hidden md:block md:flex-1 md:min-h-0 overflow-auto mi-table-scroll">
             <table className="mi-table">
               <thead>
                 <tr>
@@ -464,18 +549,9 @@ export function StockPage({
                       <tr key={m.id}>
                         <td className="text-ink3" style={{ fontSize: 13 }}>{fmtDate(m.created_at)}</td>
                         <td className="font-medium text-ink">{m.product_name}</td>
-                        <td>
-                          <div className="flex items-center gap-1.5">
-                            <span className={`mi-badge mi-badge--${TYPE_TONES[m.type] ?? "gray"}`}>
-                              {t.has(`type_${m.type}`) ? t(`type_${m.type}`) : m.type}
-                            </span>
-                            {isRectification && (
-                              <span className="mi-badge mi-badge--blue">{t("type_rectification")}</span>
-                            )}
-                          </div>
-                        </td>
+                        <td>{movementTypeBadge(m, isRectification)}</td>
                         <td className="text-ink" style={{ fontVariantNumeric: "tabular-nums" }}>
-                          {m.type === "entry" ? "+" : m.type === "exit" || m.type === "expiry" ? "−" : ""}{m.quantity}
+                          {signedQuantity(m)}
                         </td>
                         <td className="text-ink2" style={{ fontSize: 13 }}>
                           {m.expiry_date ? fmtDate(m.expiry_date) : "—"}
@@ -487,21 +563,7 @@ export function StockPage({
                         {canWrite && (
                           <td>
                             <div className="flex items-center justify-end">
-                              {canRollback ? (
-                                <button
-                                  type="button"
-                                  className="mi-iconbtn"
-                                  aria-label={t("rectify_action")}
-                                  title={t("rectify_action")}
-                                  onClick={() => setRectifying({ id: m.id, type: m.type, quantity: m.quantity, expiry_date: m.expiry_date, product_name: m.product_name })}
-                                >
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
-                                  </svg>
-                                </button>
-                              ) : (
-                                <span className="text-ink3" style={{ fontSize: 13 }}>{alreadyRectified ? t("rectified_tag") : "—"}</span>
-                              )}
+                              {rectifyControl(m, canRollback, alreadyRectified)}
                             </div>
                           </td>
                         )}
@@ -513,23 +575,58 @@ export function StockPage({
             </table>
           </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between gap-3 p-4 border-t" style={{ borderColor: "var(--c-line)" }}>
-            <span className="text-ink3" style={{ fontSize: 13 }}>
-              {t("pagination_range", { from: rangeFrom, to: rangeTo, total: count })}
-            </span>
-            <div className="flex items-center gap-2">
-              <button className="mi-btn mi-btn--ghost mi-btn--sm" disabled={page <= 1} onClick={() => goto(page - 1)}>
-                {t("prev")}
-              </button>
-              <span className="text-ink2" style={{ fontSize: 13 }}>
-                {t("page_of", { page, total: totalPages })}
-              </span>
-              <button className="mi-btn mi-btn--ghost mi-btn--sm" disabled={page >= totalPages} onClick={() => goto(page + 1)}>
-                {t("next")}
-              </button>
-            </div>
+          {/* Mobile cards */}
+          <div className="flex-1 min-h-0 overflow-auto md:hidden p-3">
+            {movements.length === 0 ? (
+              <div className="text-ink3" style={{ textAlign: "center", padding: "24px 0", fontSize: 14 }}>
+                {t("empty")}
+              </div>
+            ) : (
+              movements.map((m) => {
+                const isRectification = m.corrects_movement_id !== null;
+                const alreadyRectified = rectifiedSet.has(m.id);
+                const canRollback = canWrite && !isRectification && !alreadyRectified && (m.type === "entry" || m.type === "exit");
+                return (
+                  <DataCard
+                    key={m.id}
+                    header={
+                      <span className="flex flex-col gap-0.5">
+                        <span className="font-medium text-ink">{m.product_name}</span>
+                        <span className="text-ink3" style={{ fontSize: 12 }}>{fmtDate(m.created_at)}</span>
+                      </span>
+                    }
+                    meta={
+                      <span className="text-ink" style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600, fontSize: 14 }}>
+                        {signedQuantity(m)}
+                      </span>
+                    }
+                  >
+                    <dl className="mi-dl">
+                      <DataRow label={t("table_type")}>{movementTypeBadge(m, isRectification)}</DataRow>
+                      <DataRow label={t("table_expiry")}>{m.expiry_date ? fmtDate(m.expiry_date) : "—"}</DataRow>
+                      <DataRow label={t("table_user")}>{m.user_name}</DataRow>
+                      <DataRow label={t("table_provider")}>{m.provider_name ?? "—"}</DataRow>
+                      <DataRow label={t("table_receptor")}>{m.receptor_name ?? "—"}</DataRow>
+                      <DataRow label={t("table_notes")}>{m.notes ?? "—"}</DataRow>
+                      {canWrite && (
+                        <DataRow label={t("table_actions")}>
+                          <span className="flex items-center justify-end">{rectifyControl(m, canRollback, alreadyRectified)}</span>
+                        </DataRow>
+                      )}
+                    </dl>
+                  </DataCard>
+                );
+              })
+            )}
           </div>
+
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            count={count}
+            onPageChange={goto}
+            onPageSizeChange={setSize}
+          />
         </div>
       )}
 

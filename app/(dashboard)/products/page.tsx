@@ -3,13 +3,12 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { canWriteInventory } from "@/lib/constants/roles";
 import { ProductsPage } from "@/components/products/ProductsPage";
-
-const PAGE_SIZE = 20;
+import { resolvePage, resolvePageSize } from "@/lib/pagination";
 
 export default async function ProductsServerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; q?: string; category?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; size?: string; q?: string; category?: string; status?: string }>;
 }) {
   const sp = await searchParams;
   const cookieStore = await cookies();
@@ -22,15 +21,16 @@ export default async function ProductsServerPage({
 
   const canWrite = canWriteInventory(user.app_metadata?.role as string);
 
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const page = resolvePage(sp.page);
+  const pageSize = resolvePageSize(sp.size);
   const q = (sp.q ?? "").trim();
   const category = (sp.category ?? "").trim();
   const status = (sp.status ?? "").trim(); // "" (all) | "active" | "inactive"
   // Strip PostgREST filter metacharacters from free text before interpolating.
   const safeQ = q.replace(/[,()*]/g, " ").trim();
 
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   let query = supabase
     .from("products")
@@ -50,7 +50,7 @@ export default async function ProductsServerPage({
       products={products ?? []}
       count={count ?? 0}
       page={page}
-      pageSize={PAGE_SIZE}
+      pageSize={pageSize}
       q={q}
       category={category}
       status={status}

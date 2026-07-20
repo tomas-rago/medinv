@@ -3,13 +3,12 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { canManageProviders } from "@/lib/constants/roles";
 import { ProvidersPage } from "@/components/providers/ProvidersPage";
-
-const PAGE_SIZE = 20;
+import { resolvePage, resolvePageSize } from "@/lib/pagination";
 
 export default async function ProvidersServerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; q?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; size?: string; q?: string; status?: string }>;
 }) {
   const sp = await searchParams;
   const cookieStore = await cookies();
@@ -22,14 +21,15 @@ export default async function ProvidersServerPage({
 
   const canManage = canManageProviders(user.app_metadata?.role as string);
 
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const page = resolvePage(sp.page);
+  const pageSize = resolvePageSize(sp.size);
   const q = (sp.q ?? "").trim();
   const status = (sp.status ?? "").trim(); // "" (all) | "active" | "inactive"
   // Strip PostgREST filter metacharacters from free text before interpolating.
   const safeQ = q.replace(/[,()*]/g, " ").trim();
 
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   let query = supabase
     .from("providers")
@@ -64,7 +64,7 @@ export default async function ProvidersServerPage({
       providers={providers}
       count={count ?? 0}
       page={page}
-      pageSize={PAGE_SIZE}
+      pageSize={pageSize}
       q={q}
       status={status}
       canManage={canManage}

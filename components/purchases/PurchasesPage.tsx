@@ -8,6 +8,8 @@ import { ReceivePurchaseModal } from "./ReceivePurchaseModal";
 import { PurchaseDetailModal } from "./PurchaseDetailModal";
 import { PurchaseStatusModal } from "./PurchaseStatusModal";
 import type { ProviderOption } from "@/app/(dashboard)/purchases/actions";
+import { Pagination } from "@/components/ui/Pagination";
+import { DataCard, DataRow } from "@/components/ui/DataCard";
 
 export type PurchaseListRow = {
   id: string;
@@ -53,20 +55,18 @@ export function PurchasesPage({
   const [stat, setStat] = useState(status);
   const [prov, setProv] = useState(providerId);
 
-  const totalPages = Math.max(1, Math.ceil(count / pageSize));
-  const rangeFrom = count === 0 ? 0 : (page - 1) * pageSize + 1;
-  const rangeTo = Math.min(page * pageSize, count);
-
   const colCount = canManage ? 7 : 6;
 
-  function navigate(next: { status?: string; provider?: string; page?: number }) {
+  function navigate(next: { status?: string; provider?: string; page?: number; size?: number }) {
     const params = new URLSearchParams();
     const ns = next.status ?? stat;
     const np2 = next.provider ?? prov;
     const np = next.page ?? 1;
+    const nsize = next.size ?? pageSize;
     if (ns) params.set("status", ns);
     if (np2) params.set("provider", np2);
     if (np > 1) params.set("page", String(np));
+    if (nsize !== 20) params.set("size", String(nsize));
     const qs = params.toString();
     router.push(qs ? `/purchases?${qs}` : "/purchases");
   }
@@ -77,6 +77,76 @@ export function PurchasesPage({
 
   function formatMoney(value: number) {
     return value.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 2 });
+  }
+
+  function rowActions(p: PurchaseListRow) {
+    return (
+      <>
+        <button
+          type="button"
+          className="mi-iconbtn"
+          aria-label={t("action_view")}
+          title={t("action_view")}
+          onClick={() => setViewing(p)}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+        {p.status === "draft" && (
+          <button
+            type="button"
+            className="mi-iconbtn"
+            aria-label={t("action_confirm")}
+            title={t("action_confirm")}
+            onClick={() => setTransition({ purchase: p, action: "confirm" })}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>
+            </svg>
+          </button>
+        )}
+        {(p.status === "draft" || p.status === "confirmed") && (
+          <>
+            <button
+              type="button"
+              className="mi-iconbtn"
+              aria-label={t("action_receive")}
+              title={t("action_receive")}
+              onClick={() => setReceiving(p)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/>
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="mi-iconbtn"
+              aria-label={t("action_cancel")}
+              title={t("action_cancel")}
+              onClick={() => setTransition({ purchase: p, action: "cancel" })}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9"/><path d="m8 8 8 8M16 8l-8 8"/>
+              </svg>
+            </button>
+          </>
+        )}
+      </>
+    );
+  }
+
+  function statusBadges(p: PurchaseListRow) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className={`mi-badge ${STATUS_BADGE[p.status]}`}>{t(`status_${p.status}`)}</span>
+        {p.has_discrepancy && (
+          <span className="mi-badge mi-badge--amber" title={t("discrepancy_hint")}>
+            {t("discrepancy_badge")}
+          </span>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -108,7 +178,7 @@ export function PurchasesPage({
       </div>
 
       {/* Table */}
-      <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden">
+      <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden flex flex-col flex-1 min-h-0">
         <div
           className="flex flex-wrap items-center gap-3 p-4 border-b"
           style={{ borderColor: "var(--c-line)" }}
@@ -142,7 +212,7 @@ export function PurchasesPage({
           </span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="hidden md:block md:flex-1 md:min-h-0 overflow-auto mi-table-scroll">
           <table className="mi-table">
             <thead>
               <tr>
@@ -177,72 +247,14 @@ export function PurchasesPage({
                     <td className="text-ink2" style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
                       {p.has_prices ? formatMoney(p.total) : "—"}
                     </td>
-                    <td>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`mi-badge ${STATUS_BADGE[p.status]}`}>{t(`status_${p.status}`)}</span>
-                        {p.has_discrepancy && (
-                          <span className="mi-badge mi-badge--amber" title={t("discrepancy_hint")}>
-                            {t("discrepancy_badge")}
-                          </span>
-                        )}
-                      </div>
-                    </td>
+                    <td>{statusBadges(p)}</td>
                     <td className="text-ink3" style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
                       {p.received_at ? formatDate(p.received_at) : "—"}
                     </td>
                     {canManage && (
                       <td>
                         <div className="flex items-center justify-end gap-1">
-                          <button
-                            type="button"
-                            className="mi-iconbtn"
-                            aria-label={t("action_view")}
-                            title={t("action_view")}
-                            onClick={() => setViewing(p)}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
-                            </svg>
-                          </button>
-                          {p.status === "draft" && (
-                            <button
-                              type="button"
-                              className="mi-iconbtn"
-                              aria-label={t("action_confirm")}
-                              title={t("action_confirm")}
-                              onClick={() => setTransition({ purchase: p, action: "confirm" })}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>
-                              </svg>
-                            </button>
-                          )}
-                          {(p.status === "draft" || p.status === "confirmed") && (
-                            <>
-                              <button
-                                type="button"
-                                className="mi-iconbtn"
-                                aria-label={t("action_receive")}
-                                title={t("action_receive")}
-                                onClick={() => setReceiving(p)}
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/>
-                                </svg>
-                              </button>
-                              <button
-                                type="button"
-                                className="mi-iconbtn"
-                                aria-label={t("action_cancel")}
-                                title={t("action_cancel")}
-                                onClick={() => setTransition({ purchase: p, action: "cancel" })}
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="12" cy="12" r="9"/><path d="m8 8 8 8M16 8l-8 8"/>
-                                </svg>
-                              </button>
-                            </>
-                          )}
+                          {rowActions(p)}
                         </div>
                       </td>
                     )}
@@ -253,31 +265,51 @@ export function PurchasesPage({
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between gap-3 p-4 border-t" style={{ borderColor: "var(--c-line)" }}>
-          <span className="text-ink3" style={{ fontSize: 13 }}>
-            {t("pagination_range", { from: rangeFrom, to: rangeTo, total: count })}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="mi-btn mi-btn--ghost mi-btn--sm"
-              disabled={page <= 1}
-              onClick={() => navigate({ page: page - 1 })}
-            >
-              {t("prev")}
-            </button>
-            <span className="text-ink2" style={{ fontSize: 13 }}>
-              {t("page_of", { page, total: totalPages })}
-            </span>
-            <button
-              className="mi-btn mi-btn--ghost mi-btn--sm"
-              disabled={page >= totalPages}
-              onClick={() => navigate({ page: page + 1 })}
-            >
-              {t("next")}
-            </button>
-          </div>
+        {/* Mobile cards */}
+        <div className="flex-1 min-h-0 overflow-auto md:hidden p-3">
+          {purchases.length === 0 ? (
+            <div className="text-ink3" style={{ textAlign: "center", padding: "24px 0", fontSize: 14 }}>
+              {t("empty")}
+            </div>
+          ) : (
+            purchases.map((p) => (
+              <DataCard
+                key={p.id}
+                header={
+                  <span className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-ink">{p.provider_name ?? t("no_provider")}</span>
+                    <span className="text-ink3" style={{ fontSize: 12, fontVariantNumeric: "tabular-nums" }}>{formatDate(p.created_at)}</span>
+                  </span>
+                }
+                meta={<span className={`mi-badge ${STATUS_BADGE[p.status]}`}>{t(`status_${p.status}`)}</span>}
+              >
+                <dl className="mi-dl">
+                  <DataRow label={t("table_items")}>{t("item_count", { count: p.item_count })}</DataRow>
+                  <DataRow label={t("table_total")}>
+                    <span style={{ fontVariantNumeric: "tabular-nums" }}>{p.has_prices ? formatMoney(p.total) : "—"}</span>
+                  </DataRow>
+                  <DataRow label={t("table_status")}>{statusBadges(p)}</DataRow>
+                  <DataRow label={t("table_received")}>
+                    <span style={{ fontVariantNumeric: "tabular-nums" }}>{p.received_at ? formatDate(p.received_at) : "—"}</span>
+                  </DataRow>
+                  {canManage && (
+                    <DataRow label={t("table_actions")}>
+                      <span className="flex items-center justify-end gap-1">{rowActions(p)}</span>
+                    </DataRow>
+                  )}
+                </dl>
+              </DataCard>
+            ))
+          )}
         </div>
+
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          count={count}
+          onPageChange={(pg) => navigate({ page: pg })}
+          onPageSizeChange={(s) => navigate({ size: s, page: 1 })}
+        />
       </div>
 
       {showCreate && <PurchaseModal providers={providers} onClose={() => setShowCreate(false)} />}

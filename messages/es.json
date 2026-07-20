@@ -1,4 +1,13 @@
 {
+  "Common": {
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "page_of": "Página {page} de {total}",
+    "pagination_range": "{from}–{to} de {total}",
+    "rows_per_page": "Filas por página",
+    "expand": "Mostrar detalles",
+    "collapse": "Ocultar detalles"
+  },
   "Login": {
     "heading": "Bienvenid@ de nuevo",
     "subheading": "Gestioná tu inventario, compras y equipo desde un solo lugar.",
@@ -220,6 +229,7 @@
     "invite_button": "Invitar usuario",
     "search_placeholder": "Buscar por nombre o email…",
     "user_count": "{count, plural, one {# usuario} other {# usuarios}}",
+    "empty": "No hay usuarios para mostrar.",
     "table_user": "Usuario",
     "table_role": "Rol",
     "table_status": "Estado",

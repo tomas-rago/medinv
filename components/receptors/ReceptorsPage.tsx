@@ -7,6 +7,8 @@ import { ReceptorModal } from "./ReceptorModal";
 import { EditReceptorModal } from "./EditReceptorModal";
 import type { EditableReceptor } from "./EditReceptorModal";
 import { ReceptorActiveModal } from "./ReceptorActiveModal";
+import { Pagination } from "@/components/ui/Pagination";
+import { DataCard, DataRow } from "@/components/ui/DataCard";
 
 type Receptor = {
   id: string;
@@ -43,20 +45,18 @@ export function ReceptorsPage({ receptors, count, page, pageSize, q, status, can
   const [stat, setStat] = useState(status);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const totalPages = Math.max(1, Math.ceil(count / pageSize));
-  const rangeFrom = count === 0 ? 0 : (page - 1) * pageSize + 1;
-  const rangeTo = Math.min(page * pageSize, count);
-
   const colCount = canManage ? 6 : 5;
 
-  function navigate(next: { q?: string; status?: string; page?: number }) {
+  function navigate(next: { q?: string; status?: string; page?: number; size?: number }) {
     const params = new URLSearchParams();
     const nq = next.q ?? search;
     const ns = next.status ?? stat;
     const np = next.page ?? 1;
+    const nsize = next.size ?? pageSize;
     if (nq) params.set("q", nq);
     if (ns) params.set("status", ns);
     if (np > 1) params.set("page", String(np));
+    if (nsize !== 20) params.set("size", String(nsize));
     const qs = params.toString();
     router.push(qs ? `/receptors?${qs}` : "/receptors");
   }
@@ -65,6 +65,41 @@ export function ReceptorsPage({ receptors, count, page, pageSize, q, status, can
     setSearch(value);
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => navigate({ q: value, page: 1 }), 400);
+  }
+
+  function rowActions(r: Receptor) {
+    return (
+      <>
+        <button
+          type="button"
+          className="mi-iconbtn"
+          aria-label={t("action_edit")}
+          title={t("action_edit")}
+          onClick={() => setEditing(r)}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="mi-iconbtn"
+          aria-label={r.active ? t("action_deactivate") : t("action_reactivate")}
+          title={r.active ? t("action_deactivate") : t("action_reactivate")}
+          onClick={() => setToggling(r)}
+        >
+          {r.active ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
+            </svg>
+          )}
+        </button>
+      </>
+    );
   }
 
   return (
@@ -96,7 +131,7 @@ export function ReceptorsPage({ receptors, count, page, pageSize, q, status, can
       </div>
 
       {/* Table */}
-      <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden">
+      <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden flex flex-col flex-1 min-h-0">
         <div
           className="flex flex-wrap items-center gap-3 p-4 border-b"
           style={{ borderColor: "var(--c-line)" }}
@@ -133,7 +168,7 @@ export function ReceptorsPage({ receptors, count, page, pageSize, q, status, can
           </span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="hidden md:block md:flex-1 md:min-h-0 overflow-auto mi-table-scroll">
           <table className="mi-table">
             <thead>
               <tr>
@@ -177,34 +212,7 @@ export function ReceptorsPage({ receptors, count, page, pageSize, q, status, can
                     {canManage && (
                       <td>
                         <div className="flex items-center justify-end gap-1">
-                          <button
-                            type="button"
-                            className="mi-iconbtn"
-                            aria-label={t("action_edit")}
-                            title={t("action_edit")}
-                            onClick={() => setEditing(r)}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
-                            </svg>
-                          </button>
-                          <button
-                            type="button"
-                            className="mi-iconbtn"
-                            aria-label={r.active ? t("action_deactivate") : t("action_reactivate")}
-                            title={r.active ? t("action_deactivate") : t("action_reactivate")}
-                            onClick={() => setToggling(r)}
-                          >
-                            {r.active ? (
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                              </svg>
-                            ) : (
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
-                              </svg>
-                            )}
-                          </button>
+                          {rowActions(r)}
                         </div>
                       </td>
                     )}
@@ -215,31 +223,51 @@ export function ReceptorsPage({ receptors, count, page, pageSize, q, status, can
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between gap-3 p-4 border-t" style={{ borderColor: "var(--c-line)" }}>
-          <span className="text-ink3" style={{ fontSize: 13 }}>
-            {t("pagination_range", { from: rangeFrom, to: rangeTo, total: count })}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="mi-btn mi-btn--ghost mi-btn--sm"
-              disabled={page <= 1}
-              onClick={() => navigate({ page: page - 1 })}
-            >
-              {t("prev")}
-            </button>
-            <span className="text-ink2" style={{ fontSize: 13 }}>
-              {t("page_of", { page, total: totalPages })}
-            </span>
-            <button
-              className="mi-btn mi-btn--ghost mi-btn--sm"
-              disabled={page >= totalPages}
-              onClick={() => navigate({ page: page + 1 })}
-            >
-              {t("next")}
-            </button>
-          </div>
+        {/* Mobile cards */}
+        <div className="flex-1 min-h-0 overflow-auto md:hidden p-3">
+          {receptors.length === 0 ? (
+            <div className="text-ink3" style={{ textAlign: "center", padding: "24px 0", fontSize: 14 }}>
+              {t("empty")}
+            </div>
+          ) : (
+            receptors.map((r) => (
+              <DataCard
+                key={r.id}
+                header={
+                  <span className="flex items-center gap-2" style={r.active ? undefined : { opacity: 0.6 }}>
+                    <span className="font-semibold text-ink">{r.name}</span>
+                    {!r.active && <span className="mi-badge mi-badge--gray">{t("inactive_badge")}</span>}
+                  </span>
+                }
+                meta={
+                  r.patient_type ? (
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    <span className="mi-badge mi-badge--gray">{tPT(r.patient_type as any)}</span>
+                  ) : undefined
+                }
+              >
+                <dl className="mi-dl">
+                  <DataRow label={t("table_external_id")}><span style={{ fontVariantNumeric: "tabular-nums" }}>{r.external_id ?? "—"}</span></DataRow>
+                  <DataRow label={t("table_phone")}><span style={{ fontVariantNumeric: "tabular-nums" }}>{r.phone ?? "—"}</span></DataRow>
+                  <DataRow label={t("table_email")}>{r.email ?? "—"}</DataRow>
+                  {canManage && (
+                    <DataRow label={t("table_actions")}>
+                      <span className="flex items-center justify-end gap-1">{rowActions(r)}</span>
+                    </DataRow>
+                  )}
+                </dl>
+              </DataCard>
+            ))
+          )}
         </div>
+
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          count={count}
+          onPageChange={(p) => navigate({ page: p })}
+          onPageSizeChange={(s) => navigate({ size: s, page: 1 })}
+        />
       </div>
 
       {showCreate && <ReceptorModal onClose={() => setShowCreate(false)} />}

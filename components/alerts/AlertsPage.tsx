@@ -9,6 +9,8 @@ import type { AlertSettings } from "./AlertSettingsModal";
 import { ThresholdsModal } from "./ThresholdsModal";
 import type { ThresholdRow } from "./ThresholdsModal";
 import { ExplainButton } from "@/components/asistencia-ia/ExplainButton";
+import { Pagination } from "@/components/ui/Pagination";
+import { DataCard, DataRow } from "@/components/ui/DataCard";
 
 type AlertRow = {
   id: string;
@@ -71,18 +73,16 @@ export function AlertsPage({
   const [ackingId, setAckingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const totalPages = Math.max(1, Math.ceil(count / pageSize));
-  const rangeFrom = count === 0 ? 0 : (page - 1) * pageSize + 1;
-  const rangeTo = Math.min(page * pageSize, count);
-
-  function navigate(next: { type?: string; status?: string; page?: number }) {
+  function navigate(next: { type?: string; status?: string; page?: number; size?: number }) {
     const params = new URLSearchParams();
     const nt = next.type ?? typeFilter;
     const ns = next.status ?? statusFilter;
     const np = next.page ?? 1;
+    const nsize = next.size ?? pageSize;
     if (nt) params.set("type", nt);
     if (ns && ns !== "active") params.set("status", ns);
     if (np > 1) params.set("page", String(np));
+    if (nsize !== 20) params.set("size", String(nsize));
     const qs = params.toString();
     router.push(qs ? `/alerts?${qs}` : "/alerts");
   }
@@ -95,6 +95,56 @@ export function AlertsPage({
       setAckingId(null);
       if (!result.ok) setErrorKey(result.error ?? "unexpected");
     });
+  }
+
+  function typeBadge(a: AlertRow) {
+    const expired = a.type === "expiry" && a.expiry_date !== null && isPastDate(a.expiry_date);
+    if (a.type === "low_stock") return <span className="mi-badge mi-badge--amber">{t("type_low_stock")}</span>;
+    if (a.type === "reorder_suggested") return <span className="mi-badge mi-badge--blue">{t("type_reorder")}</span>;
+    return (
+      <span className={`mi-badge ${expired ? "mi-badge--danger" : "mi-badge--blue"}`}>
+        {expired ? t("type_expired") : t("type_expiry")}
+      </span>
+    );
+  }
+
+  function detailText(a: AlertRow) {
+    return a.type === "low_stock"
+      ? t("detail_low_stock", { quantity: a.quantity ?? 0, threshold: a.threshold ?? 0 })
+      : a.type === "reorder_suggested"
+        ? t("detail_reorder", { quantity: a.quantity ?? 0, threshold: a.threshold ?? 0 })
+        : t("detail_expiry", { date: a.expiry_date ? fmtDate(a.expiry_date) : "—", quantity: a.quantity ?? 0 });
+  }
+
+  function statusBadge(a: AlertRow) {
+    return a.status === "active" ? (
+      <span className="mi-badge mi-badge--danger">{t("status_active_badge")}</span>
+    ) : (
+      <span className="mi-badge mi-badge--green">{t("status_resolved_badge")}</span>
+    );
+  }
+
+  function ackAction(a: AlertRow) {
+    if (a.status === "active" && !a.acknowledged_at) {
+      return (
+        <button
+          type="button"
+          className="mi-btn mi-btn--ghost mi-btn--sm"
+          disabled={ackingId === a.id}
+          onClick={() => handleAcknowledge(a.id)}
+        >
+          {ackingId === a.id ? t("acknowledging") : t("acknowledge")}
+        </button>
+      );
+    }
+    if (a.status === "active" && a.acknowledged_at) {
+      return (
+        <span className="text-ink3" style={{ fontSize: 12 }}>
+          {t("acknowledged_on", { date: fmtDate(a.acknowledged_at) })}
+        </span>
+      );
+    }
+    return null;
   }
 
   return (
@@ -141,7 +191,7 @@ export function AlertsPage({
       </div>
 
       {/* Table */}
-      <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden">
+      <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden flex flex-col flex-1 min-h-0">
         <div
           className="flex flex-wrap items-center gap-3 p-4 border-b"
           style={{ borderColor: "var(--c-line)" }}
@@ -180,7 +230,7 @@ export function AlertsPage({
           </p>
         )}
 
-        <div className="overflow-x-auto">
+        <div className="hidden md:block md:flex-1 md:min-h-0 overflow-auto mi-table-scroll">
           <table className="mi-table">
             <thead>
               <tr>
@@ -200,102 +250,74 @@ export function AlertsPage({
                   </td>
                 </tr>
               ) : (
-                alerts.map((a) => {
-                  const expired = a.type === "expiry" && a.expiry_date !== null && isPastDate(a.expiry_date);
-                  return (
-                    <tr key={a.id} style={a.status === "resolved" ? { opacity: 0.55 } : undefined}>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          {a.status === "active" && !a.acknowledged_at && (
-                            <span
-                              title={t("unread_hint")}
-                              style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--c-danger)", flexShrink: 0 }}
-                            />
-                          )}
-                          <span className="font-semibold text-ink">{a.product_name}</span>
-                        </div>
-                      </td>
-                      <td>
-                        {a.type === "low_stock" ? (
-                          <span className="mi-badge mi-badge--amber">{t("type_low_stock")}</span>
-                        ) : a.type === "reorder_suggested" ? (
-                          <span className="mi-badge mi-badge--blue">{t("type_reorder")}</span>
-                        ) : (
-                          <span className={`mi-badge ${expired ? "mi-badge--danger" : "mi-badge--blue"}`}>
-                            {expired ? t("type_expired") : t("type_expiry")}
-                          </span>
+                alerts.map((a) => (
+                  <tr key={a.id} style={a.status === "resolved" ? { opacity: 0.55 } : undefined}>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        {a.status === "active" && !a.acknowledged_at && (
+                          <span
+                            title={t("unread_hint")}
+                            style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--c-danger)", flexShrink: 0 }}
+                          />
                         )}
-                      </td>
-                      <td className="text-ink2" style={{ fontSize: 13 }}>
-                        {a.type === "low_stock"
-                          ? t("detail_low_stock", { quantity: a.quantity ?? 0, threshold: a.threshold ?? 0 })
-                          : a.type === "reorder_suggested"
-                            ? t("detail_reorder", { quantity: a.quantity ?? 0, threshold: a.threshold ?? 0 })
-                            : t("detail_expiry", {
-                                date: a.expiry_date ? fmtDate(a.expiry_date) : "—",
-                                quantity: a.quantity ?? 0,
-                              })}
-                      </td>
-                      <td className="text-ink3" style={{ fontSize: 13 }}>{fmtDate(a.triggered_at)}</td>
-                      <td>
-                        {a.status === "active" ? (
-                          <span className="mi-badge mi-badge--danger">{t("status_active_badge")}</span>
-                        ) : (
-                          <span className="mi-badge mi-badge--green">{t("status_resolved_badge")}</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="flex items-center justify-end gap-1">
-                          {a.status === "active" && !a.acknowledged_at && (
-                            <button
-                              type="button"
-                              className="mi-btn mi-btn--ghost mi-btn--sm"
-                              disabled={ackingId === a.id}
-                              onClick={() => handleAcknowledge(a.id)}
-                            >
-                              {ackingId === a.id ? t("acknowledging") : t("acknowledge")}
-                            </button>
-                          )}
-                          {a.status === "active" && a.acknowledged_at && (
-                            <span className="text-ink3" style={{ fontSize: 12 }}>
-                              {t("acknowledged_on", { date: fmtDate(a.acknowledged_at) })}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                        <span className="font-semibold text-ink">{a.product_name}</span>
+                      </div>
+                    </td>
+                    <td>{typeBadge(a)}</td>
+                    <td className="text-ink2" style={{ fontSize: 13 }}>{detailText(a)}</td>
+                    <td className="text-ink3" style={{ fontSize: 13 }}>{fmtDate(a.triggered_at)}</td>
+                    <td>{statusBadge(a)}</td>
+                    <td>
+                      <div className="flex items-center justify-end gap-1">{ackAction(a)}</div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between gap-3 p-4 border-t" style={{ borderColor: "var(--c-line)" }}>
-          <span className="text-ink3" style={{ fontSize: 13 }}>
-            {t("pagination_range", { from: rangeFrom, to: rangeTo, total: count })}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="mi-btn mi-btn--ghost mi-btn--sm"
-              disabled={page <= 1}
-              onClick={() => navigate({ page: page - 1 })}
-            >
-              {t("prev")}
-            </button>
-            <span className="text-ink2" style={{ fontSize: 13 }}>
-              {t("page_of", { page, total: totalPages })}
-            </span>
-            <button
-              className="mi-btn mi-btn--ghost mi-btn--sm"
-              disabled={page >= totalPages}
-              onClick={() => navigate({ page: page + 1 })}
-            >
-              {t("next")}
-            </button>
-          </div>
+        {/* Mobile cards */}
+        <div className="flex-1 min-h-0 overflow-auto md:hidden p-3">
+          {alerts.length === 0 ? (
+            <div className="text-ink3" style={{ textAlign: "center", padding: "24px 0", fontSize: 14 }}>
+              {t("empty")}
+            </div>
+          ) : (
+            alerts.map((a) => (
+              <DataCard
+                key={a.id}
+                header={
+                  <span className="flex items-center gap-2" style={a.status === "resolved" ? { opacity: 0.6 } : undefined}>
+                    {a.status === "active" && !a.acknowledged_at && (
+                      <span
+                        title={t("unread_hint")}
+                        style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--c-danger)", flexShrink: 0 }}
+                      />
+                    )}
+                    <span className="font-semibold text-ink">{a.product_name}</span>
+                  </span>
+                }
+                meta={typeBadge(a)}
+              >
+                <dl className="mi-dl">
+                  <DataRow label={t("table_detail")}>{detailText(a)}</DataRow>
+                  <DataRow label={t("table_triggered")}>{fmtDate(a.triggered_at)}</DataRow>
+                  <DataRow label={t("table_status")}>{statusBadge(a)}</DataRow>
+                  {ackAction(a) && <DataRow label={t("table_actions")}>{ackAction(a)}</DataRow>}
+                </dl>
+              </DataCard>
+            ))
+          )}
         </div>
+
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          count={count}
+          onPageChange={(p) => navigate({ page: p })}
+          onPageSizeChange={(s) => navigate({ size: s, page: 1 })}
+        />
       </div>
 
       {showSettings && <AlertSettingsModal settings={settings} onClose={() => setShowSettings(false)} />}
