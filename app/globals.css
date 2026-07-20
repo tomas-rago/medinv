@@ -176,6 +176,13 @@ body {
 .mi-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .mi-btn:disabled:hover { filter: none; }
 
+/* Collapse a button label to icon-only below sm; label returns at ≥640px. */
+.mi-btn__label { display: none; }
+@media (min-width: 640px) { .mi-btn__label { display: inline; } }
+@media (max-width: 639px) {
+  .mi-btn:has(> .mi-btn__label) { padding-left: 12px; padding-right: 12px; }
+}
+
 /* ===========================================================================
    Form fields
    =========================================================================== */

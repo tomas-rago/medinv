@@ -301,13 +301,13 @@ export function StockPage({
             {aiExplain && <ExplainButton screen="stock" />}
             {canWrite && (
               <>
-                <button className="mi-btn mi-btn--soft" onClick={() => setShowExit(true)}>
+                <button className="mi-btn mi-btn--soft" onClick={() => setShowExit(true)} aria-label={t("exit_button")} title={t("exit_button")}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>
-                  {t("exit_button")}
+                  <span className="mi-btn__label">{t("exit_button")}</span>
                 </button>
-                <button className="mi-btn mi-btn--primary" onClick={() => setShowEntry(true)}>
+                <button className="mi-btn mi-btn--primary" onClick={() => setShowEntry(true)} aria-label={t("entry_button")} title={t("entry_button")}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                  {t("entry_button")}
+                  <span className="mi-btn__label">{t("entry_button")}</span>
                 </button>
               </>
             )}
@@ -470,11 +470,13 @@ export function StockPage({
                 className="mi-btn mi-btn--soft mi-btn--sm"
                 disabled={exporting !== null}
                 onClick={() => setExportMenuOpen((open) => !open)}
+                aria-label={t("export_button")}
+                title={t("export_button")}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
                 </svg>
-                {exporting ? t("exporting") : t("export_button")}
+                <span className="mi-btn__label">{exporting ? t("exporting") : t("export_button")}</span>
               </button>
               {exportMenuOpen && (
                 <div

@@ -6,7 +6,8 @@
     "pagination_range": "{from}–{to} de {total}",
     "rows_per_page": "Filas por página",
     "expand": "Mostrar detalles",
-    "collapse": "Ocultar detalles"
+    "collapse": "Ocultar detalles",
+    "filters": "Filtros"
   },
   "Login": {
     "heading": "Bienvenid@ de nuevo",

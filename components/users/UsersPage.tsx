@@ -7,6 +7,7 @@ import { InviteModal } from "./InviteModal";
 import { EditUserModal } from "./EditUserModal";
 import { Pagination } from "@/components/ui/Pagination";
 import { DataCard, DataRow } from "@/components/ui/DataCard";
+import { FilterBar } from "@/components/ui/FilterBar";
 
 type Profile = {
   id: string;
@@ -142,15 +143,18 @@ export function UsersPage({ profiles, count, page, pageSize, q, isAdmin }: Users
             data-tutorial="actions"
             className="mi-btn mi-btn--primary"
             onClick={() => setShowInvite(true)}
+            aria-label={t("invite_button")}
+            title={t("invite_button")}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            {t("invite_button")}
+            <span className="mi-btn__label">{t("invite_button")}</span>
           </button>
         )}
       </div>
 
       {/* Table */}
       <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden flex flex-col flex-1 min-h-0">
+        <FilterBar hasActive={Boolean(search)}>
         <div
           className="flex flex-wrap items-center gap-3 p-4 border-b"
           style={{ borderColor: "var(--c-line)" }}
@@ -177,6 +181,7 @@ export function UsersPage({ profiles, count, page, pageSize, q, isAdmin }: Users
             {t("user_count", { count })}
           </span>
         </div>
+        </FilterBar>
 
         <div className="hidden md:block md:flex-1 md:min-h-0 overflow-auto mi-table-scroll">
           <table className="mi-table">

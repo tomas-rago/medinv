@@ -11,6 +11,7 @@ import type { ThresholdRow } from "./ThresholdsModal";
 import { ExplainButton } from "@/components/asistencia-ia/ExplainButton";
 import { Pagination } from "@/components/ui/Pagination";
 import { DataCard, DataRow } from "@/components/ui/DataCard";
+import { FilterBar } from "@/components/ui/FilterBar";
 
 type AlertRow = {
   id: string;
@@ -172,17 +173,17 @@ export function AlertsPage({
             {aiExplain && <ExplainButton screen="alerts" />}
             {canManage && (
               <>
-                <button className="mi-btn mi-btn--soft" onClick={() => setShowThresholds(true)}>
+                <button className="mi-btn mi-btn--soft" onClick={() => setShowThresholds(true)} aria-label={t("thresholds_button")} title={t("thresholds_button")}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/>
                   </svg>
-                  {t("thresholds_button")}
+                  <span className="mi-btn__label">{t("thresholds_button")}</span>
                 </button>
-                <button className="mi-btn mi-btn--primary" onClick={() => setShowSettings(true)}>
+                <button className="mi-btn mi-btn--primary" onClick={() => setShowSettings(true)} aria-label={t("settings_button")} title={t("settings_button")}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.5M12 19v2.5M4.5 12H2M22 12h-2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8"/>
                   </svg>
-                  {t("settings_button")}
+                  <span className="mi-btn__label">{t("settings_button")}</span>
                 </button>
               </>
             )}
@@ -192,6 +193,7 @@ export function AlertsPage({
 
       {/* Table */}
       <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden flex flex-col flex-1 min-h-0">
+        <FilterBar hasActive={Boolean(typeFilter) || statusFilter !== "active"}>
         <div
           className="flex flex-wrap items-center gap-3 p-4 border-b"
           style={{ borderColor: "var(--c-line)" }}
@@ -222,6 +224,7 @@ export function AlertsPage({
             {t("alert_count", { count })}
           </span>
         </div>
+        </FilterBar>
 
         {errorKey && (
           <p className="mi-field-error px-4 pt-3">
