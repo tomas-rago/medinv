@@ -184,12 +184,20 @@ export function DashboardSummaryCard({ initialSummary }: DashboardSummaryCardPro
             <div
               className={chart ? "grid gap-5 lg:grid-cols-2 lg:items-start" : undefined}
             >
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* min-w-0: grid items default to min-width:auto, which would stop
+                  this column shrinking below its content and push the card wide. */}
+              <div
+                className="min-w-0"
+                style={{ display: "flex", flexDirection: "column", gap: 16 }}
+              >
                 <div>
-                  <p className="font-semibold text-ink" style={{ fontSize: 15 }}>
+                  <p className="font-semibold text-ink wrap-break-word" style={{ fontSize: 15 }}>
                     {content.headline}
                   </p>
-                  <p className="whitespace-pre-wrap text-ink2 mt-1" style={{ fontSize: 14 }}>
+                  <p
+                    className="whitespace-pre-wrap wrap-break-word text-ink2 mt-1"
+                    style={{ fontSize: 14 }}
+                  >
                     {content.summary}
                   </p>
                 </div>
@@ -227,7 +235,7 @@ export function DashboardSummaryCard({ initialSummary }: DashboardSummaryCardPro
 
               {chart && (
                 <div
-                  className="mi-card"
+                  className="mi-card min-w-0 overflow-x-auto"
                   style={{ padding: 16, background: "var(--c-surface-2)" }}
                 >
                   <SummaryChart spec={chart} />

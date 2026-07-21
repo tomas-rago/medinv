@@ -111,7 +111,19 @@ export async function HomePage({
   return (
     <div
       className="flex-1 overflow-y-auto px-4 py-5 md:px-7 md:py-7"
-      style={{ display: "flex", flexDirection: "column", gap: "var(--d-section-gap)" }}
+      // Grid, not flex-column: this element has a definite height (flex-1 inside
+      // the h-screen shell), so as a flex container its children would shrink to
+      // fit — and cards carrying `overflow-hidden` have an automatic minimum
+      // size of 0, so they were squashed and their content cropped. Grid rows
+      // size to their content; align-content:start keeps them from stretching.
+      style={{
+        display: "grid",
+        // minmax(0, 1fr) keeps a wide child (a table, a chart) from stretching
+        // the column past the viewport instead of scrolling inside its own box.
+        gridTemplateColumns: "minmax(0, 1fr)",
+        alignContent: "start",
+        gap: "var(--d-section-gap)",
+      }}
     >
       {/* Greeting */}
       <div className="flex flex-wrap items-end justify-between gap-4">
