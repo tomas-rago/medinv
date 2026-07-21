@@ -22,6 +22,7 @@ export default async function ReceptorsServerPage({
   const role = user.app_metadata?.role as string;
   const canCreate = canCreateReceptors(role);
   const canManage = canManageReceptors(role);
+  if (!canCreate) redirect("/products");
 
   const page = resolvePage(sp.page);
   const pageSize = resolvePageSize(sp.size);

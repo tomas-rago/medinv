@@ -20,6 +20,7 @@ export default async function ProvidersServerPage({
   if (!user) redirect("/login");
 
   const canManage = canManageProviders(user.app_metadata?.role as string);
+  if (!canManage) redirect("/products");
 
   const page = resolvePage(sp.page);
   const pageSize = resolvePageSize(sp.size);

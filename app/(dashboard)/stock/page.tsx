@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { canWriteInventory } from "@/lib/constants/roles";
+import { canWriteInventory, canViewReports } from "@/lib/constants/roles";
 import { hasAiAccess } from "@/lib/ai/access";
 import { parseMovementFilters } from "@/lib/schemas/stock/filters";
 import { buildMovementsQuery } from "./query";
@@ -31,13 +31,18 @@ export default async function StockServerPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const canWrite = canWriteInventory(user.app_metadata?.role as string);
+  const role = user.app_metadata?.role as string;
+  const canWrite = canWriteInventory(role);
+  // Movements log/export is a "report" — reserved for operational roles.
+  // Doctor keeps stock access (Existencias tab) but not the movements report.
+  const showReports = canViewReports(role);
 
   const orgId = user.app_metadata?.organization_id as string | undefined;
   const aiExplain = orgId ? await hasAiAccess(supabase, orgId) : false;
 
   const filters = parseMovementFilters(sp);
-  const initialTab = sp.tab === "movements" ? ("movements" as const) : ("stock" as const);
+  const initialTab =
+    showReports && sp.tab === "movements" ? ("movements" as const) : ("stock" as const);
 
   const page = resolvePage(sp.page);
   const pageSize = resolvePageSize(sp.size);
@@ -166,6 +171,7 @@ export default async function StockServerPage({
       page={page}
       pageSize={pageSize}
       canWrite={canWrite}
+      canViewReports={showReports}
       rectifiedIds={rectifiedIds}
       existencias={existencias}
       aiExplain={aiExplain}

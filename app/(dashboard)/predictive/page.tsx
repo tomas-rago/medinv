@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { canManagePredictive } from "@/lib/constants/roles";
+import { canManagePredictive, canViewPredictive } from "@/lib/constants/roles";
 import { hasAiAccess } from "@/lib/ai/access";
 import { getPredictions } from "@/lib/predictive/data";
 import { syncReorderAlerts } from "@/lib/predictive/alerts";
@@ -22,7 +22,10 @@ export default async function PredictiveServerPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const canManage = canManagePredictive(user.app_metadata?.role as string);
+  const role = user.app_metadata?.role as string;
+  if (!canViewPredictive(role)) redirect("/products");
+
+  const canManage = canManagePredictive(role);
 
   const orgId = user.app_metadata?.organization_id as string | undefined;
   const aiExplain = orgId ? await hasAiAccess(supabase, orgId) : false;

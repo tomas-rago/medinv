@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { hasAiAccess } from "@/lib/ai/access";
+import { canViewDashboard } from "@/lib/constants/roles";
 import { getPredictions } from "@/lib/predictive/data";
 import { HomePage, type AtRiskItem } from "@/components/home/HomePage";
 
@@ -19,6 +20,7 @@ export default async function DashboardPage() {
   if (!user) redirect("/login");
 
   const role = (user.app_metadata?.role as string) ?? "administrative";
+  if (!canViewDashboard(role)) redirect("/products");
   const orgId = user.app_metadata?.organization_id as string | undefined;
 
   // getPredictions also runs inside the layout's syncReorderAlerts; cheap at

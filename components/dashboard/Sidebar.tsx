@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Logo } from "@/components/ui/Logo";
+import {
+  canManageProviders,
+  canManagePurchases,
+  canCreateReceptors,
+  canViewAlerts,
+  canViewDashboard,
+  canViewPredictive,
+} from "@/lib/constants/roles";
 import { SidebarNav, SidebarNavLink, type SidebarNavGroup, type SidebarNavItem } from "./SidebarNav";
 
 interface SidebarProps {
@@ -24,12 +32,15 @@ export async function Sidebar({ profile, hasAiAccess = false, alertCount = 0 }: 
     administrative: t("roles.administrative"),
   };
 
-  type NavItem = SidebarNavItem & { adminOnly?: boolean };
+  // `visible` hides an item for roles the matrix excludes from that module
+  // (doctor sees only products/stock). `adminOnly` keeps the chief_doctor-only
+  // items. Products/stock have no predicate → visible to every role.
+  type NavItem = SidebarNavItem & { adminOnly?: boolean; visible?: (role: string) => boolean };
 
   const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     {
       label: t("groups.general"),
-      items: [{ id: "panel", href: "/dashboard", icon: "i-home", label: t("nav.panel") }],
+      items: [{ id: "panel", href: "/dashboard", icon: "i-home", label: t("nav.panel"), visible: canViewDashboard }],
     },
     {
       label: t("groups.operation"),
@@ -41,12 +52,13 @@ export async function Sidebar({ profile, hasAiAccess = false, alertCount = 0 }: 
           href: "/alerts",
           icon: "i-bell",
           label: t("nav.alerts"),
+          visible: canViewAlerts,
           ...(alertCount > 0 ? { badge: String(alertCount), badgeTone: "danger" } : {}),
         } as NavItem,
-        { id: "compras", href: "/purchases", icon: "i-cart", label: t("nav.purchases") },
-        { id: "proveedores", href: "/providers", icon: "i-truck", label: t("nav.providers") },
-        { id: "receptores", href: "/receptors", icon: "i-user", label: t("nav.receptors") },
-        { id: "prediccion", href: "/predictive", icon: "i-chart", label: t("nav.predictive") },
+        { id: "compras", href: "/purchases", icon: "i-cart", label: t("nav.purchases"), visible: canManagePurchases },
+        { id: "proveedores", href: "/providers", icon: "i-truck", label: t("nav.providers"), visible: canManageProviders },
+        { id: "receptores", href: "/receptors", icon: "i-user", label: t("nav.receptors"), visible: canCreateReceptors },
+        { id: "prediccion", href: "/predictive", icon: "i-chart", label: t("nav.predictive"), visible: canViewPredictive },
         { id: "personal", href: "/users", icon: "i-users", label: t("nav.users"), adminOnly: true },
       ],
     },
@@ -67,7 +79,20 @@ export async function Sidebar({ profile, hasAiAccess = false, alertCount = 0 }: 
 
   const groups: SidebarNavGroup[] = NAV_GROUPS.map((group) => ({
     label: group.label,
-    items: group.items.filter((item) => !item.adminOnly || profile.role === "chief_doctor"),
+    items: group.items
+      .filter(
+        (item) =>
+          (!item.adminOnly || profile.role === "chief_doctor") &&
+          (!item.visible || item.visible(profile.role))
+      )
+      // Strip the server-only gating props — the rest is passed to a client
+      // component and must be serializable (no functions).
+      .map((item) => {
+        const clean = { ...item };
+        delete clean.adminOnly;
+        delete clean.visible;
+        return clean;
+      }),
   }));
 
   return (

@@ -49,6 +49,7 @@ interface StockPageProps {
   page: number;
   pageSize: number;
   canWrite: boolean;
+  canViewReports: boolean;
   rectifiedIds: string[];
   existencias: ExistenciaRow[];
   aiExplain: boolean;
@@ -114,6 +115,7 @@ export function StockPage({
   page,
   pageSize,
   canWrite,
+  canViewReports,
   rectifiedIds,
   existencias,
   aiExplain,
@@ -315,21 +317,23 @@ export function StockPage({
         )}
       </div>
 
-      {/* Tabs */}
-      <div data-tutorial="tabs" className="flex items-center gap-2">
-        <button
-          className={tab === "stock" ? "mi-btn mi-btn--soft mi-btn--sm" : "mi-btn mi-btn--ghost mi-btn--sm"}
-          onClick={() => setTab("stock")}
-        >
-          {t("tab_stock")}
-        </button>
-        <button
-          className={tab === "movements" ? "mi-btn mi-btn--soft mi-btn--sm" : "mi-btn mi-btn--ghost mi-btn--sm"}
-          onClick={() => setTab("movements")}
-        >
-          {t("tab_movements")}
-        </button>
-      </div>
+      {/* Tabs — the movements report is reserved for operational roles. */}
+      {canViewReports && (
+        <div data-tutorial="tabs" className="flex items-center gap-2">
+          <button
+            className={tab === "stock" ? "mi-btn mi-btn--soft mi-btn--sm" : "mi-btn mi-btn--ghost mi-btn--sm"}
+            onClick={() => setTab("stock")}
+          >
+            {t("tab_stock")}
+          </button>
+          <button
+            className={tab === "movements" ? "mi-btn mi-btn--soft mi-btn--sm" : "mi-btn mi-btn--ghost mi-btn--sm"}
+            onClick={() => setTab("movements")}
+          >
+            {t("tab_movements")}
+          </button>
+        </div>
+      )}
 
       {tab === "stock" ? (
         /* Existencias (on-hand) */
