@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+// Expiry on ingress paths must be today or later — a past date means the batch
+// is already expired and shouldn't enter stock. (Compared as YYYY-MM-DD strings
+// against the current UTC day, matching the `min` set on the date inputs.)
+export const notPastDate = (v: string) => v >= new Date().toISOString().slice(0, 10);
+
 export const StockEntrySchema = z.object({
   product_id: z.string().uuid("product_required"),
   quantity: z.coerce.number().positive("quantity_positive"),
@@ -7,7 +12,8 @@ export const StockEntrySchema = z.object({
     .string()
     .trim()
     .transform((v) => (v === "" ? undefined : v))
-    .optional(),
+    .optional()
+    .refine((v) => v === undefined || notPastDate(v), "expiry_date_in_past"),
   notes: z
     .string()
     .trim()
@@ -21,6 +27,13 @@ export type StockEntryInput = z.infer<typeof StockEntrySchema>;
 export const StockExitSchema = z.object({
   product_id: z.string().uuid("product_required"),
   quantity: z.coerce.number().positive("quantity_positive"),
+  // Optional destination (receptor) — empty string means "none".
+  receptor_id: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? undefined : v))
+    .refine((v) => v === undefined || z.uuid().safeParse(v).success, "receptor_invalid")
+    .optional(),
   notes: z
     .string()
     .trim()

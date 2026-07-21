@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { notPastDate } from "@/lib/schemas/stock/movement";
 
 // Line items travel as a JSON string in a hidden form field (the create and
 // receive modals build them dynamically), so both schemas parse from string.
@@ -51,7 +52,8 @@ const ReceiveItemSchema = z.object({
     .transform((v) => (v === "" ? null : v))
     .nullable()
     .optional()
-    .transform((v) => v ?? null),
+    .transform((v) => v ?? null)
+    .refine((v) => v === null || notPastDate(v), "expiry_date_in_past"),
 });
 
 export const ReceivePurchaseSchema = z.object({

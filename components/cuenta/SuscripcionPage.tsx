@@ -151,7 +151,7 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
   const featuredIndex = Math.floor(paidPlans.length / 2);
 
   return (
-    <div className="flex-1 overflow-y-auto p-8">
+    <div className="flex-1 overflow-y-auto px-4 py-5 md:p-8">
       <div className="max-w-4xl mx-auto space-y-8">
 
         {/* Header */}
@@ -220,7 +220,13 @@ export function SuscripcionPage({ org, currentPlan, plans }: Props) {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5 items-stretch">
+          <div
+            className="grid gap-5 items-stretch mx-auto"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              maxWidth: paidPlans.length === 1 ? 380 : paidPlans.length === 2 ? 720 : undefined,
+            }}
+          >
             {paidPlans.map((plan, idx) => {
               const meta = TIER_META[Math.min(idx, TIER_META.length - 1)];
               const isFeatured = idx === featuredIndex;

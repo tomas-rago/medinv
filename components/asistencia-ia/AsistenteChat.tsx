@@ -165,7 +165,7 @@ export default function AsistenteChat({ usedTokens, tokenLimit }: AsistenteChatP
   const fmt = (n: number) => n.toLocaleString("es-AR");
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 px-7 py-7 gap-4">
+    <div className="flex-1 flex flex-col min-h-0 px-4 py-5 md:px-7 md:py-7 gap-4">
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

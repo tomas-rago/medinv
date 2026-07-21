@@ -89,7 +89,7 @@ export function SignUp() {
             </p>
 
             <form action={action}>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="mi-field" style={{ marginTop: 0 }}>
                   <label htmlFor="firstName" className="mi-label">{t("first_name")}</label>
                   <input
@@ -153,6 +153,29 @@ export function SignUp() {
                   />
                 </div>
                 {state.errors.password?.map((e) => (
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  <p key={e} className="mi-field-error">{tVal(e as any)}</p>
+                ))}
+              </div>
+
+              <div className="mi-field">
+                <label className="mi-check-row">
+                  <input type="checkbox" name="terms" className="mi-check" />
+                  <span>
+                    {t.rich("terms_label", {
+                      link: (chunks) => (
+                        <Link
+                          href="/terms"
+                          target="_blank"
+                          className="font-semibold text-primary hover:text-primaryd"
+                        >
+                          {chunks}
+                        </Link>
+                      ),
+                    })}
+                  </span>
+                </label>
+                {state.errors.terms?.map((e) => (
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   <p key={e} className="mi-field-error">{tVal(e as any)}</p>
                 ))}

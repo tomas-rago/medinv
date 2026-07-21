@@ -7,7 +7,14 @@ import { StockEntryModal } from "./StockEntryModal";
 import { StockExitModal } from "./StockExitModal";
 import { RectifyMovementModal } from "./RectifyMovementModal";
 import type { RectifiableMovement } from "./RectifyMovementModal";
+import { MovementsFilterBar } from "./MovementsFilterBar";
+import { movementsUrl } from "./movements-url";
 import { ExplainButton } from "@/components/asistencia-ia/ExplainButton";
+import { Pagination } from "@/components/ui/Pagination";
+import { DataCard, DataRow } from "@/components/ui/DataCard";
+import { fetchMovementsForExport } from "@/app/(dashboard)/stock/actions";
+import type { MovementFilters, MovementSortKey } from "@/lib/schemas/stock/filters";
+import type { MovementExportRow } from "@/lib/export/movements-types";
 
 type MovementRow = {
   id: string;
@@ -19,7 +26,10 @@ type MovementRow = {
   corrects_movement_id: string | null;
   product_name: string;
   category: string | null;
+  criticality: string | null;
   user_name: string;
+  provider_name: string | null;
+  receptor_name: string | null;
 };
 
 type ExistenciaRow = {
@@ -39,9 +49,15 @@ interface StockPageProps {
   page: number;
   pageSize: number;
   canWrite: boolean;
+  canViewReports: boolean;
   rectifiedIds: string[];
   existencias: ExistenciaRow[];
   aiExplain: boolean;
+  filters: MovementFilters;
+  initialTab: "stock" | "movements";
+  providers: { id: string; name: string }[];
+  selectedProductName: string | null;
+  selectedReceptorName: string | null;
 }
 
 const TYPE_TONES: Record<string, string> = {
@@ -55,25 +71,82 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export function StockPage({ movements, count, page, pageSize, canWrite, rectifiedIds, existencias, aiExplain }: StockPageProps) {
+function SortHeader({
+  column,
+  label,
+  activeSort,
+  activeDir,
+  onSort,
+  sortLabel,
+}: {
+  column: MovementSortKey;
+  label: string;
+  activeSort: MovementSortKey;
+  activeDir: "asc" | "desc";
+  onSort: (key: MovementSortKey) => void;
+  sortLabel: (dir: "asc" | "desc") => string;
+}) {
+  const isActive = activeSort === column;
+  return (
+    <th>
+      <button
+        type="button"
+        onClick={() => onSort(column)}
+        className="inline-flex items-center gap-1"
+        style={{ font: "inherit", color: "inherit", cursor: "pointer" }}
+        aria-label={sortLabel(isActive && activeDir === "asc" ? "desc" : "asc")}
+      >
+        {label}
+        <svg
+          width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
+          style={{ opacity: isActive ? 1 : 0.3, transform: isActive && activeDir === "desc" ? "rotate(180deg)" : "none" }}
+        >
+          <path d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+      </button>
+    </th>
+  );
+}
+
+export function StockPage({
+  movements,
+  count,
+  page,
+  pageSize,
+  canWrite,
+  canViewReports,
+  rectifiedIds,
+  existencias,
+  aiExplain,
+  filters,
+  initialTab,
+  providers,
+  selectedProductName,
+  selectedReceptorName,
+}: StockPageProps) {
   const t = useTranslations("Stock");
   const tCat = useTranslations("Categories");
+  const tCrit = useTranslations("Criticality");
   const tUnit = useTranslations("Units");
   const router = useRouter();
   const [showEntry, setShowEntry] = useState(false);
   const [showExit, setShowExit] = useState(false);
   const [rectifying, setRectifying] = useState<RectifiableMovement | null>(null);
-  const [tab, setTab] = useState<"stock" | "movements">("stock");
+  const [tab, setTab] = useState<"stock" | "movements">(initialTab);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [exporting, setExporting] = useState<"csv" | "xlsx" | "pdf" | null>(null);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
 
   const rectifiedSet = new Set(rectifiedIds);
 
-  const totalPages = Math.max(1, Math.ceil(count / pageSize));
-  const rangeFrom = count === 0 ? 0 : (page - 1) * pageSize + 1;
-  const rangeTo = Math.min(page * pageSize, count);
-
   function goto(p: number) {
-    router.push(p > 1 ? `/stock?page=${p}` : "/stock");
+    router.push(movementsUrl(filters, p, pageSize));
+  }
+
+  function setSize(s: number) {
+    router.push(movementsUrl(filters, 1, s));
   }
 
   function toggleExpand(id: string) {
@@ -85,11 +158,129 @@ export function StockPage({ movements, count, page, pageSize, canWrite, rectifie
     });
   }
 
-  const colSpanMovements = canWrite ? 8 : 7;
+  const activeSort: MovementSortKey = filters.sort ?? "date";
+  const activeDir = filters.dir ?? (activeSort === "date" ? "desc" : "asc");
+
+  function onSort(key: MovementSortKey) {
+    // Same column toggles direction; a new column starts at its default.
+    const dir =
+      activeSort === key
+        ? activeDir === "asc" ? "desc" : "asc"
+        : key === "date" ? "desc" : "asc";
+    router.push(movementsUrl({ ...filters, sort: key, dir }));
+  }
+
+  const sortHeaderProps = {
+    activeSort,
+    activeDir,
+    onSort,
+    sortLabel: (dir: "asc" | "desc") => (dir === "asc" ? t("sort_asc") : t("sort_desc")),
+  };
+
+  // Translate export row codes to labels client-side so es.json stays the
+  // single label source.
+  function toExportCells(rows: MovementExportRow[]): string[][] {
+    return rows.map((r) => [
+      fmtDate(r.created_at),
+      r.product_name,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      r.category ? tCat(r.category as any) : "—",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      r.criticality ? tCrit(r.criticality as any) : "—",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      t.has(`type_${r.type}` as any) ? t(`type_${r.type}` as any) : r.type,
+      String(r.quantity),
+      r.expiry_date ? fmtDate(r.expiry_date) : "—",
+      r.user_name,
+      r.provider_name ?? "—",
+      r.receptor_name ?? "—",
+      r.notes ?? "—",
+    ]);
+  }
+
+  async function handleExport(format: "csv" | "xlsx" | "pdf") {
+    setExportMenuOpen(false);
+    setExportNotice(null);
+    setExporting(format);
+    try {
+      const result = await fetchMovementsForExport(filters);
+      if (!result.ok) {
+        setExportNotice(t("export_failed"));
+        return;
+      }
+      if (result.rows.length === 0) {
+        setExportNotice(t("export_empty"));
+        return;
+      }
+      const headers = [
+        t("table_date"),
+        t("table_product"),
+        t("table_product_category"),
+        t("table_criticality"),
+        t("table_type"),
+        t("table_quantity"),
+        t("table_expiry"),
+        t("table_user"),
+        t("table_provider"),
+        t("table_receptor"),
+        t("table_notes"),
+      ];
+      const cells = toExportCells(result.rows);
+      const filename = `movimientos-${new Date().toISOString().slice(0, 10)}`;
+      const exporters = await import("@/lib/export/movements");
+      if (format === "csv") exporters.exportMovementsCsv(headers, cells, filename);
+      else if (format === "xlsx") await exporters.exportMovementsXlsx(headers, cells, filename);
+      else await exporters.exportMovementsPdf(headers, cells, filename, t("movements_title"));
+      if (result.truncated) {
+        setExportNotice(t("export_truncated", { max: 5000 }));
+      }
+    } catch (err) {
+      console.error("[export]", err);
+      setExportNotice(t("export_failed"));
+    } finally {
+      setExporting(null);
+    }
+  }
+
+  const colSpanMovements = canWrite ? 10 : 9;
+
+  function movementTypeBadge(m: MovementRow, isRectification: boolean) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className={`mi-badge mi-badge--${TYPE_TONES[m.type] ?? "gray"}`}>
+          {t.has(`type_${m.type}`) ? t(`type_${m.type}`) : m.type}
+        </span>
+        {isRectification && <span className="mi-badge mi-badge--blue">{t("type_rectification")}</span>}
+      </div>
+    );
+  }
+
+  function signedQuantity(m: MovementRow) {
+    const sign = m.type === "entry" ? "+" : m.type === "exit" || m.type === "expiry" ? "−" : "";
+    return `${sign}${m.quantity}`;
+  }
+
+  function rectifyControl(m: MovementRow, canRollback: boolean, alreadyRectified: boolean) {
+    return canRollback ? (
+      <button
+        type="button"
+        className="mi-iconbtn"
+        aria-label={t("rectify_action")}
+        title={t("rectify_action")}
+        onClick={() => setRectifying({ id: m.id, type: m.type, quantity: m.quantity, expiry_date: m.expiry_date, product_name: m.product_name })}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
+        </svg>
+      </button>
+    ) : (
+      <span className="text-ink3" style={{ fontSize: 13 }}>{alreadyRectified ? t("rectified_tag") : "—"}</span>
+    );
+  }
 
   return (
     <div
-      className="flex-1 overflow-y-auto px-7 py-7"
+      className="flex-1 overflow-y-auto px-4 py-5 md:px-7 md:py-7"
       style={{ display: "flex", flexDirection: "column", gap: "var(--d-section-gap)" }}
     >
       {/* Page header */}
@@ -108,17 +299,17 @@ export function StockPage({ movements, count, page, pageSize, canWrite, rectifie
           </p>
         </div>
         {(canWrite || aiExplain) && (
-          <div className="flex items-center gap-2">
+          <div data-tutorial="actions" className="flex items-center gap-2">
             {aiExplain && <ExplainButton screen="stock" />}
             {canWrite && (
               <>
-                <button className="mi-btn mi-btn--soft" onClick={() => setShowExit(true)}>
+                <button className="mi-btn mi-btn--soft" onClick={() => setShowExit(true)} aria-label={t("exit_button")} title={t("exit_button")}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>
-                  {t("exit_button")}
+                  <span className="mi-btn__label">{t("exit_button")}</span>
                 </button>
-                <button className="mi-btn mi-btn--primary" onClick={() => setShowEntry(true)}>
+                <button className="mi-btn mi-btn--primary" onClick={() => setShowEntry(true)} aria-label={t("entry_button")} title={t("entry_button")}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                  {t("entry_button")}
+                  <span className="mi-btn__label">{t("entry_button")}</span>
                 </button>
               </>
             )}
@@ -126,25 +317,27 @@ export function StockPage({ movements, count, page, pageSize, canWrite, rectifie
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2">
-        <button
-          className={tab === "stock" ? "mi-btn mi-btn--soft mi-btn--sm" : "mi-btn mi-btn--ghost mi-btn--sm"}
-          onClick={() => setTab("stock")}
-        >
-          {t("tab_stock")}
-        </button>
-        <button
-          className={tab === "movements" ? "mi-btn mi-btn--soft mi-btn--sm" : "mi-btn mi-btn--ghost mi-btn--sm"}
-          onClick={() => setTab("movements")}
-        >
-          {t("tab_movements")}
-        </button>
-      </div>
+      {/* Tabs — the movements report is reserved for operational roles. */}
+      {canViewReports && (
+        <div data-tutorial="tabs" className="flex items-center gap-2">
+          <button
+            className={tab === "stock" ? "mi-btn mi-btn--soft mi-btn--sm" : "mi-btn mi-btn--ghost mi-btn--sm"}
+            onClick={() => setTab("stock")}
+          >
+            {t("tab_stock")}
+          </button>
+          <button
+            className={tab === "movements" ? "mi-btn mi-btn--soft mi-btn--sm" : "mi-btn mi-btn--ghost mi-btn--sm"}
+            onClick={() => setTab("movements")}
+          >
+            {t("tab_movements")}
+          </button>
+        </div>
+      )}
 
       {tab === "stock" ? (
         /* Existencias (on-hand) */
-        <div className="mi-card mi-shadow overflow-hidden">
+        <div data-tutorial="main" className="mi-card mi-shadow overflow-hidden flex flex-col flex-1 min-h-0">
           <div className="flex flex-wrap items-center gap-3 p-4 border-b" style={{ borderColor: "var(--c-line)" }}>
             <span className="font-semibold text-ink">{t("existencias_title")}</span>
             <div className="flex-1" />
@@ -152,7 +345,7 @@ export function StockPage({ movements, count, page, pageSize, canWrite, rectifie
               {t("existencias_count", { count: existencias.length })}
             </span>
           </div>
-          <div className="overflow-x-auto">
+          <div className="hidden md:block md:flex-1 md:min-h-0 overflow-auto mi-table-scroll">
             <table className="mi-table">
               <thead>
                 <tr>
@@ -216,28 +409,132 @@ export function StockPage({ movements, count, page, pageSize, canWrite, rectifie
               </tbody>
             </table>
           </div>
+
+          {/* Mobile cards */}
+          <div className="flex-1 min-h-0 overflow-auto md:hidden p-3">
+            {existencias.length === 0 ? (
+              <div className="text-ink3" style={{ textAlign: "center", padding: "24px 0", fontSize: 14 }}>
+                {t("existencias_empty")}
+              </div>
+            ) : (
+              existencias.map((s) => {
+                const unitLabel = tUnit.has(s.unit) ? tUnit(s.unit) : s.unit;
+                return (
+                  <DataCard
+                    key={s.product_id}
+                    header={
+                      <span className="flex items-center gap-2">
+                        <span className="font-semibold text-ink">{s.product_name}</span>
+                        {s.low && <span className="mi-badge mi-badge--amber">{t("existencias_low")}</span>}
+                      </span>
+                    }
+                    meta={
+                      <span className="text-ink" style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600, fontSize: 14 }}>
+                        {s.quantity} <span className="text-ink3" style={{ fontWeight: 400, fontSize: 12 }}>{unitLabel}</span>
+                      </span>
+                    }
+                  >
+                    <dl className="mi-dl">
+                      <DataRow label={t("table_product_category")}>
+                        {s.category ? <span className="mi-badge mi-badge--gray">{tCat(s.category)}</span> : "—"}
+                      </DataRow>
+                      {s.batches.length > 0 && (
+                        <div className="mi-dl-row" style={{ alignItems: "flex-start" }}>
+                          <dt>{t("existencias_expiry")}</dt>
+                          <dd>
+                            <span className="flex flex-col gap-1">
+                              {s.batches.map((b, i) => (
+                                <span key={`${s.product_id}-m-${i}`} style={{ fontVariantNumeric: "tabular-nums" }}>
+                                  {b.expiry_date ? fmtDate(b.expiry_date) : t("existencias_no_expiry")} · {b.quantity}
+                                </span>
+                              ))}
+                            </span>
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                  </DataCard>
+                );
+              })
+            )}
+          </div>
         </div>
       ) : (
         /* Movements log */
-        <div className="mi-card mi-shadow overflow-hidden">
+        <div className="mi-card mi-shadow overflow-hidden flex flex-col flex-1 min-h-0">
           <div className="flex flex-wrap items-center gap-3 p-4 border-b" style={{ borderColor: "var(--c-line)" }}>
             <span className="font-semibold text-ink">{t("movements_title")}</span>
             <div className="flex-1" />
+            {exportNotice && (
+              <span className="text-ink3" style={{ fontSize: 13 }}>{exportNotice}</span>
+            )}
+            <div className="relative">
+              <button
+                type="button"
+                className="mi-btn mi-btn--soft mi-btn--sm"
+                disabled={exporting !== null}
+                onClick={() => setExportMenuOpen((open) => !open)}
+                aria-label={t("export_button")}
+                title={t("export_button")}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
+                </svg>
+                <span className="mi-btn__label">{exporting ? t("exporting") : t("export_button")}</span>
+              </button>
+              {exportMenuOpen && (
+                <div
+                  className="rounded-xl overflow-hidden"
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    right: 0,
+                    zIndex: 50,
+                    marginTop: 4,
+                    minWidth: 160,
+                    border: "1px solid var(--c-line)",
+                    background: "var(--c-surface)",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+                  }}
+                >
+                  {(["csv", "xlsx", "pdf"] as const).map((format) => (
+                    <button
+                      key={format}
+                      type="button"
+                      className="w-full text-left px-3 py-2 text-ink"
+                      style={{ borderBottom: "1px solid var(--c-line)", fontSize: 13 }}
+                      onClick={() => handleExport(format)}
+                    >
+                      {format === "csv" ? t("export_csv") : format === "xlsx" ? t("export_excel") : t("export_pdf")}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <span className="text-ink3" style={{ fontSize: 13 }}>
               {t("movement_count", { count })}
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          <MovementsFilterBar
+            filters={filters}
+            providers={providers}
+            selectedProductName={selectedProductName}
+            selectedReceptorName={selectedReceptorName}
+          />
+
+          <div className="hidden md:block md:flex-1 md:min-h-0 overflow-auto mi-table-scroll">
             <table className="mi-table">
               <thead>
                 <tr>
-                  <th>{t("table_date")}</th>
-                  <th>{t("table_product")}</th>
-                  <th>{t("table_type")}</th>
-                  <th>{t("table_quantity")}</th>
-                  <th>{t("table_expiry")}</th>
+                  <SortHeader column="date" label={t("table_date")} {...sortHeaderProps} />
+                  <SortHeader column="product" label={t("table_product")} {...sortHeaderProps} />
+                  <SortHeader column="type" label={t("table_type")} {...sortHeaderProps} />
+                  <SortHeader column="quantity" label={t("table_quantity")} {...sortHeaderProps} />
+                  <SortHeader column="expiry" label={t("table_expiry")} {...sortHeaderProps} />
                   <th>{t("table_user")}</th>
+                  <th>{t("table_provider")}</th>
+                  <SortHeader column="receptor" label={t("table_receptor")} {...sortHeaderProps} />
                   <th>{t("table_notes")}</th>
                   {canWrite && <th style={{ textAlign: "right" }}>{t("table_actions")}</th>}
                 </tr>
@@ -258,42 +555,21 @@ export function StockPage({ movements, count, page, pageSize, canWrite, rectifie
                       <tr key={m.id}>
                         <td className="text-ink3" style={{ fontSize: 13 }}>{fmtDate(m.created_at)}</td>
                         <td className="font-medium text-ink">{m.product_name}</td>
-                        <td>
-                          <div className="flex items-center gap-1.5">
-                            <span className={`mi-badge mi-badge--${TYPE_TONES[m.type] ?? "gray"}`}>
-                              {t.has(`type_${m.type}`) ? t(`type_${m.type}`) : m.type}
-                            </span>
-                            {isRectification && (
-                              <span className="mi-badge mi-badge--blue">{t("type_rectification")}</span>
-                            )}
-                          </div>
-                        </td>
+                        <td>{movementTypeBadge(m, isRectification)}</td>
                         <td className="text-ink" style={{ fontVariantNumeric: "tabular-nums" }}>
-                          {m.type === "entry" ? "+" : m.type === "exit" || m.type === "expiry" ? "−" : ""}{m.quantity}
+                          {signedQuantity(m)}
                         </td>
                         <td className="text-ink2" style={{ fontSize: 13 }}>
                           {m.expiry_date ? fmtDate(m.expiry_date) : "—"}
                         </td>
                         <td className="text-ink2" style={{ fontSize: 13 }}>{m.user_name}</td>
+                        <td className="text-ink2" style={{ fontSize: 13 }}>{m.provider_name ?? "—"}</td>
+                        <td className="text-ink2" style={{ fontSize: 13 }}>{m.receptor_name ?? "—"}</td>
                         <td className="text-ink3" style={{ fontSize: 13 }}>{m.notes ?? "—"}</td>
                         {canWrite && (
                           <td>
                             <div className="flex items-center justify-end">
-                              {canRollback ? (
-                                <button
-                                  type="button"
-                                  className="mi-iconbtn"
-                                  aria-label={t("rectify_action")}
-                                  title={t("rectify_action")}
-                                  onClick={() => setRectifying({ id: m.id, type: m.type, quantity: m.quantity, expiry_date: m.expiry_date, product_name: m.product_name })}
-                                >
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
-                                  </svg>
-                                </button>
-                              ) : (
-                                <span className="text-ink3" style={{ fontSize: 13 }}>{alreadyRectified ? t("rectified_tag") : "—"}</span>
-                              )}
+                              {rectifyControl(m, canRollback, alreadyRectified)}
                             </div>
                           </td>
                         )}
@@ -305,23 +581,58 @@ export function StockPage({ movements, count, page, pageSize, canWrite, rectifie
             </table>
           </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between gap-3 p-4 border-t" style={{ borderColor: "var(--c-line)" }}>
-            <span className="text-ink3" style={{ fontSize: 13 }}>
-              {t("pagination_range", { from: rangeFrom, to: rangeTo, total: count })}
-            </span>
-            <div className="flex items-center gap-2">
-              <button className="mi-btn mi-btn--ghost mi-btn--sm" disabled={page <= 1} onClick={() => goto(page - 1)}>
-                {t("prev")}
-              </button>
-              <span className="text-ink2" style={{ fontSize: 13 }}>
-                {t("page_of", { page, total: totalPages })}
-              </span>
-              <button className="mi-btn mi-btn--ghost mi-btn--sm" disabled={page >= totalPages} onClick={() => goto(page + 1)}>
-                {t("next")}
-              </button>
-            </div>
+          {/* Mobile cards */}
+          <div className="flex-1 min-h-0 overflow-auto md:hidden p-3">
+            {movements.length === 0 ? (
+              <div className="text-ink3" style={{ textAlign: "center", padding: "24px 0", fontSize: 14 }}>
+                {t("empty")}
+              </div>
+            ) : (
+              movements.map((m) => {
+                const isRectification = m.corrects_movement_id !== null;
+                const alreadyRectified = rectifiedSet.has(m.id);
+                const canRollback = canWrite && !isRectification && !alreadyRectified && (m.type === "entry" || m.type === "exit");
+                return (
+                  <DataCard
+                    key={m.id}
+                    header={
+                      <span className="flex flex-col gap-0.5">
+                        <span className="font-medium text-ink">{m.product_name}</span>
+                        <span className="text-ink3" style={{ fontSize: 12 }}>{fmtDate(m.created_at)}</span>
+                      </span>
+                    }
+                    meta={
+                      <span className="text-ink" style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600, fontSize: 14 }}>
+                        {signedQuantity(m)}
+                      </span>
+                    }
+                  >
+                    <dl className="mi-dl">
+                      <DataRow label={t("table_type")}>{movementTypeBadge(m, isRectification)}</DataRow>
+                      <DataRow label={t("table_expiry")}>{m.expiry_date ? fmtDate(m.expiry_date) : "—"}</DataRow>
+                      <DataRow label={t("table_user")}>{m.user_name}</DataRow>
+                      <DataRow label={t("table_provider")}>{m.provider_name ?? "—"}</DataRow>
+                      <DataRow label={t("table_receptor")}>{m.receptor_name ?? "—"}</DataRow>
+                      <DataRow label={t("table_notes")}>{m.notes ?? "—"}</DataRow>
+                      {canWrite && (
+                        <DataRow label={t("table_actions")}>
+                          <span className="flex items-center justify-end">{rectifyControl(m, canRollback, alreadyRectified)}</span>
+                        </DataRow>
+                      )}
+                    </dl>
+                  </DataCard>
+                );
+              })
+            )}
           </div>
+
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            count={count}
+            onPageChange={goto}
+            onPageSizeChange={setSize}
+          />
         </div>
       )}
 

@@ -106,9 +106,9 @@ export function ExplainButton({ screen, productId }: ExplainButtonProps) {
 
   return (
     <>
-      <button className="mi-btn mi-btn--soft" onClick={openAndRun}>
+      <button className="mi-btn mi-btn--soft" onClick={openAndRun} aria-label={t("explain_button")} title={t("explain_button")}>
         <SparkleIcon size={17} />
-        {t("explain_button")}
+        <span className="mi-btn__label">{t("explain_button")}</span>
       </button>
 
       {open && (

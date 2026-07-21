@@ -65,6 +65,10 @@ export function ReceivePurchaseModal({ purchase, onClose }: ReceivePurchaseModal
     }))
   );
 
+  // Today (UTC) as YYYY-MM-DD — received batches can't already be expired.
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const hasPastExpiry = lines.some((l) => l.expiry_date !== "" && l.expiry_date < todayISO);
+
   return (
     <div className="mi-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="mi-modal mi-shadow-lg mi-fade" style={{ maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
@@ -122,6 +126,7 @@ export function ReceivePurchaseModal({ purchase, onClose }: ReceivePurchaseModal
                     {lines.map((l) => {
                       const acceptedNum = Number(l.accepted);
                       const differs = !Number.isNaN(acceptedNum) && acceptedNum !== l.ordered;
+                      const expiryPast = l.expiry_date !== "" && l.expiry_date < todayISO;
                       return (
                         <tr key={l.id}>
                           <td>
@@ -148,12 +153,19 @@ export function ReceivePurchaseModal({ purchase, onClose }: ReceivePurchaseModal
                           <td>
                             <input
                               className="mi-input"
-                              style={{ paddingTop: 6, paddingBottom: 6 }}
+                              style={{
+                                paddingTop: 6, paddingBottom: 6,
+                                ...(expiryPast ? { borderColor: "var(--c-danger)" } : {}),
+                              }}
                               type="date"
+                              min={todayISO}
                               aria-label={t("line_expiry")}
                               value={l.expiry_date}
                               onChange={(e) => updateLine(l.id, { expiry_date: e.target.value })}
                             />
+                            {expiryPast && (
+                              <p className="mi-field-error" style={{ marginTop: 4 }}>{tVal("expiry_date_in_past")}</p>
+                            )}
                           </td>
                         </tr>
                       );
@@ -182,7 +194,7 @@ export function ReceivePurchaseModal({ purchase, onClose }: ReceivePurchaseModal
           <button
             type="submit"
             form="receive-form"
-            disabled={isPending || loading || lines.length === 0}
+            disabled={isPending || loading || lines.length === 0 || hasPastExpiry}
             className="mi-btn mi-btn--primary"
           >
             {isPending ? t("saving") : t("receive_submit")}

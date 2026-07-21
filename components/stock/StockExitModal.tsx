@@ -4,8 +4,11 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { registerStockExit, searchProducts, getProductStock } from "@/app/(dashboard)/stock/actions";
 import type { ProductMatch, StockExitResult } from "@/app/(dashboard)/stock/actions";
+import { searchReceptors } from "@/app/(dashboard)/receptors/actions";
+import type { ReceptorRow } from "@/app/(dashboard)/receptors/actions";
 import dynamic from "next/dynamic";
 import { ProductModal } from "@/components/products/ProductModal";
+import { ReceptorModal } from "@/components/receptors/ReceptorModal";
 
 // Loaded on demand so the heavy @zxing barcode lib never blocks this modal
 // (or the page that opens it) — important for older mobile browsers.
@@ -23,6 +26,7 @@ interface StockExitModalProps {
 export function StockExitModal({ onClose }: StockExitModalProps) {
   const t = useTranslations("Stock");
   const tCat = useTranslations("Categories");
+  const tPT = useTranslations("PatientTypes");
   const tVal = useTranslations("Validation");
   const tErr = useTranslations("Errors");
 
@@ -39,16 +43,27 @@ export function StockExitModal({ onClose }: StockExitModalProps) {
   const [showScanner, setShowScanner] = useState(false);
   const [createEan, setCreateEan] = useState<string | null>(null); // non-null => create modal open
 
+  // Optional receptor (egress destination) — own debounced search state.
+  const [receptorQuery, setReceptorQuery] = useState("");
+  const [receptorResults, setReceptorResults] = useState<ReceptorRow[]>([]);
+  const [receptorSearching, setReceptorSearching] = useState(false);
+  const [receptorSearched, setReceptorSearched] = useState(false);
+  const [selectedReceptor, setSelectedReceptor] = useState<ReceptorRow | null>(null);
+  const [showCreateReceptor, setShowCreateReceptor] = useState(false);
+
   const reqId = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const receptorReqId = useRef(0);
+  const receptorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (state.ok) onClose();
   }, [state.ok, onClose]);
 
-  // Clear any pending debounce timer on unmount.
+  // Clear any pending debounce timers on unmount.
   useEffect(() => () => {
     if (timerRef.current) clearTimeout(timerRef.current);
+    if (receptorTimerRef.current) clearTimeout(receptorTimerRef.current);
   }, []);
 
   // Debounced product search, driven from input/scanner handlers (not an effect).
@@ -76,6 +91,41 @@ export function StockExitModal({ onClose }: StockExitModalProps) {
   function onQueryChange(value: string) {
     setQuery(value);
     scheduleSearch(value);
+  }
+
+  // Debounced receptor search, same shape as the product search above.
+  function onReceptorQueryChange(value: string) {
+    setReceptorQuery(value);
+    if (receptorTimerRef.current) clearTimeout(receptorTimerRef.current);
+    const term = value.trim();
+    if (term.length < 2) {
+      receptorReqId.current++;
+      setReceptorResults([]);
+      setReceptorSearched(false);
+      setReceptorSearching(false);
+      return;
+    }
+    setReceptorSearching(true);
+    const current = ++receptorReqId.current;
+    receptorTimerRef.current = setTimeout(async () => {
+      const res = await searchReceptors(term);
+      if (current !== receptorReqId.current) return; // stale response
+      setReceptorResults(res);
+      setReceptorSearched(true);
+      setReceptorSearching(false);
+    }, 300);
+  }
+
+  function pickReceptor(r: ReceptorRow) {
+    setSelectedReceptor(r);
+    setReceptorResults([]);
+    setReceptorSearched(false);
+    setReceptorQuery("");
+  }
+
+  function clearReceptor() {
+    setSelectedReceptor(null);
+    setReceptorQuery("");
   }
 
   async function pick(p: ProductMatch) {
@@ -258,9 +308,116 @@ export function StockExitModal({ onClose }: StockExitModalProps) {
             </div>
           )}
 
+          {/* Optional destination (receptor) */}
+          {selectedReceptor ? (
+            <div
+              className="flex items-center gap-3 p-3 rounded-xl mt-4"
+              style={{ background: "var(--c-surface-2)", border: "1px solid var(--c-line)" }}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="text-ink3" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.4 }}>
+                  {t("receptor_label")}
+                </div>
+                <div className="font-semibold text-ink truncate">{selectedReceptor.name}</div>
+                <div className="text-ink2 truncate" style={{ fontSize: 12 }}>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {selectedReceptor.patient_type ? tPT(selectedReceptor.patient_type as any) : t("receptor_no_type")}
+                  {selectedReceptor.external_id ? ` · ${selectedReceptor.external_id}` : ""}
+                </div>
+              </div>
+              <button type="button" className="mi-btn mi-btn--ghost mi-btn--sm" onClick={clearReceptor}>
+                {t("change_receptor")}
+              </button>
+            </div>
+          ) : (
+            <div className="mi-field">
+              <label htmlFor="stk-receptor" className="mi-label">
+                {t("receptor_label")}{" "}
+                <span className="text-ink3" style={{ fontWeight: 400 }}>{t("receptor_optional")}</span>
+              </label>
+              <div className="relative">
+                <input
+                  id="stk-receptor"
+                  className="mi-input"
+                  placeholder={t("receptor_search_placeholder")}
+                  value={receptorQuery}
+                  onChange={(e) => onReceptorQueryChange(e.target.value)}
+                  autoComplete="off"
+                />
+                {receptorResults.length > 0 && (
+                  <div
+                    className="rounded-xl overflow-hidden"
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      right: 0,
+                      zIndex: 50,
+                      marginTop: 4,
+                      border: "1px solid var(--c-line)",
+                      background: "var(--c-surface)",
+                      maxHeight: 220,
+                      overflowY: "auto",
+                      boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+                    }}
+                  >
+                    {receptorResults.map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 flex items-center gap-3"
+                        style={{ borderBottom: "1px solid var(--c-line)" }}
+                        onClick={() => pickReceptor(r)}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-ink truncate">{r.name}</div>
+                          <div className="text-ink3 truncate" style={{ fontSize: 12 }}>
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                            {r.patient_type ? tPT(r.patient_type as any) : t("receptor_no_type")}
+                            {r.external_id ? ` · ${r.external_id}` : ""}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {receptorSearching && (
+                <p className="text-ink3 mt-2" style={{ fontSize: 13 }}>{t("searching_receptors")}</p>
+              )}
+
+              {!receptorSearching && receptorSearched && receptorResults.length === 0 && (
+                <div
+                  className="flex items-center justify-between gap-3 mt-2 p-3 rounded-xl"
+                  style={{ background: "var(--c-surface-2)", fontSize: 13 }}
+                >
+                  <span className="text-ink2">{t("no_receptor_results")}</span>
+                  <button
+                    type="button"
+                    className="mi-btn mi-btn--soft mi-btn--sm"
+                    onClick={() => setShowCreateReceptor(true)}
+                  >
+                    {t("create_receptor")}
+                  </button>
+                </div>
+              )}
+
+              <button
+                type="button"
+                className="mi-btn mi-btn--ghost mi-btn--sm mt-2"
+                onClick={() => setShowCreateReceptor(true)}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                {t("create_receptor")}
+              </button>
+            </div>
+          )}
+
           {/* Exit details — only meaningful once a product is chosen */}
           <form id="stock-exit-form" action={action}>
             <input type="hidden" name="product_id" value={selected?.id ?? ""} />
+            <input type="hidden" name="receptor_id" value={selectedReceptor?.id ?? ""} />
 
             <div className="mi-field">
               <label htmlFor="stk-qty" className="mi-label">{t("quantity_label")}</label>
@@ -333,6 +490,16 @@ export function StockExitModal({ onClose }: StockExitModalProps) {
           onCreated={(product) => {
             setCreateEan(null);
             pick(product);
+          }}
+        />
+      )}
+
+      {showCreateReceptor && (
+        <ReceptorModal
+          onClose={() => setShowCreateReceptor(false)}
+          onCreated={(receptor) => {
+            setShowCreateReceptor(false);
+            pickReceptor(receptor);
           }}
         />
       )}

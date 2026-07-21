@@ -1,4 +1,14 @@
 {
+  "Common": {
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "page_of": "Página {page} de {total}",
+    "pagination_range": "{from}–{to} de {total}",
+    "rows_per_page": "Filas por página",
+    "expand": "Mostrar detalles",
+    "collapse": "Ocultar detalles",
+    "filters": "Filtros"
+  },
   "Login": {
     "heading": "Bienvenid@ de nuevo",
     "subheading": "Gestioná tu inventario, compras y equipo desde un solo lugar.",
@@ -26,7 +36,35 @@
     "submitting": "Creando cuenta…",
     "have_account": "¿Ya tenés cuenta?",
     "sign_in": "Iniciá sesión",
+    "terms_label": "Acepto los <link>términos y condiciones</link>",
     "art_caption": "Tu equipo, organizado"
+  },
+  "Terms": {
+    "heading": "Términos y condiciones",
+    "updated_at": "Última actualización: 20 de julio de 2026",
+    "s1_title": "1. Aceptación de los términos",
+    "s1_body": "Bienvenido a Med+Inv (el «Servicio»), proporcionado por Tomás Rago (el «Proveedor», «nosotros» o «nos»), con domicilio en Sarmiento 15, Villa La Bolsa, Provincia de Córdoba, Argentina. Nos complace ofrecerle acceso al Servicio, sujeto a estos términos y condiciones (los «Términos») y a las prácticas de privacidad descriptas más abajo. Al acceder y utilizar el Servicio usted expresa su consentimiento, acuerdo y entendimiento de estos Términos. Si no está de acuerdo con ellos, no utilice el Servicio. El uso del Servicio implica también la aceptación de las modalidades operativas vigentes y de las que se habiliten en el futuro.",
+    "s2_title": "2. Descripción del servicio",
+    "s2_body": "Med+Inv es una plataforma web de gestión de inventario de insumos médicos. Permite registrar productos y existencias, ingresar y egresar stock, ver alertas de stock bajo y de vencimiento, recibir sugerencias predictivas de compra, gestionar órdenes de compra y proveedores/destinatarios, generar reportes históricos de movimientos exportables (Excel/CSV y PDF) y, en los planes que lo incluyen, utilizar funciones de asistencia basadas en inteligencia artificial. El Servicio es una herramienta de gestión administrativa y no reemplaza el criterio profesional ni los sistemas clínicos de la institución.",
+    "s3_title": "3. Operaciones habilitadas",
+    "s3_body": "Las operaciones disponibles son aquellas habilitadas para cada cuenta según el rol del usuario y los requisitos vigentes en cada momento. El Proveedor podrá ampliar o restringir las operaciones habilitadas, comunicándolo previamente con una antelación no menor a 60 días. En ningún caso el uso de una operación o funcionalidad debe entenderse como una obligación del Proveedor de mantenerla disponible de forma indefinida.",
+    "s4_title": "4. Cuentas, roles y acceso",
+    "s4_body": "Para operar el Servicio se requiere una cuenta. El titular de la organización (rol Director médico) administra el alta, modificación y baja de los usuarios invitados y es responsable del uso que estos hagan del Servicio. El acceso a cada funcionalidad depende del rol asignado (Médico Jefe, Médico, Enfermero/a o Administrativo/a). Las credenciales de acceso son personales, secretas e intransferibles; el usuario asume las consecuencias de su divulgación a terceros y libera al Proveedor de toda responsabilidad que de ello derive. El Proveedor nunca solicitará la totalidad de sus datos ni le requerirá sus credenciales por correo electrónico.",
+    "s5_title": "5. Datos y privacidad",
+    "s5_body": "Para utilizar el Servicio los usuarios deben facilitar determinados datos de carácter personal y de su organización. Dicha información se procesa y almacena en servidores de terceros (infraestructura Supabase) que mantienen estándares de seguridad y protección tanto física como tecnológica. El tratamiento de los datos personales se realiza conforme a la Ley N.º 25.326 de Protección de los Datos Personales de la República Argentina. El usuario puede solicitar el acceso, la rectificación o la supresión de sus datos escribiendo a la dirección de contacto indicada más abajo.",
+    "s6_title": "6. Suscripción y pagos",
+    "s6_body": "El Servicio ofrece un plan gratuito y planes pagos con funcionalidades adicionales (incluido un límite mensual de consumo de inteligencia artificial). Los planes pagos se abonan mediante Mercado Pago a través de una suscripción recurrente; el alta, la mejora, la baja de plan y la cancelación de la suscripción se gestionan desde la sección Cuenta → Suscripción. La cancelación surte efecto conforme a las condiciones del plan contratado. El Proveedor podrá modificar los valores o comisiones del Servicio, comunicándolo con una antelación no menor a 60 días.",
+    "s7_title": "7. Responsabilidad y garantías",
+    "s7_body": "El Servicio se ofrece «tal cual» y «según disponibilidad». El Proveedor procura mantener su correcto funcionamiento pero no garantiza que sea ininterrumpido o libre de errores. Med+Inv es una herramienta de apoyo a la gestión de inventario: las decisiones clínicas, de dispensación, de compra y de control de vencimientos son responsabilidad exclusiva de los profesionales y de la institución usuaria. En la máxima medida permitida por la ley, el Proveedor no será responsable por daños indirectos o pérdidas derivados del uso o de la imposibilidad de uso del Servicio.",
+    "s8_title": "8. Propiedad intelectual",
+    "s8_body": "El software y sus componentes están protegidos por la Ley N.º 11.723 de Propiedad Intelectual de la República Argentina y demás normativa aplicable. El uso del Servicio no transfiere al usuario ningún derecho de propiedad intelectual sobre el software, su código, sus marcas o sus contenidos.",
+    "s9_title": "9. Vigencia y terminación",
+    "s9_body": "El usuario podrá dejar sin efecto la relación que surge de estos Términos en forma inmediata, sin más responsabilidad que la derivada de los gastos ya originados hasta ese momento. Si el usuario incumpliera cualquiera de sus obligaciones o de estos Términos, el Proveedor podrá suspender o dar de baja el Servicio en forma inmediata, sin que ello genere derecho a indemnización o compensación alguna. El Proveedor también podrá discontinuar el Servicio con un preaviso mínimo de 60 días.",
+    "s10_title": "10. Validez de operaciones y notificaciones",
+    "s10_body": "Los registros emitidos por la aplicación serán prueba suficiente de las operaciones cursadas a través de ella. A los efectos del cumplimiento de disposiciones legales o contractuales, se otorga a las notificaciones cursadas por este medio el mismo alcance que a las notificaciones mediante documento escrito.",
+    "s11_title": "11. Contacto y modificaciones",
+    "s11_body": "Para consultas, sugerencias o reclamos puede escribirnos a tomasrago430@gmail.com, o al domicilio Sarmiento 15, Villa La Bolsa, Provincia de Córdoba, Argentina. El Proveedor podrá actualizar estos Términos cuando resulte necesario; los cambios se comunicarán previamente y su vigencia se indicará mediante la fecha de última actualización que figura al inicio de este documento.",
+    "back_to_signup": "Volver al registro"
   },
   "ForgotPassword": {
     "heading": "Olvidaste tu contraseña",
@@ -76,10 +114,12 @@
       "alerts": "Alertas",
       "purchases": "Compras",
       "providers": "Proveedores",
+      "receptors": "Receptores",
       "predictive": "Predicción",
       "users": "Personal",
       "subscription": "Suscripción",
       "ai": "Asistente IA",
+      "faq": "Preguntas frecuentes",
       "settings": "Ajustes"
     },
     "roles": {
@@ -89,7 +129,83 @@
       "administrative": "Administrativo/a"
     },
     "user_fallback": "Usuario",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "open_menu": "Abrir menú"
+  },
+  "Home": {
+    "breadcrumb": "General",
+    "greeting": "¡Hola, {name}!",
+    "greeting_fallback": "¡Hola!",
+    "subheading": "¿Qué querés hacer hoy?",
+    "kpi": {
+      "alerts": "Alertas activas",
+      "reorder": "Para reponer pronto",
+      "purchases": "Compras pendientes"
+    },
+    "risk": {
+      "title": "Insumos que conviene reponer",
+      "subtitle": "Según el consumo reciente y el tiempo de entrega de tus compras.",
+      "col_product": "Insumo",
+      "col_stock": "Stock actual",
+      "col_when": "Cuándo pedir",
+      "col_qty": "Cantidad sugerida",
+      "order_now": "Pedir ahora",
+      "in_days": "En {days, plural, one {# día} other {# días}}",
+      "qty_units": "{quantity} u.",
+      "empty": "Todo en orden por ahora: ningún insumo necesita reposición en los próximos días.",
+      "view_all": "Ver análisis completo"
+    },
+    "aiSummary": {
+      "title": "Resumen del panel con IA",
+      "subtitle": "Un panorama del estado del stock generado con IA.",
+      "generate": "Generar",
+      "regenerate": "Regenerar",
+      "generating": "Generando el resumen…",
+      "generatedAgo": "Generado {time}",
+      "actionsTitle": "Acciones sugeridas",
+      "disclaimer": "Resumen generado con IA a partir de tus datos. Son sugerencias basadas en el historial; la decisión final es del equipo."
+    },
+    "shortcuts": {
+      "title": "Accesos rápidos",
+      "stock": {
+        "title": "Inventario",
+        "desc_write": "Consultá el stock y registrá entradas y salidas.",
+        "desc_read": "Mirá cuánto stock queda de cada insumo."
+      },
+      "products": {
+        "title": "Insumos",
+        "desc": "El catálogo de insumos de tu institución."
+      },
+      "alerts": {
+        "title": "Alertas",
+        "desc": "Avisos de stock bajo y vencimientos próximos."
+      },
+      "purchases": {
+        "title": "Compras",
+        "desc_write": "Registrá pedidos a proveedores y su recepción.",
+        "desc_read": "Seguí el estado de los pedidos a proveedores."
+      },
+      "providers": {
+        "title": "Proveedores",
+        "desc": "Tus proveedores y los insumos que ofrece cada uno."
+      },
+      "predictive": {
+        "title": "Predicción",
+        "desc": "Cuándo y cuánto conviene pedir de cada insumo."
+      },
+      "users": {
+        "title": "Personal",
+        "desc": "Invitá y administrá al equipo de tu institución."
+      },
+      "subscription": {
+        "title": "Suscripción",
+        "desc": "Tu plan y la facturación de Med+Inv."
+      },
+      "ai": {
+        "title": "Asistente IA",
+        "desc": "Preguntá sobre stock, alertas y reposición en lenguaje natural."
+      }
+    }
   },
   "Onboarding": {
     "heading": "Elegí el plan para tu institución",
@@ -134,6 +250,7 @@
     "invite_button": "Invitar usuario",
     "search_placeholder": "Buscar por nombre o email…",
     "user_count": "{count, plural, one {# usuario} other {# usuarios}}",
+    "empty": "No hay usuarios para mostrar.",
     "table_user": "Usuario",
     "table_role": "Rol",
     "table_status": "Estado",
@@ -294,6 +411,7 @@
     "quantity_positive": "Ingresá una cantidad mayor a cero",
     "quantity_non_negative": "La cantidad no puede ser negativa",
     "quantity_required": "Ingresá una cantidad",
+    "expiry_date_in_past": "El vencimiento no puede ser una fecha pasada",
     "price_non_negative": "El precio no puede ser negativo",
     "items_required": "Agregá al menos un insumo a la orden",
     "items_duplicate_product": "No repitas el mismo insumo en la orden",
@@ -308,7 +426,202 @@
     "expiry_days_range": "Ingresá un valor entre 1 y 365 días",
     "lead_time_range": "Ingresá un valor entre 1 y 365 días",
     "coverage_days_range": "Ingresá un valor entre 1 y 365 días",
-    "safety_days_range": "Ingresá un número entero entre 0 y 365"
+    "safety_days_range": "Ingresá un número entero entre 0 y 365",
+    "patient_type_invalid": "Tipo de paciente inválido",
+    "receptor_invalid": "Receptor inválido",
+    "receptor_required": "Seleccioná un receptor",
+    "receptor_duplicate": "Ya existe un receptor con este nombre",
+    "receptor_external_id_duplicate": "Ya existe un receptor con este ID externo",
+    "terms_required": "Debés aceptar los términos y condiciones"
+  },
+  "Faq": {
+    "breadcrumb_account": "Cuenta",
+    "breadcrumb_faq": "Preguntas frecuentes",
+    "heading": "Preguntas frecuentes",
+    "subheading": "Respuestas a las dudas más comunes sobre el uso de Med+Inv.",
+    "groups": {
+      "inventory": "Inventario",
+      "alerts_purchases": "Alertas y compras",
+      "predictive": "Predicción",
+      "account": "Cuenta",
+      "contact": "Contacto"
+    },
+    "items": {
+      "stock_in": {
+        "q": "¿Cómo ingreso stock de un insumo?",
+        "a": "Desde Inventario, registrá un movimiento de ingreso indicando el insumo, la cantidad y, si corresponde, el lote y su vencimiento. Si el ingreso viene de una orden de compra, al marcar la recepción en Compras el stock se carga automáticamente. Todos los ingresos quedan registrados como movimientos: nunca se edita el stock a mano."
+      },
+      "stock_out": {
+        "q": "¿Cómo registro un egreso o consumo?",
+        "a": "Desde Inventario, registrá un movimiento de egreso indicando el insumo, la cantidad y el receptor (el destino del insumo: un paciente, un sector, etc.). El sistema descuenta primero los lotes que vencen antes, para minimizar vencimientos."
+      },
+      "batches_expiry": {
+        "q": "¿Cómo funcionan los lotes y los vencimientos?",
+        "a": "Cada ingreso puede asociarse a un lote con fecha de vencimiento. El stock se descuenta por lote (primero lo que vence antes) y, cuando un lote está por vencer dentro de la ventana configurada, se genera una alerta de vencimiento para que puedas usarlo o darlo de baja a tiempo."
+      },
+      "min_quantity": {
+        "q": "¿Qué diferencia hay entre el stock mínimo y el punto de pedido?",
+        "a": "El stock mínimo es un umbral fijo que definís por insumo: si el stock cae por debajo, se genera una alerta. El punto de pedido, en cambio, lo calcula la sección Predicción a partir del consumo real, el tiempo de entrega y el stock de seguridad, y se actualiza solo a medida que cambia tu consumo."
+      },
+      "scanner": {
+        "q": "¿Puedo usar un lector de códigos de barras?",
+        "a": "Sí. Los insumos pueden tener un código EAN asociado, y en los formularios de movimiento podés escanear el código con la cámara del dispositivo para seleccionar el insumo sin buscarlo a mano."
+      },
+      "alert_types": {
+        "q": "¿Qué tipos de alertas existen?",
+        "a": "Hay tres tipos: alertas de stock bajo (el stock cayó por debajo del mínimo configurado), alertas de vencimiento (un lote vence dentro de la ventana configurada) y alertas de reposición (el stock llegó al punto de pedido calculado por Predicción)."
+      },
+      "acknowledge_alerts": {
+        "q": "¿Cómo gestiono las alertas?",
+        "a": "En la sección Alertas podés ver el detalle de cada una, marcarlas como leídas y resolverlas. El número que aparece junto a la campana indica cuántas alertas activas tenés pendientes."
+      },
+      "purchase_flow": {
+        "q": "¿Cómo funciona una orden de compra?",
+        "a": "Una orden se crea eligiendo un proveedor y los insumos con sus cantidades. Primero queda como borrador, después se confirma (se envía al proveedor) y por último se registra la recepción cuando llega la mercadería. Recién al recibirla se carga el stock."
+      },
+      "purchase_reception": {
+        "q": "¿Qué pasa si el proveedor entrega menos de lo pedido?",
+        "a": "La recepción admite cantidades parciales: al recibir la orden indicás cuánto llegó realmente de cada insumo, y solo eso se carga al inventario. La diferencia queda registrada en la orden."
+      },
+      "providers": {
+        "q": "¿Para qué sirve cargar proveedores?",
+        "a": "Las órdenes de compra se asocian a un proveedor. Además, el sistema usa el historial de tus compras (días entre pedido y recepción) para estimar automáticamente el tiempo de entrega, que alimenta el cálculo del punto de pedido en Predicción."
+      },
+      "predictive_how": {
+        "q": "¿Cómo calcula el sistema la demanda estimada?",
+        "a": "A partir de los movimientos de egreso recientes de cada insumo. Si hay historial suficiente, usa una regresión lineal que detecta tendencias (consumo en aumento o en baja); si hay pocos datos, usa el promedio diario. El método usado se indica en cada fila."
+      },
+      "reorder_point": {
+        "q": "¿Qué es el punto de pedido y el stock de seguridad?",
+        "a": "El punto de pedido es el nivel de stock a partir del cual conviene pedir: cubre el consumo estimado durante el tiempo de entrega más el stock de seguridad. El stock de seguridad es un colchón extra que depende de la criticidad del insumo (vital, esencial o deseable) y se configura en días de consumo."
+      },
+      "suggested_qty": {
+        "q": "¿Cómo se calcula la cantidad sugerida de compra?",
+        "a": "Cuando el stock llega al punto de pedido, el sistema sugiere una cantidad que cubre los días de cobertura configurados además del tiempo de entrega. Los días de cobertura se ajustan desde el botón «Configurar reposición» en Predicción."
+      },
+      "roles_permissions": {
+        "q": "¿Qué puede hacer cada rol?",
+        "a": "El Médico Jefe administra todo: usuarios, suscripción, alertas, predicción, compras, proveedores y reportes, además del inventario. Los roles Enfermero/a y Administrativo/a operan el día a día completo (inventario, compras, proveedores, alertas y predicción), pero no gestionan usuarios ni la suscripción. El rol Médico se enfoca en el inventario: alta, modificación y baja de insumos y registro de ingresos y egresos."
+      },
+      "ai_assistant": {
+        "q": "¿Qué hace el Asistente IA y por qué no lo veo?",
+        "a": "El Asistente IA responde consultas en lenguaje natural sobre tu stock, alertas y predicciones (solo lee datos, no los modifica). Está disponible a partir del plan intermedio: si tu plan no lo incluye, vas a ver la insignia «Pro» en el menú."
+      },
+      "subscription": {
+        "q": "¿Cómo gestiono la suscripción?",
+        "a": "Desde Cuenta → Suscripción, el Médico Jefe puede ver el plan actual, cambiarlo o actualizar el medio de pago. Los demás roles no tienen acceso a esa sección."
+      },
+      "create_password": {
+        "q": "¿Cómo creo o recupero mi clave?",
+        "a": "Tu clave la definís vos al aceptar la invitación a la organización o al registrarte, desde el enlace que llega a tu correo. Si la olvidaste, usá «¿Olvidaste tu contraseña?» en la pantalla de inicio de sesión: te enviaremos un enlace para restablecerla. La clave es personal, secreta e intransferible."
+      },
+      "unlock_user": {
+        "q": "¿Cómo reactivo o doy de baja a un usuario?",
+        "a": "El Médico Jefe gestiona los usuarios desde la sección Personal: puede invitar nuevos usuarios, y activar o desactivar a los existentes. Un usuario desactivado no puede iniciar sesión hasta que se lo reactive."
+      },
+      "contact_email": {
+        "q": "¿A qué dirección puedo escribir por una sugerencia o reclamo?",
+        "a": "Podés escribirnos a tomasrago430@gmail.com. Respondemos consultas sobre el uso del Servicio, sugerencias y reclamos."
+      },
+      "pause_subscription": {
+        "q": "¿Cómo pauso o cancelo mi suscripción?",
+        "a": "Desde Cuenta → Suscripción, el Médico Jefe puede cambiar de plan o cancelar la suscripción. Al cancelar, la cuenta vuelve al plan gratuito según las condiciones del plan contratado; los datos de tu organización se conservan."
+      },
+      "payment_methods": {
+        "q": "¿Qué medios de pago aceptan?",
+        "a": "Los planes pagos se abonan mediante Mercado Pago, a través de una suscripción recurrente que se gestiona desde Cuenta → Suscripción."
+      }
+    }
+  },
+  "Tutorial": {
+    "next": "Siguiente",
+    "prev": "Anterior",
+    "skip": "Omitir",
+    "done": "Entendido",
+    "step_counter": "{current} de {total}",
+    "help_button": "Ver tutorial de esta pantalla",
+    "dashboard": {
+      "intro_title": "Panel principal",
+      "intro_body": "Este es tu punto de partida: un resumen del estado del inventario y accesos directos a lo que necesitás hacer hoy.",
+      "kpis_title": "Indicadores",
+      "kpis_body": "Estas tarjetas muestran las alertas activas, los insumos que conviene reponer pronto y las compras pendientes. Tocá una para ir al detalle.",
+      "main_title": "Insumos para reponer",
+      "main_body": "Esta lista destaca los insumos que conviene pedir pronto, según el consumo reciente y el tiempo de entrega de tus compras."
+    },
+    "products": {
+      "intro_title": "Insumos",
+      "intro_body": "Acá administrás el catálogo de insumos: nombre, categoría, unidad, criticidad, stock mínimo y código EAN.",
+      "main_title": "Catálogo",
+      "main_body": "La tabla lista todos los insumos de tu organización. Podés buscar por nombre y filtrar por categoría, y editar cada insumo desde su fila.",
+      "actions_title": "Nuevo insumo",
+      "actions_body": "Con este botón agregás un insumo nuevo al catálogo. Después vas a poder registrar sus movimientos de stock desde Inventario."
+    },
+    "stock": {
+      "intro_title": "Inventario",
+      "intro_body": "Acá ves las existencias de cada insumo y registrás los movimientos de ingreso y egreso. El stock nunca se edita a mano: siempre a través de movimientos.",
+      "main_title": "Existencias",
+      "main_body": "Cada fila muestra el stock disponible de un insumo. Si tiene lotes con vencimiento, podés expandir la fila para ver el detalle por lote.",
+      "tabs_title": "Existencias y movimientos",
+      "tabs_body": "Con estas pestañas alternás entre las existencias actuales y el historial de movimientos, donde queda registrado cada ingreso y egreso con su usuario.",
+      "actions_title": "Registrar movimientos",
+      "actions_body": "Con estos botones registrás ingresos (compras, donaciones) y egresos (consumos, bajas). Los egresos requieren indicar el receptor de destino."
+    },
+    "alerts": {
+      "intro_title": "Alertas",
+      "intro_body": "Acá se concentran los avisos del sistema: stock bajo, lotes por vencer y sugerencias de reposición.",
+      "main_title": "Listado de alertas",
+      "main_body": "Podés filtrar por tipo y estado, ver el detalle de cada alerta y marcarla como leída o resuelta cuando la atiendas.",
+      "actions_title": "Configuración",
+      "actions_body": "Desde acá ajustás los umbrales de stock mínimo y la ventana de días para las alertas de vencimiento."
+    },
+    "purchases": {
+      "intro_title": "Compras",
+      "intro_body": "Acá gestionás las órdenes de compra a tus proveedores, desde el borrador hasta la recepción de la mercadería.",
+      "main_title": "Órdenes de compra",
+      "main_body": "La tabla muestra cada orden con su estado: borrador, confirmada o recibida. Al registrar la recepción, el stock ingresa automáticamente al inventario.",
+      "actions_title": "Nueva orden",
+      "actions_body": "Con este botón creás una orden nueva: elegís el proveedor, los insumos y las cantidades. La recepción admite cantidades parciales."
+    },
+    "providers": {
+      "intro_title": "Proveedores",
+      "intro_body": "Acá administrás los proveedores a los que les comprás insumos.",
+      "main_title": "Listado de proveedores",
+      "main_body": "Cada proveedor puede asociarse a órdenes de compra. El sistema usa el historial de entregas para estimar automáticamente los tiempos de entrega.",
+      "actions_title": "Nuevo proveedor",
+      "actions_body": "Con este botón agregás un proveedor con sus datos de contacto para poder asignarle órdenes de compra."
+    },
+    "receptors": {
+      "intro_title": "Receptores",
+      "intro_body": "Los receptores son los destinos de los egresos de stock: pacientes, sectores u otros destinos de tu institución.",
+      "main_title": "Listado de receptores",
+      "main_body": "Cada egreso de inventario se asocia a un receptor, así queda trazabilidad de adónde fue cada insumo.",
+      "actions_title": "Nuevo receptor",
+      "actions_body": "Con este botón agregás un receptor nuevo, con su tipo y un ID externo opcional para vincularlo con otros sistemas."
+    },
+    "predictive": {
+      "intro_title": "Predicción de stock",
+      "intro_body": "Esta pantalla estima la demanda de cada insumo a partir del consumo real y te sugiere cuándo y cuánto pedir.",
+      "main_title": "Tabla de predicción",
+      "main_body": "Por cada insumo ves la demanda diaria estimada, el punto de pedido y la sugerencia de compra. Los íconos de información junto a cada columna explican cómo se calcula. Tocá un insumo para ver su detalle con gráfico.",
+      "actions_title": "Parámetros de reposición",
+      "actions_body": "Desde acá configurás el tiempo de entrega, los días de cobertura y el stock de seguridad por criticidad, que definen los cálculos de esta pantalla."
+    },
+    "users": {
+      "intro_title": "Personal",
+      "intro_body": "Acá administrás a las personas de tu organización y sus roles.",
+      "main_title": "Listado del equipo",
+      "main_body": "Cada persona tiene un rol (Médico Jefe, Médico, Enfermero/a o Administrativo/a) que define qué puede hacer en el sistema.",
+      "actions_title": "Invitar",
+      "actions_body": "Con este botón invitás a alguien por email: recibe un enlace para crear su contraseña y entrar con el rol que le asignes."
+    },
+    "settings": {
+      "intro_title": "Ajustes",
+      "intro_body": "Acá gestionás tu perfil personal y tu contraseña.",
+      "main_title": "Mi perfil",
+      "main_body": "Podés actualizar tu nombre y apellido, que se muestran en el menú y en los registros de movimientos.",
+      "password_title": "Contraseña",
+      "password_body": "Para cambiar tu contraseña, ingresá la actual y la nueva. La nueva debe tener al menos 8 caracteres."
+    }
   },
   "InviteCallback": {
     "invalid_link": "El enlace de invitación no es válido o ya fue usado.",
@@ -348,7 +661,9 @@
     "ai_response_truncated": "La respuesta se cortó por longitud; probá con una pregunta más acotada",
     "ai_tool_loop_limit": "La consulta resultó demasiado compleja; probá dividirla en preguntas más simples",
     "ai_explain_failed": "No se pudo analizar la pantalla; probá de nuevo",
-    "unexpected": "Error inesperado"
+    "ai_summary_failed": "No se pudo generar el resumen; probá de nuevo",
+    "unexpected": "Error inesperado",
+    "receptor_not_found": "El receptor no existe o está inactivo"
   },
   "Categories": {
     "analgesics": "Analgésicos",
@@ -367,6 +682,12 @@
     "vital": "Vital",
     "essential": "Esencial",
     "desirable": "Deseable"
+  },
+  "PatientTypes": {
+    "independent": "Particular",
+    "social_security": "Obra social",
+    "prepaid": "Prepaga",
+    "other": "Otro"
   },
   "Units": {
     "unit": "Unidad",
@@ -499,6 +820,62 @@
     "deactivate_confirm": "¿Querés desactivar",
     "activate_confirm": "¿Querés reactivar",
     "deactivate_warning": "Los proveedores inactivos no estarán disponibles al crear órdenes de compra.",
+    "save": "Guardar",
+    "save_changes": "Guardar cambios",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "close": "Cerrar"
+  },
+  "Receptors": {
+    "breadcrumb_operation": "Operación",
+    "breadcrumb_receptors": "Receptores",
+    "heading": "Receptores",
+    "subheading": "Gestioná los destinos de los egresos de stock: pacientes u otros receptores de insumos.",
+    "new_button": "Nuevo",
+    "search_placeholder": "Buscar por nombre, ID externo o email…",
+    "all_statuses": "Todos los estados",
+    "status_active": "Activo",
+    "status_inactive": "Inactivo",
+    "inactive_badge": "Inactivo",
+    "receptor_count": "{count, plural, =0 {Sin receptores} one {# receptor} other {# receptores}}",
+    "table_name": "Nombre",
+    "table_external_id": "ID externo",
+    "table_patient_type": "Tipo",
+    "table_phone": "Teléfono",
+    "table_email": "Email",
+    "table_actions": "Acciones",
+    "action_edit": "Editar",
+    "action_deactivate": "Desactivar",
+    "action_reactivate": "Reactivar",
+    "empty": "No hay receptores para mostrar.",
+    "pagination_range": "{from}–{to} de {total}",
+    "page_of": "Página {page} de {total}",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "modal_title": "Nuevo receptor",
+    "modal_subtitle": "Agregá un destino para egresos de stock",
+    "edit_title": "Editar receptor",
+    "edit_subtitle": "Modificá los datos del receptor",
+    "field_name": "Nombre",
+    "field_name_placeholder": "Ej. Juan Pérez",
+    "field_external_id": "ID externo (opcional)",
+    "field_external_id_placeholder": "Ej. HC-10234 — ID en tu sistema de pacientes",
+    "field_patient_type": "Tipo de paciente (opcional)",
+    "field_patient_type_none": "Sin especificar",
+    "field_phone": "Teléfono (opcional)",
+    "field_phone_placeholder": "Ej. +54 11 4000-0000",
+    "field_email": "Email (opcional)",
+    "field_email_placeholder": "Ej. juan.perez@mail.com",
+    "field_notes": "Notas (opcional)",
+    "field_notes_placeholder": "Notas adicionales",
+    "current_status": "Estado actual:",
+    "deactivate": "Desactivar",
+    "activate": "Reactivar",
+    "deactivate_title": "Desactivar receptor",
+    "activate_title": "Reactivar receptor",
+    "deactivate_confirm": "¿Querés desactivar",
+    "activate_confirm": "¿Querés reactivar",
+    "deactivate_warning": "Los receptores inactivos no estarán disponibles al registrar egresos.",
     "save": "Guardar",
     "save_changes": "Guardar cambios",
     "saving": "Guardando…",
@@ -649,7 +1026,37 @@
     "rectify_confirm": "Rectificar",
     "saving": "Registrando…",
     "cancel": "Cancelar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "receptor_label": "Receptor",
+    "receptor_optional": "(opcional)",
+    "receptor_search_placeholder": "Buscar por nombre o ID externo…",
+    "searching_receptors": "Buscando…",
+    "no_receptor_results": "No se encontró ningún receptor.",
+    "create_receptor": "Crear receptor",
+    "change_receptor": "Cambiar",
+    "receptor_no_type": "Sin tipo",
+    "table_provider": "Proveedor",
+    "table_receptor": "Receptor",
+    "table_criticality": "Criticidad",
+    "filter_product": "Producto…",
+    "filter_receptor": "Receptor…",
+    "filter_all_categories": "Todas las categorías",
+    "filter_all_types": "Todos los tipos",
+    "filter_all_criticalities": "Todas las criticidades",
+    "filter_all_providers": "Todos los proveedores",
+    "filter_from": "Desde",
+    "filter_to": "Hasta",
+    "clear_filters": "Limpiar filtros",
+    "sort_asc": "Ordenar ascendente",
+    "sort_desc": "Ordenar descendente",
+    "export_button": "Exportar",
+    "exporting": "Exportando…",
+    "export_csv": "CSV",
+    "export_excel": "Excel (.xlsx)",
+    "export_pdf": "PDF",
+    "export_truncated": "Se exportaron los primeros {max} movimientos (hay más resultados; ajustá los filtros).",
+    "export_empty": "No hay movimientos para exportar.",
+    "export_failed": "No se pudo exportar. Probá de nuevo."
   },
   "Alerts": {
     "breadcrumb_operation": "Operación",
@@ -666,6 +1073,9 @@
     "all_statuses": "Todos los estados",
     "status_active": "Activas",
     "status_resolved": "Resueltas",
+    "view_unread": "Sin leer",
+    "view_active": "Todas las activas",
+    "view_resolved": "Resueltas",
     "status_active_badge": "Activa",
     "status_resolved_badge": "Resuelta",
     "alert_count": "{count, plural, =0 {Sin alertas} one {# alerta} other {# alertas}}",
@@ -733,6 +1143,12 @@
     "suggestion_order_in": "Pedir en ~{days, plural, one {# día} other {# días}}",
     "suggested_units": "{quantity} u.",
     "suggested_qty_hint": "La cantidad sugerida aparece cuando el stock llega al punto de pedido",
+    "hint_demand": "Cuánto se consume por día, estimado a partir de los movimientos de stock recientes (por tendencia o promedio, según el historial disponible).",
+    "hint_reorder_point": "Nivel de stock a partir del cual conviene pedir: cubre la demanda durante el tiempo de entrega más el stock de seguridad.",
+    "hint_suggestion": "Cuándo conviene hacer el pedido, según la demanda estimada y el stock actual respecto del punto de pedido.",
+    "hint_suggested_qty": "Cantidad a pedir para cubrir los días de cobertura configurados. Aparece cuando el stock llega al punto de pedido.",
+    "hint_lead_time": "Días que tarda un pedido en llegar desde que se hace. Puede calcularse automáticamente a partir de tus compras recibidas.",
+    "hint_safety_stock": "Colchón de unidades extra para absorber picos de consumo o demoras de entrega, según la criticidad del insumo.",
     "empty": "No hay insumos con existencias registradas.",
     "settings_title": "Parámetros de reposición",
     "settings_subtitle": "Definen el punto de pedido y la cantidad sugerida",

@@ -28,7 +28,7 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
 
   return (
     <div
-      className="flex-1 overflow-y-auto px-7 py-7"
+      className="flex-1 overflow-y-auto px-4 py-5 md:px-7 md:py-7"
       style={{ display: "flex", flexDirection: "column", gap: "var(--d-section-gap)" }}
     >
       {/* Page header */}
@@ -47,7 +47,7 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
       </div>
 
       {/* Section 1: Mi perfil */}
-      <section className="mi-card mi-shadow" style={{ maxWidth: 520, padding: "var(--d-card-pad)" }}>
+      <section data-tutorial="main" className="mi-card mi-shadow" style={{ maxWidth: 520, padding: "var(--d-card-pad)" }}>
         <h2 className="font-display text-ink" style={{ fontSize: 18, marginBottom: 4 }}>{t("profile_title")}</h2>
         <p className="text-ink3 mb-5" style={{ fontSize: 13 }}>{email}</p>
 
@@ -64,7 +64,7 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
         )}
 
         <form action={profileAction}>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="mi-field" style={{ marginTop: 0 }}>
               <label htmlFor="firstName" className="mi-label">{t("first_name")}</label>
               <input
@@ -110,7 +110,7 @@ export function SettingsPage({ email, initialFirstName, initialLastName }: Setti
       </section>
 
       {/* Section 2: Cambiar contraseña */}
-      <section className="mi-card mi-shadow" style={{ maxWidth: 520, padding: "var(--d-card-pad)" }}>
+      <section data-tutorial="password" className="mi-card mi-shadow" style={{ maxWidth: 520, padding: "var(--d-card-pad)" }}>
         <h2 className="font-display text-ink" style={{ fontSize: 18, marginBottom: 16 }}>{t("password_title")}</h2>
 
         {passwordState.ok && (

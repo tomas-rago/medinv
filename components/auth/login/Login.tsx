@@ -115,8 +115,8 @@ export function Login() {
 
           <p className="text-center text-ink3" style={{ fontSize: 12 }}>
             {tFoot("copyright")} ·{" "}
-            <a href="#" className="hover:text-ink2">{tFoot("privacy")}</a> ·{" "}
-            <a href="#" className="hover:text-ink2">{tFoot("terms")}</a>
+            <a href="/terms" className="hover:text-ink2">{tFoot("privacy")}</a> ·{" "}
+            <a href="/terms" className="hover:text-ink2">{tFoot("terms")}</a>
           </p>
         </div>
 
