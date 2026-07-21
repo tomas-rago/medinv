@@ -43,5 +43,13 @@ cookie**, using ephemeral orgs/users on the live project (same pattern as
   over HTTP — verify the markup (`mi-topbar`, `mi-drawer`) and grep the
   served `/_next/static/chunks/*.css` for the rules; pixel checks need a
   human or a browser tool.
+- **Sizing/clipping bugs are invisible to the SSR drivers.** The dashboard
+  scroll root has a definite height, so a flex-column root silently squashed
+  cards (`overflow-hidden` ⇒ automatic minimum size 0) and cropped their
+  content while the HTML and CSS both looked right. For anything about a box
+  growing, cropping or overflowing, use `verify-dashboard-layout.mts`, which
+  drives headless Chrome over CDP (no Playwright needed — Node's built-in
+  `WebSocket` talks to `--remote-debugging-port`) and measures real rendered
+  heights. `CHROME_PATH` overrides the browser binary.
 - Anonymous requests to dashboard routes 307 → `/login`; assert with
   `redirect: "manual"`.

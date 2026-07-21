@@ -111,17 +111,21 @@ export async function HomePage({
   return (
     <div
       className="flex-1 overflow-y-auto px-4 py-5 md:px-7 md:py-7"
-      // Grid, not flex-column: this element has a definite height (flex-1 inside
-      // the h-screen shell), so as a flex container its children would shrink to
-      // fit — and cards carrying `overflow-hidden` have an automatic minimum
-      // size of 0, so they were squashed and their content cropped. Grid rows
-      // size to their content; align-content:start keeps them from stretching.
+      // This element has a definite height (flex-1 inside the h-screen shell),
+      // so as a flex column its children shrank to fit — and cards carrying
+      // `overflow-hidden` have an automatic minimum size of 0, so they were
+      // squashed and their content cropped.
+      //
+      // grid-auto-rows:max-content is what actually fixes it: plain `auto` rows
+      // fall back to their min-content size (0 for those cards) when the tracks
+      // don't fit, which squashes them even harder than flex did. max-content
+      // rows keep their full height and overflow into the scroll container.
       style={{
         display: "grid",
         // minmax(0, 1fr) keeps a wide child (a table, a chart) from stretching
         // the column past the viewport instead of scrolling inside its own box.
         gridTemplateColumns: "minmax(0, 1fr)",
-        alignContent: "start",
+        gridAutoRows: "max-content",
         gap: "var(--d-section-gap)",
       }}
     >
