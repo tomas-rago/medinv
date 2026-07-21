@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { SummaryChart } from "./SummaryChart";
+import { SummaryChart, isRenderableChart } from "./SummaryChart";
 import type {
   DashboardSummary,
   DashboardSummaryContent,
@@ -68,6 +68,10 @@ export function DashboardSummaryCard({ initialSummary }: DashboardSummaryCardPro
   );
   const [loading, setLoading] = useState(false);
   const [errorKey, setErrorKey] = useState<string | null>(null);
+
+  // A chart the model returned but whose values are all zero renders as an
+  // empty panel, so treat it as no chart at all.
+  const chart = content && isRenderableChart(content.chart) ? content.chart : null;
 
   const abortRef = useRef<AbortController | null>(null);
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -175,50 +179,61 @@ export function DashboardSummaryCard({ initialSummary }: DashboardSummaryCardPro
 
         {content && (
           <>
-            <div>
-              <p className="font-semibold text-ink" style={{ fontSize: 15 }}>
-                {content.headline}
-              </p>
-              <p className="whitespace-pre-wrap text-ink2 mt-1" style={{ fontSize: 14 }}>
-                {content.summary}
-              </p>
+            {/* Text and chart sit side by side on desktop, stacked on mobile.
+                Without a renderable chart the text simply spans the full width. */}
+            <div
+              className={chart ? "grid gap-5 lg:grid-cols-2 lg:items-start" : undefined}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div>
+                  <p className="font-semibold text-ink" style={{ fontSize: 15 }}>
+                    {content.headline}
+                  </p>
+                  <p className="whitespace-pre-wrap text-ink2 mt-1" style={{ fontSize: 14 }}>
+                    {content.summary}
+                  </p>
+                </div>
+
+                {content.actions.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-ink mb-2" style={{ fontSize: 13 }}>
+                      {t("aiSummary.actionsTitle")}
+                    </h3>
+                    <ul style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {content.actions.map((action, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-2 text-ink2"
+                          style={{ fontSize: 14 }}
+                        >
+                          <span
+                            aria-hidden
+                            className="flex-none"
+                            style={{
+                              marginTop: 6,
+                              width: 6,
+                              height: 6,
+                              borderRadius: 999,
+                              background: "var(--c-primary)",
+                            }}
+                          />
+                          {action}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {chart && (
+                <div
+                  className="mi-card"
+                  style={{ padding: 16, background: "var(--c-surface-2)" }}
+                >
+                  <SummaryChart spec={chart} />
+                </div>
+              )}
             </div>
-
-            {content.actions.length > 0 && (
-              <div>
-                <h3 className="font-semibold text-ink mb-2" style={{ fontSize: 13 }}>
-                  {t("aiSummary.actionsTitle")}
-                </h3>
-                <ul style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {content.actions.map((action, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-2 text-ink2"
-                      style={{ fontSize: 14 }}
-                    >
-                      <span
-                        aria-hidden
-                        className="flex-none"
-                        style={{
-                          marginTop: 6,
-                          width: 6,
-                          height: 6,
-                          borderRadius: 999,
-                          background: "var(--c-primary)",
-                        }}
-                      />
-                      {action}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {content.chart && (
-              <div className="mi-card" style={{ padding: 16, background: "var(--c-surface-2, transparent)" }}>
-                <SummaryChart spec={content.chart} />
-              </div>
-            )}
 
             <p className="text-ink3" style={{ fontSize: 11 }}>
               {t("aiSummary.disclaimer")}
