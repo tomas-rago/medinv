@@ -155,6 +155,16 @@
       "empty": "Todo en orden por ahora: ningún insumo necesita reposición en los próximos días.",
       "view_all": "Ver análisis completo"
     },
+    "aiSummary": {
+      "title": "Resumen del panel con IA",
+      "subtitle": "Un panorama del estado del stock generado con IA.",
+      "generate": "Generar",
+      "regenerate": "Regenerar",
+      "generating": "Generando el resumen…",
+      "generatedAgo": "Generado {time}",
+      "actionsTitle": "Acciones sugeridas",
+      "disclaimer": "Resumen generado con IA a partir de tus datos. Son sugerencias basadas en el historial; la decisión final es del equipo."
+    },
     "shortcuts": {
       "title": "Accesos rápidos",
       "stock": {
@@ -651,6 +661,7 @@
     "ai_response_truncated": "La respuesta se cortó por longitud; probá con una pregunta más acotada",
     "ai_tool_loop_limit": "La consulta resultó demasiado compleja; probá dividirla en preguntas más simples",
     "ai_explain_failed": "No se pudo analizar la pantalla; probá de nuevo",
+    "ai_summary_failed": "No se pudo generar el resumen; probá de nuevo",
     "unexpected": "Error inesperado",
     "receptor_not_found": "El receptor no existe o está inactivo"
   },
