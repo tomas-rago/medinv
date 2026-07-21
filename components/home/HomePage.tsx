@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { canWriteInventory, canManagePurchases } from "@/lib/constants/roles";
+import type { DashboardSummary } from "@/lib/schemas/asistencia-ia/dashboard-summary";
+import { DashboardSummaryCard } from "./DashboardSummaryCard";
 
 export interface AtRiskItem {
   product_id: string;
@@ -19,6 +21,10 @@ interface HomePageProps {
   hasAiAccess: boolean;
   // Non-null only for chief_doctor: predictive oversight section.
   atRisk: AtRiskItem[] | null;
+  // Chief-doctor + AI-access only: whether to show the AI summary tile, and its
+  // cached content (null on first-ever visit — the tile generates it).
+  showAiSummary: boolean;
+  initialSummary: DashboardSummary | null;
 }
 
 function fmtQty(n: number) {
@@ -54,6 +60,8 @@ export async function HomePage({
   pendingPurchases,
   hasAiAccess,
   atRisk,
+  showAiSummary,
+  initialSummary,
 }: HomePageProps) {
   const t = await getTranslations("Home");
   const tSidebar = await getTranslations("Sidebar");
@@ -147,6 +155,9 @@ export async function HomePage({
           </Link>
         ))}
       </div>
+
+      {/* Chief-only AI management summary */}
+      {showAiSummary && <DashboardSummaryCard initialSummary={initialSummary} />}
 
       {/* Chief-only predictive oversight */}
       {atRisk !== null && (

@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { canWriteInventory } from "@/lib/constants/roles";
+import { canWriteInventory, canViewReports } from "@/lib/constants/roles";
 import { hasAiAccess } from "@/lib/ai/access";
 import { parseMovementFilters } from "@/lib/schemas/stock/filters";
 import { buildMovementsQuery } from "./query";
 import { StockPage } from "@/components/stock/StockPage";
-
-const PAGE_SIZE = 20;
+import { resolvePage, resolvePageSize } from "@/lib/pagination";
 
 type ProductJoin = { name: string; category: string | null; criticality: string | null };
 type StockProductJoin = { name: string; category: string | null; unit: string };
@@ -32,17 +31,23 @@ export default async function StockServerPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const canWrite = canWriteInventory(user.app_metadata?.role as string);
+  const role = user.app_metadata?.role as string;
+  const canWrite = canWriteInventory(role);
+  // Movements log/export is a "report" — reserved for operational roles.
+  // Doctor keeps stock access (Existencias tab) but not the movements report.
+  const showReports = canViewReports(role);
 
   const orgId = user.app_metadata?.organization_id as string | undefined;
   const aiExplain = orgId ? await hasAiAccess(supabase, orgId) : false;
 
   const filters = parseMovementFilters(sp);
-  const initialTab = sp.tab === "movements" ? ("movements" as const) : ("stock" as const);
+  const initialTab =
+    showReports && sp.tab === "movements" ? ("movements" as const) : ("stock" as const);
 
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
+  const page = resolvePage(sp.page);
+  const pageSize = resolvePageSize(sp.size);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   const { data: movements, count } = await buildMovementsQuery(supabase, filters).range(from, to);
 
@@ -164,8 +169,9 @@ export default async function StockServerPage({
       movements={rows}
       count={count ?? 0}
       page={page}
-      pageSize={PAGE_SIZE}
+      pageSize={pageSize}
       canWrite={canWrite}
+      canViewReports={showReports}
       rectifiedIds={rectifiedIds}
       existencias={existencias}
       aiExplain={aiExplain}

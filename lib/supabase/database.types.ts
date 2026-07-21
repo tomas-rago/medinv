@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_dashboard_summaries: {
+        Row: {
+          content: Json
+          generated_at: string
+          generated_by: string | null
+          organization_id: string
+        }
+        Insert: {
+          content: Json
+          generated_at?: string
+          generated_by?: string | null
+          organization_id: string
+        }
+        Update: {
+          content?: Json
+          generated_at?: string
+          generated_by?: string | null
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_dashboard_summaries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alert_settings: {
         Row: {
           expiry_days_ahead: number

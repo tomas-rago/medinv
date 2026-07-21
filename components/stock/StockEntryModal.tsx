@@ -36,6 +36,11 @@ export function StockEntryModal({ onClose }: StockEntryModalProps) {
 
   const [showScanner, setShowScanner] = useState(false);
   const [createEan, setCreateEan] = useState<string | null>(null); // non-null => create modal open
+  const [expiry, setExpiry] = useState("");
+
+  // Today (UTC) as YYYY-MM-DD — past expiry dates are non-selectable / rejected.
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const expiryInPast = expiry !== "" && expiry < todayISO;
 
   const reqId = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -270,7 +275,21 @@ export function StockEntryModal({ onClose }: StockEntryModalProps) {
 
             <div className="mi-field">
               <label htmlFor="stk-expiry" className="mi-label">{t("expiry_label")}</label>
-              <input id="stk-expiry" name="expiry_date" type="date" className="mi-input" disabled={!selected} />
+              <input
+                id="stk-expiry"
+                name="expiry_date"
+                type="date"
+                className="mi-input"
+                min={todayISO}
+                value={expiry}
+                onChange={(e) => setExpiry(e.target.value)}
+                disabled={!selected}
+              />
+              {expiryInPast && <p className="mi-field-error">{tVal("expiry_date_in_past")}</p>}
+              {state.errors.expiry_date?.map((e) => (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                <p key={e} className="mi-field-error">{tVal(e as any)}</p>
+              ))}
             </div>
 
             <div className="mi-field">
@@ -290,7 +309,7 @@ export function StockEntryModal({ onClose }: StockEntryModalProps) {
           <button type="button" className="mi-btn mi-btn--ghost" onClick={onClose}>
             {t("cancel")}
           </button>
-          <button type="submit" form="stock-entry-form" disabled={isPending || !selected} className="mi-btn mi-btn--primary">
+          <button type="submit" form="stock-entry-form" disabled={isPending || !selected || expiryInPast} className="mi-btn mi-btn--primary">
             {isPending ? t("saving") : t("register_entry")}
           </button>
         </div>

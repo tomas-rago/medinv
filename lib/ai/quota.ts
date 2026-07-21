@@ -62,6 +62,18 @@ export function isOverQuota(used: number, limit: number): boolean {
   return used >= limit;
 }
 
+// Rough USD cost of a turn given its input/output token split, for display
+// only — enforcement stays token-based (see the counting rule above). Rates are
+// the claude-opus-4-8 list prices: $5 / 1M input, $25 / 1M output. This ignores
+// the cheaper cache-read tier (cache reads counted 1:1 in tokens are billed at
+// ~0.1×), so the estimate is an upper bound on real spend.
+export const USD_PER_INPUT_TOKEN = 5 / 1_000_000;
+export const USD_PER_OUTPUT_TOKEN = 25 / 1_000_000;
+
+export function estimateUsd(inputTokens: number, outputTokens: number): number {
+  return inputTokens * USD_PER_INPUT_TOKEN + outputTokens * USD_PER_OUTPUT_TOKEN;
+}
+
 // One row per assistant turn. token_usage deliberately has no INSERT policy;
 // writes go through the service-role client only.
 export async function recordTokenUsage(

@@ -12,6 +12,7 @@ import { PRODUCT_CRITICALITIES } from "@/lib/constants/criticality";
 import { MOVEMENT_TYPES } from "@/lib/schemas/stock/filters";
 import type { MovementFilters } from "@/lib/schemas/stock/filters";
 import { movementsUrl, hasActiveFilters } from "./movements-url";
+import { FilterBar } from "@/components/ui/FilterBar";
 
 interface MovementsFilterBarProps {
   filters: MovementFilters;
@@ -166,6 +167,7 @@ export function MovementsFilterBar({
   }
 
   return (
+    <FilterBar hasActive={hasActiveFilters(filters)}>
     <div
       className="flex flex-wrap items-center gap-2 p-4 border-b"
       style={{ borderColor: "var(--c-line)" }}
@@ -292,5 +294,6 @@ export function MovementsFilterBar({
         </button>
       )}
     </div>
+    </FilterBar>
   );
 }

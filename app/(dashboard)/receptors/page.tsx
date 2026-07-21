@@ -3,13 +3,12 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { canCreateReceptors, canManageReceptors } from "@/lib/constants/roles";
 import { ReceptorsPage } from "@/components/receptors/ReceptorsPage";
-
-const PAGE_SIZE = 20;
+import { resolvePage, resolvePageSize } from "@/lib/pagination";
 
 export default async function ReceptorsServerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; q?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; size?: string; q?: string; status?: string }>;
 }) {
   const sp = await searchParams;
   const cookieStore = await cookies();
@@ -23,15 +22,17 @@ export default async function ReceptorsServerPage({
   const role = user.app_metadata?.role as string;
   const canCreate = canCreateReceptors(role);
   const canManage = canManageReceptors(role);
+  if (!canCreate) redirect("/products");
 
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const page = resolvePage(sp.page);
+  const pageSize = resolvePageSize(sp.size);
   const q = (sp.q ?? "").trim();
   const status = (sp.status ?? "").trim(); // "" (all) | "active" | "inactive"
   // Strip PostgREST filter metacharacters from free text before interpolating.
   const safeQ = q.replace(/[,()*]/g, " ").trim();
 
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   let query = supabase
     .from("receptors")
@@ -53,7 +54,7 @@ export default async function ReceptorsServerPage({
       receptors={data ?? []}
       count={count ?? 0}
       page={page}
-      pageSize={PAGE_SIZE}
+      pageSize={pageSize}
       q={q}
       status={status}
       canCreate={canCreate}

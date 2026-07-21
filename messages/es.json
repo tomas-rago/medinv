@@ -1,4 +1,14 @@
 {
+  "Common": {
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "page_of": "Página {page} de {total}",
+    "pagination_range": "{from}–{to} de {total}",
+    "rows_per_page": "Filas por página",
+    "expand": "Mostrar detalles",
+    "collapse": "Ocultar detalles",
+    "filters": "Filtros"
+  },
   "Login": {
     "heading": "Bienvenid@ de nuevo",
     "subheading": "Gestioná tu inventario, compras y equipo desde un solo lugar.",
@@ -31,19 +41,29 @@
   },
   "Terms": {
     "heading": "Términos y condiciones",
-    "updated_at": "Última actualización: julio 2026",
+    "updated_at": "Última actualización: 20 de julio de 2026",
     "s1_title": "1. Aceptación de los términos",
-    "s1_body": "[Contenido pendiente] Al crear una cuenta en Med+Inv aceptás estos términos y condiciones. Esta sección describirá el alcance del acuerdo entre vos y Med+Inv.",
+    "s1_body": "Bienvenido a Med+Inv (el «Servicio»), proporcionado por Tomás Rago (el «Proveedor», «nosotros» o «nos»), con domicilio en Sarmiento 15, Villa La Bolsa, Provincia de Córdoba, Argentina. Nos complace ofrecerle acceso al Servicio, sujeto a estos términos y condiciones (los «Términos») y a las prácticas de privacidad descriptas más abajo. Al acceder y utilizar el Servicio usted expresa su consentimiento, acuerdo y entendimiento de estos Términos. Si no está de acuerdo con ellos, no utilice el Servicio. El uso del Servicio implica también la aceptación de las modalidades operativas vigentes y de las que se habiliten en el futuro.",
     "s2_title": "2. Descripción del servicio",
-    "s2_body": "[Contenido pendiente] Med+Inv es una plataforma de gestión de inventario de insumos médicos. Esta sección detallará las funcionalidades incluidas y sus limitaciones.",
-    "s3_title": "3. Cuentas y roles",
-    "s3_body": "[Contenido pendiente] Esta sección describirá las responsabilidades del administrador de la cuenta, la gestión de usuarios invitados y los distintos roles disponibles.",
-    "s4_title": "4. Datos y privacidad",
-    "s4_body": "[Contenido pendiente] Esta sección explicará qué datos se almacenan, cómo se protegen y cuáles son tus derechos sobre ellos.",
-    "s5_title": "5. Suscripción y pagos",
-    "s5_body": "[Contenido pendiente] Esta sección detallará los planes disponibles, la facturación, las renovaciones y la política de cancelación.",
-    "s6_title": "6. Responsabilidad",
-    "s6_body": "[Contenido pendiente] Esta sección describirá los límites de responsabilidad del servicio y las obligaciones de cada parte.",
+    "s2_body": "Med+Inv es una plataforma web de gestión de inventario de insumos médicos. Permite registrar productos y existencias, ingresar y egresar stock, ver alertas de stock bajo y de vencimiento, recibir sugerencias predictivas de compra, gestionar órdenes de compra y proveedores/destinatarios, generar reportes históricos de movimientos exportables (Excel/CSV y PDF) y, en los planes que lo incluyen, utilizar funciones de asistencia basadas en inteligencia artificial. El Servicio es una herramienta de gestión administrativa y no reemplaza el criterio profesional ni los sistemas clínicos de la institución.",
+    "s3_title": "3. Operaciones habilitadas",
+    "s3_body": "Las operaciones disponibles son aquellas habilitadas para cada cuenta según el rol del usuario y los requisitos vigentes en cada momento. El Proveedor podrá ampliar o restringir las operaciones habilitadas, comunicándolo previamente con una antelación no menor a 60 días. En ningún caso el uso de una operación o funcionalidad debe entenderse como una obligación del Proveedor de mantenerla disponible de forma indefinida.",
+    "s4_title": "4. Cuentas, roles y acceso",
+    "s4_body": "Para operar el Servicio se requiere una cuenta. El titular de la organización (rol Director médico) administra el alta, modificación y baja de los usuarios invitados y es responsable del uso que estos hagan del Servicio. El acceso a cada funcionalidad depende del rol asignado (Médico Jefe, Médico, Enfermero/a o Administrativo/a). Las credenciales de acceso son personales, secretas e intransferibles; el usuario asume las consecuencias de su divulgación a terceros y libera al Proveedor de toda responsabilidad que de ello derive. El Proveedor nunca solicitará la totalidad de sus datos ni le requerirá sus credenciales por correo electrónico.",
+    "s5_title": "5. Datos y privacidad",
+    "s5_body": "Para utilizar el Servicio los usuarios deben facilitar determinados datos de carácter personal y de su organización. Dicha información se procesa y almacena en servidores de terceros (infraestructura Supabase) que mantienen estándares de seguridad y protección tanto física como tecnológica. El tratamiento de los datos personales se realiza conforme a la Ley N.º 25.326 de Protección de los Datos Personales de la República Argentina. El usuario puede solicitar el acceso, la rectificación o la supresión de sus datos escribiendo a la dirección de contacto indicada más abajo.",
+    "s6_title": "6. Suscripción y pagos",
+    "s6_body": "El Servicio ofrece un plan gratuito y planes pagos con funcionalidades adicionales (incluido un límite mensual de consumo de inteligencia artificial). Los planes pagos se abonan mediante Mercado Pago a través de una suscripción recurrente; el alta, la mejora, la baja de plan y la cancelación de la suscripción se gestionan desde la sección Cuenta → Suscripción. La cancelación surte efecto conforme a las condiciones del plan contratado. El Proveedor podrá modificar los valores o comisiones del Servicio, comunicándolo con una antelación no menor a 60 días.",
+    "s7_title": "7. Responsabilidad y garantías",
+    "s7_body": "El Servicio se ofrece «tal cual» y «según disponibilidad». El Proveedor procura mantener su correcto funcionamiento pero no garantiza que sea ininterrumpido o libre de errores. Med+Inv es una herramienta de apoyo a la gestión de inventario: las decisiones clínicas, de dispensación, de compra y de control de vencimientos son responsabilidad exclusiva de los profesionales y de la institución usuaria. En la máxima medida permitida por la ley, el Proveedor no será responsable por daños indirectos o pérdidas derivados del uso o de la imposibilidad de uso del Servicio.",
+    "s8_title": "8. Propiedad intelectual",
+    "s8_body": "El software y sus componentes están protegidos por la Ley N.º 11.723 de Propiedad Intelectual de la República Argentina y demás normativa aplicable. El uso del Servicio no transfiere al usuario ningún derecho de propiedad intelectual sobre el software, su código, sus marcas o sus contenidos.",
+    "s9_title": "9. Vigencia y terminación",
+    "s9_body": "El usuario podrá dejar sin efecto la relación que surge de estos Términos en forma inmediata, sin más responsabilidad que la derivada de los gastos ya originados hasta ese momento. Si el usuario incumpliera cualquiera de sus obligaciones o de estos Términos, el Proveedor podrá suspender o dar de baja el Servicio en forma inmediata, sin que ello genere derecho a indemnización o compensación alguna. El Proveedor también podrá discontinuar el Servicio con un preaviso mínimo de 60 días.",
+    "s10_title": "10. Validez de operaciones y notificaciones",
+    "s10_body": "Los registros emitidos por la aplicación serán prueba suficiente de las operaciones cursadas a través de ella. A los efectos del cumplimiento de disposiciones legales o contractuales, se otorga a las notificaciones cursadas por este medio el mismo alcance que a las notificaciones mediante documento escrito.",
+    "s11_title": "11. Contacto y modificaciones",
+    "s11_body": "Para consultas, sugerencias o reclamos puede escribirnos a tomasrago430@gmail.com, o al domicilio Sarmiento 15, Villa La Bolsa, Provincia de Córdoba, Argentina. El Proveedor podrá actualizar estos Términos cuando resulte necesario; los cambios se comunicarán previamente y su vigencia se indicará mediante la fecha de última actualización que figura al inicio de este documento.",
     "back_to_signup": "Volver al registro"
   },
   "ForgotPassword": {
@@ -135,6 +155,16 @@
       "empty": "Todo en orden por ahora: ningún insumo necesita reposición en los próximos días.",
       "view_all": "Ver análisis completo"
     },
+    "aiSummary": {
+      "title": "Resumen del panel con IA",
+      "subtitle": "Un panorama del estado del stock generado con IA.",
+      "generate": "Generar",
+      "regenerate": "Regenerar",
+      "generating": "Generando el resumen…",
+      "generatedAgo": "Generado {time}",
+      "actionsTitle": "Acciones sugeridas",
+      "disclaimer": "Resumen generado con IA a partir de tus datos. Son sugerencias basadas en el historial; la decisión final es del equipo."
+    },
     "shortcuts": {
       "title": "Accesos rápidos",
       "stock": {
@@ -220,6 +250,7 @@
     "invite_button": "Invitar usuario",
     "search_placeholder": "Buscar por nombre o email…",
     "user_count": "{count, plural, one {# usuario} other {# usuarios}}",
+    "empty": "No hay usuarios para mostrar.",
     "table_user": "Usuario",
     "table_role": "Rol",
     "table_status": "Estado",
@@ -380,6 +411,7 @@
     "quantity_positive": "Ingresá una cantidad mayor a cero",
     "quantity_non_negative": "La cantidad no puede ser negativa",
     "quantity_required": "Ingresá una cantidad",
+    "expiry_date_in_past": "El vencimiento no puede ser una fecha pasada",
     "price_non_negative": "El precio no puede ser negativo",
     "items_required": "Agregá al menos un insumo a la orden",
     "items_duplicate_product": "No repitas el mismo insumo en la orden",
@@ -411,7 +443,8 @@
       "inventory": "Inventario",
       "alerts_purchases": "Alertas y compras",
       "predictive": "Predicción",
-      "account": "Cuenta"
+      "account": "Cuenta",
+      "contact": "Contacto"
     },
     "items": {
       "stock_in": {
@@ -468,7 +501,7 @@
       },
       "roles_permissions": {
         "q": "¿Qué puede hacer cada rol?",
-        "a": "El Médico Jefe administra todo: usuarios, suscripción y configuración de reposición, además de operar el inventario. Los roles Médico, Enfermero/a y Administrativo/a operan el día a día (movimientos, compras, alertas) según sus permisos, pero no gestionan usuarios ni la suscripción."
+        "a": "El Médico Jefe administra todo: usuarios, suscripción, alertas, predicción, compras, proveedores y reportes, además del inventario. Los roles Enfermero/a y Administrativo/a operan el día a día completo (inventario, compras, proveedores, alertas y predicción), pero no gestionan usuarios ni la suscripción. El rol Médico se enfoca en el inventario: alta, modificación y baja de insumos y registro de ingresos y egresos."
       },
       "ai_assistant": {
         "q": "¿Qué hace el Asistente IA y por qué no lo veo?",
@@ -477,6 +510,26 @@
       "subscription": {
         "q": "¿Cómo gestiono la suscripción?",
         "a": "Desde Cuenta → Suscripción, el Médico Jefe puede ver el plan actual, cambiarlo o actualizar el medio de pago. Los demás roles no tienen acceso a esa sección."
+      },
+      "create_password": {
+        "q": "¿Cómo creo o recupero mi clave?",
+        "a": "Tu clave la definís vos al aceptar la invitación a la organización o al registrarte, desde el enlace que llega a tu correo. Si la olvidaste, usá «¿Olvidaste tu contraseña?» en la pantalla de inicio de sesión: te enviaremos un enlace para restablecerla. La clave es personal, secreta e intransferible."
+      },
+      "unlock_user": {
+        "q": "¿Cómo reactivo o doy de baja a un usuario?",
+        "a": "El Médico Jefe gestiona los usuarios desde la sección Personal: puede invitar nuevos usuarios, y activar o desactivar a los existentes. Un usuario desactivado no puede iniciar sesión hasta que se lo reactive."
+      },
+      "contact_email": {
+        "q": "¿A qué dirección puedo escribir por una sugerencia o reclamo?",
+        "a": "Podés escribirnos a tomasrago430@gmail.com. Respondemos consultas sobre el uso del Servicio, sugerencias y reclamos."
+      },
+      "pause_subscription": {
+        "q": "¿Cómo pauso o cancelo mi suscripción?",
+        "a": "Desde Cuenta → Suscripción, el Médico Jefe puede cambiar de plan o cancelar la suscripción. Al cancelar, la cuenta vuelve al plan gratuito según las condiciones del plan contratado; los datos de tu organización se conservan."
+      },
+      "payment_methods": {
+        "q": "¿Qué medios de pago aceptan?",
+        "a": "Los planes pagos se abonan mediante Mercado Pago, a través de una suscripción recurrente que se gestiona desde Cuenta → Suscripción."
       }
     }
   },
@@ -608,6 +661,7 @@
     "ai_response_truncated": "La respuesta se cortó por longitud; probá con una pregunta más acotada",
     "ai_tool_loop_limit": "La consulta resultó demasiado compleja; probá dividirla en preguntas más simples",
     "ai_explain_failed": "No se pudo analizar la pantalla; probá de nuevo",
+    "ai_summary_failed": "No se pudo generar el resumen; probá de nuevo",
     "unexpected": "Error inesperado",
     "receptor_not_found": "El receptor no existe o está inactivo"
   },
@@ -1019,6 +1073,9 @@
     "all_statuses": "Todos los estados",
     "status_active": "Activas",
     "status_resolved": "Resueltas",
+    "view_unread": "Sin leer",
+    "view_active": "Todas las activas",
+    "view_resolved": "Resueltas",
     "status_active_badge": "Activa",
     "status_resolved_badge": "Resuelta",
     "alert_count": "{count, plural, =0 {Sin alertas} one {# alerta} other {# alertas}}",

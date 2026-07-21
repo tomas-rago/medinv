@@ -20,6 +20,10 @@ const GROUPS: { id: string; items: string[] }[] = [
     id: "account",
     items: ["roles_permissions", "ai_assistant", "subscription"],
   },
+  {
+    id: "contact",
+    items: ["create_password", "unlock_user", "contact_email", "pause_subscription", "payment_methods"],
+  },
 ];
 
 export function FaqPage() {

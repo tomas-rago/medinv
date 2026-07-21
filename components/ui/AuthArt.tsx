@@ -28,13 +28,18 @@ export function AuthArt({ caption }: AuthArtProps) {
       />
       <div className="relative h-full flex flex-col justify-end p-12">
         <span
-          className="mi-iso mb-8"
-          style={{ width: 48, height: 48, filter: "drop-shadow(0 4px 12px rgba(0,0,0,.25))" }}
+          className="mb-8"
+          style={{
+            display: "inline-flex",
+            width: "fit-content",
+            padding: 10,
+            background: "#fff",
+            borderRadius: 16,
+            filter: "drop-shadow(0 4px 12px rgba(0,0,0,.25))",
+          }}
         >
-          <span className="t-m" style={{ background: "#fff", color: "var(--c-primary)" }}>M</span>
-          <span className="t-plus" style={{ background: "#fff", color: "var(--c-accent)" }}>+</span>
-          <span className="t-i" style={{ background: "#fff", color: "var(--c-primary)" }}>i</span>
-          <span className="t-empty" />
+          {/* eslint-disable-next-line @next/next/no-img-element -- static SVG; next/image adds no optimization for SVGs */}
+          <img src="/isotype.svg" alt="" width={48} height={48} className="mi-iso" />
         </span>
         <h2 className="font-display text-white leading-tight max-w-md" style={{ fontSize: 34 }}>
           {caption}

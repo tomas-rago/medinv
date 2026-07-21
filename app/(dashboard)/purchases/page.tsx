@@ -3,13 +3,12 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { canManagePurchases } from "@/lib/constants/roles";
 import { PurchasesPage } from "@/components/purchases/PurchasesPage";
-
-const PAGE_SIZE = 20;
+import { resolvePage, resolvePageSize } from "@/lib/pagination";
 
 export default async function PurchasesServerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; status?: string; provider?: string }>;
+  searchParams: Promise<{ page?: string; size?: string; status?: string; provider?: string }>;
 }) {
   const sp = await searchParams;
   const cookieStore = await cookies();
@@ -21,13 +20,15 @@ export default async function PurchasesServerPage({
   if (!user) redirect("/login");
 
   const canManage = canManagePurchases(user.app_metadata?.role as string);
+  if (!canManage) redirect("/products");
 
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const page = resolvePage(sp.page);
+  const pageSize = resolvePageSize(sp.size);
   const status = (sp.status ?? "").trim();
   const providerId = (sp.provider ?? "").trim();
 
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   let query = supabase
     .from("purchases")
@@ -73,7 +74,7 @@ export default async function PurchasesServerPage({
       providers={providers ?? []}
       count={count ?? 0}
       page={page}
-      pageSize={PAGE_SIZE}
+      pageSize={pageSize}
       status={status}
       providerId={providerId}
       canManage={canManage}

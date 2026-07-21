@@ -130,7 +130,13 @@ export function Onboarding({ plans }: { plans: Plan[] }) {
             </div>
 
             {/* Plan cards */}
-            <div className="grid md:grid-cols-3 gap-5 mt-8 items-stretch">
+            <div
+              className="grid gap-5 mt-8 items-stretch mx-auto"
+              style={{
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                maxWidth: plans.length === 1 ? 380 : plans.length === 2 ? 720 : undefined,
+              }}
+            >
               {plans.map((plan, idx) => {
                 const meta = TIER_META[Math.min(idx, TIER_META.length - 1)];
                 const isFeatured = idx === featuredIndex;

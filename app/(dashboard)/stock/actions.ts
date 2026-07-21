@@ -10,7 +10,7 @@ import { MovementFiltersSchema } from "@/lib/schemas/stock/filters";
 import { buildMovementsQuery } from "./query";
 import { EXPORT_MAX_ROWS } from "@/lib/export/movements-types";
 import type { MovementExportRow, MovementsExportResult } from "@/lib/export/movements-types";
-import { canWriteInventory } from "@/lib/constants/roles";
+import { canWriteInventory, canViewReports } from "@/lib/constants/roles";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
@@ -206,6 +206,9 @@ export async function fetchMovementsForExport(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "not_authenticated" };
+  if (!canViewReports(user.app_metadata?.role as string)) {
+    return { ok: false, error: "not_authorized" };
+  }
 
   const { data, count, error } = await buildMovementsQuery(supabase, parsed.data).limit(
     EXPORT_MAX_ROWS

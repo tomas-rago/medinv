@@ -1,17 +1,16 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { canManageAlerts } from "@/lib/constants/roles";
+import { canManageAlerts, canViewAlerts } from "@/lib/constants/roles";
 import { hasAiAccess } from "@/lib/ai/access";
 import { syncReorderAlerts } from "@/lib/predictive/alerts";
 import { AlertsPage } from "@/components/alerts/AlertsPage";
-
-const PAGE_SIZE = 20;
+import { resolvePage, resolvePageSize } from "@/lib/pagination";
 
 export default async function AlertsServerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; type?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; size?: string; type?: string; view?: string }>;
 }) {
   const sp = await searchParams;
   const cookieStore = await cookies();
@@ -22,7 +21,10 @@ export default async function AlertsServerPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const canManage = canManageAlerts(user.app_metadata?.role as string);
+  const role = user.app_metadata?.role as string;
+  if (!canViewAlerts(role)) redirect("/products");
+
+  const canManage = canManageAlerts(role);
 
   const orgId = user.app_metadata?.organization_id as string | undefined;
   const aiExplain = orgId ? await hasAiAccess(supabase, orgId) : false;
@@ -31,12 +33,15 @@ export default async function AlertsServerPage({
   await supabase.rpc("sweep_alerts");
   await syncReorderAlerts(supabase);
 
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const page = resolvePage(sp.page);
+  const pageSize = resolvePageSize(sp.size);
   const type = (sp.type ?? "").trim(); // "" (all) | "low_stock" | "expiry" | "reorder_suggested"
-  const status = (sp.status ?? "active").trim(); // "active" | "resolved" | "all"
+  // Default view is "unread" = still-active alerts that haven't been read yet.
+  // "active" = every still-true alert (read or not); "resolved" = cleared ones.
+  const view = (sp.view ?? "unread").trim(); // "unread" | "active" | "resolved"
 
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   let query = supabase
     .from("alerts")
@@ -49,7 +54,9 @@ export default async function AlertsServerPage({
 
   if (type === "low_stock" || type === "expiry" || type === "reorder_suggested")
     query = query.eq("type", type);
-  if (status === "active" || status === "resolved") query = query.eq("status", status);
+  if (view === "resolved") query = query.eq("status", "resolved");
+  else if (view === "active") query = query.eq("status", "active");
+  else query = query.eq("status", "active").is("acknowledged_at", null); // unread (default)
 
   const { data, count } = await query;
 
@@ -98,9 +105,9 @@ export default async function AlertsServerPage({
       alerts={alerts}
       count={count ?? 0}
       page={page}
-      pageSize={PAGE_SIZE}
+      pageSize={pageSize}
       type={type}
-      status={status}
+      view={view}
       settings={settings}
       thresholds={thresholds}
       canManage={canManage}
