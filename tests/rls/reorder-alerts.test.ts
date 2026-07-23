@@ -135,15 +135,22 @@ describe.skipIf(!hasCreds)("reorder alerts RLS + lifecycle", () => {
     await admin.from("organizations").delete().in("id", [orgA, orgB]);
   });
 
-  it("fires an active alert with stock and reorder-point snapshots", async () => {
+  // Payload item shape the model pushes (lib/predictive/alerts.ts): the DB
+  // fires on `should_fire` and snapshots `usable_stock` rather than re-reading
+  // stock.quantity.
+  function item(fields: { reorder_point: number; usable_stock: number; should_fire: boolean }) {
+    return { product_id: productId, ...fields };
+  }
+
+  it("fires an active alert with usable-stock and reorder-point snapshots", async () => {
     const { error } = await nurseA.rpc("sync_reorder_alerts", {
-      p_items: [{ product_id: productId, reorder_point: 20 }],
+      p_items: [item({ reorder_point: 20, usable_stock: 10, should_fire: true })],
     });
     expect(error).toBeNull();
 
     const alerts = await activeReorderAlerts();
     expect(alerts).toHaveLength(1);
-    expect(alerts[0].quantity).toBe(10); // stock on hand, read server-side
+    expect(alerts[0].quantity).toBe(10); // usable stock the model reasoned about
     expect(alerts[0].threshold).toBe(20); // submitted reorder point
   });
 
@@ -166,7 +173,7 @@ describe.skipIf(!hasCreds)("reorder alerts RLS + lifecycle", () => {
     // org B submits org A's product id: the org-pinned stock join matches
     // nothing, so nothing fires in B and A's alert is untouched.
     const { error } = await chiefB.rpc("sync_reorder_alerts", {
-      p_items: [{ product_id: productId, reorder_point: 999 }],
+      p_items: [item({ reorder_point: 999, usable_stock: 0, should_fire: true })],
     });
     expect(error).toBeNull();
 
@@ -180,7 +187,7 @@ describe.skipIf(!hasCreds)("reorder alerts RLS + lifecycle", () => {
 
   it("refreshes the active alert in place instead of duplicating it", async () => {
     const { error } = await nurseA.rpc("sync_reorder_alerts", {
-      p_items: [{ product_id: productId, reorder_point: 15 }],
+      p_items: [item({ reorder_point: 15, usable_stock: 10, should_fire: true })],
     });
     expect(error).toBeNull();
 
@@ -189,25 +196,45 @@ describe.skipIf(!hasCreds)("reorder alerts RLS + lifecycle", () => {
     expect(alerts[0].threshold).toBe(15);
   });
 
-  it("auto-resolves when stock clears the reorder point and re-arms on recurrence", async () => {
+  it("stays fired on the model's verdict even when raw stock is above the reorder point", async () => {
+    // Raise the aggregate well clear of the reorder point. Under the old rule
+    // (stock.quantity <= reorder_point) this alert would have resolved, since
+    // 110 > 15 — exactly the blind spot when expired lots pad the aggregate
+    // while usable stock sits below the point.
     const { error: entryError } = await nurseA.rpc("register_stock_movement", {
       p_product_id: productId,
       p_type: "entry",
-      p_quantity: 100, // 10 + 100 = 110 > 15 → next sync resolves
+      p_quantity: 100, // 10 + 100 = 110
     });
     expect(entryError).toBeNull();
 
-    const { error: resolveSync } = await nurseA.rpc("sync_reorder_alerts", {
-      p_items: [{ product_id: productId, reorder_point: 15 }],
+    const { error } = await nurseA.rpc("sync_reorder_alerts", {
+      p_items: [item({ reorder_point: 15, usable_stock: 40, should_fire: true })],
     });
-    expect(resolveSync).toBeNull();
-    expect(await activeReorderAlerts()).toHaveLength(0);
+    expect(error).toBeNull();
 
-    // Demand grew → higher reorder point → fires again as a new row.
-    const { error: refireSync } = await nurseA.rpc("sync_reorder_alerts", {
-      p_items: [{ product_id: productId, reorder_point: 200 }],
+    const alerts = await activeReorderAlerts();
+    expect(alerts).toHaveLength(1);
+    // Snapshot is the usable stock the model used, not the 110 aggregate.
+    expect(alerts[0].quantity).toBe(40);
+    expect(alerts[0].threshold).toBe(15);
+  });
+
+  it("stays silent when the model says no, even with stock below the reorder point", async () => {
+    // The inverse blind spot: the old rule would have fired here (110 <= 200).
+    // The DB no longer second-guesses the model, so this resolves instead.
+    const { error } = await nurseA.rpc("sync_reorder_alerts", {
+      p_items: [item({ reorder_point: 200, usable_stock: 110, should_fire: false })],
     });
-    expect(refireSync).toBeNull();
+    expect(error).toBeNull();
+    expect(await activeReorderAlerts()).toHaveLength(0);
+  });
+
+  it("re-arms as a new row once the model flags it again", async () => {
+    const { error } = await nurseA.rpc("sync_reorder_alerts", {
+      p_items: [item({ reorder_point: 200, usable_stock: 110, should_fire: true })],
+    });
+    expect(error).toBeNull();
 
     const { data: all } = await admin
       .from("alerts")
@@ -258,7 +285,7 @@ describe.skipIf(!hasCreds)("reorder alerts RLS + lifecycle", () => {
   it("reorder_enabled = false blocks sync and the sweep clears actives", async () => {
     // Re-arm first.
     const { error: refire } = await nurseA.rpc("sync_reorder_alerts", {
-      p_items: [{ product_id: productId, reorder_point: 200 }],
+      p_items: [item({ reorder_point: 200, usable_stock: 110, should_fire: true })],
     });
     expect(refire).toBeNull();
     expect(await activeReorderAlerts()).toHaveLength(1);
@@ -276,7 +303,7 @@ describe.skipIf(!hasCreds)("reorder alerts RLS + lifecycle", () => {
 
     // And a sync while disabled fires nothing.
     const { error: blockedSync } = await nurseA.rpc("sync_reorder_alerts", {
-      p_items: [{ product_id: productId, reorder_point: 200 }],
+      p_items: [item({ reorder_point: 200, usable_stock: 110, should_fire: true })],
     });
     expect(blockedSync).toBeNull();
     expect(await activeReorderAlerts()).toHaveLength(0);
