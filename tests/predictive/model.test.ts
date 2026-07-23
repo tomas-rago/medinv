@@ -22,6 +22,10 @@ function history(overrides: Partial<ProductHistory>): ProductHistory {
     productId: "p1",
     consumption: [],
     currentStock: 100,
+    // No batch rows = the pre-batch-tracking fallback: currentStock is
+    // treated as one lot that never expires. Cases that exercise expiry pass
+    // `batches` explicitly.
+    batches: [],
     minQuantity: 0,
     safetyStockDays: 0,
     ...overrides,
@@ -207,5 +211,112 @@ describe("RegressionRopModel", () => {
     expect(p.safetyStock).toBe(100);
     // ceil(10 * 5 + 100)
     expect(p.reorderPoint).toBe(150);
+  });
+
+  // 10 units/day demand in every case below.
+  const tenPerDay = [
+    { date: daysAgo(8), quantity: 30 },
+    { date: daysAgo(7), quantity: 30 },
+    { date: daysAgo(6), quantity: 30 },
+  ];
+  const inDays = (n: number) => {
+    const d = new Date(AS_OF);
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0, 10);
+  };
+
+  it("excludes already-expired lots from the stock every projection uses", async () => {
+    const h = history({
+      consumption: tenPerDay,
+      currentStock: 130, // aggregate still counts the lapsed lot
+      batches: [
+        { expiryDate: daysAgo(3), quantity: 40 },
+        { expiryDate: inDays(400), quantity: 90 },
+      ],
+      minQuantity: 10,
+    });
+    const p = await model.predict(h, { leadTimeDays: 5, coverageDays: 30 }, AS_OF);
+    expect(p.usableStock).toBe(90);
+    expect(p.expiredStock).toBe(40);
+    // Reorder point is demand-driven, so unchanged; the runway is not.
+    expect(p.reorderPoint).toBe(60);
+    // floor((90 - 60) / 10) rather than the 7 days the aggregate implies.
+    expect(p.daysUntilReorder).toBe(3);
+    // Nothing more lapses inside the 35-day window.
+    expect(p.projectedWaste).toBe(0);
+    // ceil(10 * 35 + 10 - 90)
+    expect(p.suggestedQuantity).toBe(270);
+  });
+
+  it("brings the reorder day forward when a lot lapses before demand reaches it", async () => {
+    const h = history({
+      consumption: tenPerDay,
+      currentStock: 130,
+      batches: [
+        { expiryDate: inDays(2), quantity: 100 }, // only 30 of these get used
+        { expiryDate: inDays(400), quantity: 30 },
+      ],
+      minQuantity: 10,
+    });
+    const p = await model.predict(h, { leadTimeDays: 5, coverageDays: 30 }, AS_OF);
+    expect(p.usableStock).toBe(130);
+    // Days 0-2 consume 30 of the short lot; the remaining 70 lapse on day 3,
+    // dropping stock to 30. With a 5-day lead time, an order placed even today
+    // only lands on day 5 (stock 10 = safety by then), so the lead-time
+    // lookahead fires now rather than waiting for stock to visibly cross the
+    // reorder point.
+    expect(p.daysUntilReorder).toBe(0);
+    expect(p.projectedWaste).toBe(70);
+    expect(p.firstWasteDate).toBe(inDays(2));
+    // Wasted units do not count toward coverage: ceil(350 + 10 - (130 - 70))
+    expect(p.suggestedQuantity).toBe(300);
+  });
+
+  it("matches the no-expiry result when every lot outlives the horizon", async () => {
+    const h = history({
+      consumption: tenPerDay,
+      currentStock: 130,
+      batches: [{ expiryDate: inDays(400), quantity: 130 }],
+      minQuantity: 10,
+    });
+    const p = await model.predict(h, { leadTimeDays: 5, coverageDays: 30 }, AS_OF);
+    expect(p.expiredStock).toBe(0);
+    expect(p.projectedWaste).toBe(0);
+    expect(p.daysUntilReorder).toBe(7);
+    expect(p.suggestedQuantity).toBe(230);
+  });
+
+  it("reports expired stock even without a demand estimate", async () => {
+    const h = history({
+      consumption: [{ date: daysAgo(2), quantity: 5 }],
+      currentStock: 50,
+      batches: [
+        { expiryDate: daysAgo(1), quantity: 20 },
+        { expiryDate: null, quantity: 30 },
+      ],
+    });
+    const p = await model.predict(h, baseInputs, AS_OF);
+    expect(p.method).toBe("insufficient_data");
+    expect(p.usableStock).toBe(30);
+    expect(p.expiredStock).toBe(20);
+    expect(p.projectedWaste).toBeNull();
+  });
+
+  it("fires order-now when an imminent cliff would strand stock during the lead time", async () => {
+    // The whole stock expires the day after tomorrow, so only 2 days of demand
+    // (20 units) get used and 110 are lost. With a 5-day lead time there is no
+    // point at which a later order could arrive before the shortfall, so the
+    // lookahead reports 0 — where the plain "stock crosses the reorder point"
+    // rule would have said 2, two days too late to matter.
+    const h = history({
+      consumption: tenPerDay,
+      currentStock: 130,
+      batches: [{ expiryDate: inDays(1), quantity: 130 }],
+      minQuantity: 10,
+    });
+    const p = await model.predict(h, { leadTimeDays: 5, coverageDays: 30 }, AS_OF);
+    expect(p.daysUntilReorder).toBe(0);
+    expect(p.projectedWaste).toBe(110);
+    expect(p.firstWasteDate).toBe(inDays(1));
   });
 });

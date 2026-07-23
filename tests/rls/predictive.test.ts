@@ -220,6 +220,11 @@ describe.skipIf(!hasCreds)("predictive_settings RLS", () => {
     const r = rows[0];
     expect(r.product_id).toBe(productId);
     expect(r.current_stock).toBe(10);
+    // The seeded entry carries no expiry, so the whole aggregate is usable
+    // and the FEFO projection reduces to the plain formulas below.
+    expect(r.usable_stock).toBe(10);
+    expect(r.prediction.expiredStock).toBe(0);
+    expect(r.prediction.projectedWaste).toBe(0);
     expect(r.prediction.method).toBe("average");
     expect(r.prediction.dailyDemand).toBeCloseTo(10, 6);
     // ceil(10/day * 10 lead days + 0 min) = 100; stock 10 is far below it.

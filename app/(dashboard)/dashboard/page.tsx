@@ -80,7 +80,7 @@ export default async function DashboardPage() {
 
   const reorderSoonCount = predictions.rows.filter(
     (r) =>
-      urgent(r.prediction.daysUntilReorder) || r.current_stock <= r.min_quantity
+      urgent(r.prediction.daysUntilReorder) || r.usable_stock <= r.min_quantity
   ).length;
 
   // Rows come sorted most-urgent-first; chief_doctor gets the oversight list.
@@ -94,7 +94,9 @@ export default async function DashboardPage() {
             product_name: r.product_name,
             daysUntilReorder: r.prediction.daysUntilReorder as number,
             suggestedQuantity: r.prediction.suggestedQuantity,
-            currentStock: r.current_stock,
+            // Usable, not the raw aggregate — expired lots are not stock you
+            // can dispense, and the risk list is about what you can dispense.
+            currentStock: r.usable_stock,
           }))
       : null;
 

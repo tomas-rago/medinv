@@ -32,6 +32,16 @@ function fmtQty(n: number) {
   return n.toLocaleString("es-AR", { maximumFractionDigits: 2 });
 }
 
+// Batch dates are plain YYYY-MM-DD; parse as local midnight so the day does
+// not shift backwards in negative-offset timezones.
+function fmtDate(d: string) {
+  return new Date(`${d}T00:00:00`).toLocaleDateString("es-AR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function PredictivePage({ rows, count, page, pageSize, settings, canManage, aiExplain }: PredictivePageProps) {
   const t = useTranslations("Predictive");
   const tCrit = useTranslations("Criticality");
@@ -86,12 +96,56 @@ export function PredictivePage({ rows, count, page, pageSize, settings, canManag
   }
 
   function suggestedQtyCell(p: PredictionRow["prediction"]) {
-    // Coverage-target quantity, shown only once the reorder point is reached —
-    // earlier it would invite over-ordering.
-    return p.daysUntilReorder === 0 && p.suggestedQuantity !== null && p.suggestedQuantity > 0 ? (
-      <span className="text-ink font-medium">{t("suggested_units", { quantity: fmtQty(p.suggestedQuantity) })}</span>
-    ) : (
-      <span className="text-ink3" title={t("suggested_qty_hint")}>—</span>
+    // Coverage-target quantity. Always shown so the configured coverage days
+    // are legible, but muted until the reorder point is reached — at which
+    // point it becomes the number to act on.
+    //
+    // A zero is an answer ("you are already covered"), not a gap, so it reads
+    // differently from the dash, which means there is no demand estimate to
+    // compute from — that case the Sugerencia column spells out.
+    if (p.suggestedQuantity === null) return <span className="text-ink3">—</span>;
+    if (p.suggestedQuantity === 0) {
+      return (
+        <span className="text-ink3" title={t("suggested_qty_covered")}>
+          {t("suggested_units", { quantity: 0 })}
+        </span>
+      );
+    }
+    const due = p.daysUntilReorder === 0;
+    return (
+      <span
+        className={due ? "text-ink font-medium" : "text-ink3"}
+        title={due ? undefined : t("suggested_qty_hint")}
+      >
+        {t("suggested_units", { quantity: fmtQty(p.suggestedQuantity) })}
+      </span>
+    );
+  }
+
+  function stockCell(r: PredictionRow) {
+    // Usable stock only — total minus already-expired lots. Expired batches
+    // can't be removed from the system and will be discarded anyway, so the
+    // aggregate is not a number worth surfacing here.
+    return <span className="text-ink2">{fmtQty(r.usable_stock)}</span>;
+  }
+
+  function wasteIcon(p: PredictionRow["prediction"]) {
+    if (p.projectedWaste === null || p.projectedWaste <= 0) return null;
+    const label = t("waste_warning", {
+      quantity: fmtQty(p.projectedWaste),
+      date: p.firstWasteDate ? fmtDate(p.firstWasteDate) : "",
+    });
+    return (
+      <span
+        role="img"
+        aria-label={label}
+        title={label}
+        style={{ color: "var(--c-warn)", display: "inline-flex" }}
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+        </svg>
+      </span>
     );
   }
 
@@ -189,9 +243,10 @@ export function PredictivePage({ rows, count, page, pageSize, settings, canManag
                               {tCrit(r.criticality)}
                             </span>
                           )}
+                          {wasteIcon(p)}
                         </div>
                       </td>
-                      <td className="text-ink2">{fmtQty(r.current_stock)}</td>
+                      <td>{stockCell(r)}</td>
                       <td>{demandCell(p)}</td>
                       <td className="text-ink2">{p.reorderPoint !== null ? fmtQty(p.reorderPoint) : "—"}</td>
                       <td>{suggestionCell(p)}</td>
@@ -228,12 +283,13 @@ export function PredictivePage({ rows, count, page, pageSize, settings, canManag
                       {r.criticality && (
                         <span className={`mi-badge ${CRITICALITY_BADGE[r.criticality]}`}>{tCrit(r.criticality)}</span>
                       )}
+                      {wasteIcon(p)}
                     </span>
                   }
                   meta={suggestionCell(p)}
                 >
                   <dl className="mi-dl">
-                    <DataRow label={t("table_stock")}>{fmtQty(r.current_stock)}</DataRow>
+                    <DataRow label={t("table_stock")}>{stockCell(r)}</DataRow>
                     <DataRow label={t("table_demand")}>{demandCell(p)}</DataRow>
                     <DataRow label={t("table_reorder_point")}>{p.reorderPoint !== null ? fmtQty(p.reorderPoint) : "—"}</DataRow>
                     <DataRow label={t("table_suggested_qty")}>{suggestedQtyCell(p)}</DataRow>

@@ -17,6 +17,16 @@ function fmtQty(n: number) {
   return n.toLocaleString("es-AR", { maximumFractionDigits: 2 });
 }
 
+// Batch dates are plain YYYY-MM-DD; parse as local midnight so the day does
+// not shift backwards in negative-offset timezones.
+function fmtDate(d: string) {
+  return new Date(`${d}T00:00:00`).toLocaleDateString("es-AR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 const CRITICALITY_BADGE: Record<ProductCriticality, string> = {
   vital: "mi-badge--danger",
   essential: "mi-badge--amber",
@@ -34,7 +44,11 @@ export function ProductDetailPage({ detail, aiExplain }: ProductDetailPageProps)
   const hasProjection = backtest.method !== "insufficient_data";
 
   const stats: { key: string; value: React.ReactNode; extra?: React.ReactNode; hint?: string }[] = [
-    { key: "detail_stat_stock", value: fmtQty(row.current_stock) },
+    {
+      // Usable stock: the aggregate minus lots that have already expired.
+      key: "detail_stat_stock",
+      value: fmtQty(row.usable_stock),
+    },
     {
       key: "detail_stat_demand",
       hint: t("hint_demand"),
@@ -61,11 +75,19 @@ export function ProductDetailPage({ detail, aiExplain }: ProductDetailPageProps)
     },
     {
       key: "detail_stat_suggested_qty",
+      // Zero means "already covered" — an answer, not a missing value; the
+      // dash is reserved for having no demand estimate to compute from.
       value:
-        p.daysUntilReorder === 0 && p.suggestedQuantity !== null && p.suggestedQuantity > 0
+        p.suggestedQuantity !== null
           ? t("suggested_units", { quantity: fmtQty(p.suggestedQuantity) })
           : "—",
       hint: t("hint_suggested_qty"),
+      extra:
+        p.suggestedQuantity === 0 ? (
+          <span className="mi-badge mi-badge--gray" title={t("suggested_qty_covered")}>
+            {t("suggested_qty_covered_short")}
+          </span>
+        ) : undefined,
     },
     {
       key: "detail_stat_lead_time",
@@ -83,6 +105,20 @@ export function ProductDetailPage({ detail, aiExplain }: ProductDetailPageProps)
       hint: t("hint_safety_stock"),
     },
   ];
+
+  // Only worth a tile when something is actually projected to be lost.
+  if (p.projectedWaste !== null && p.projectedWaste > 0) {
+    stats.push({
+      key: "detail_stat_waste",
+      value: t("suggested_units", { quantity: fmtQty(p.projectedWaste) }),
+      hint: t("hint_waste"),
+      extra: p.firstWasteDate ? (
+        <span className="text-ink3" style={{ fontSize: 12 }}>
+          {t("detail_waste_from", { date: fmtDate(p.firstWasteDate) })}
+        </span>
+      ) : undefined,
+    });
+  }
 
   return (
     <div
