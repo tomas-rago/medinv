@@ -45,7 +45,8 @@ describe.skipIf(!hasCreds)("receptors RLS", () => {
   const userIds: string[] = [];
 
   let chiefA: Client; // chief_doctor in org A
-  let nurseA: Client; // nurse in org A (inventory writer, not manager)
+  let nurseA: Client; // nurse in org A (operations role — manages receptors)
+  let doctorA: Client; // doctor in org A (inventory only — no receptor writes)
   let chiefB: Client; // chief_doctor in org B
 
   async function createUser(role: string, organizationId: string): Promise<Client> {
@@ -101,9 +102,10 @@ describe.skipIf(!hasCreds)("receptors RLS", () => {
     if (rbError || !rb) throw new Error(`receptor B setup failed: ${rbError?.message}`);
     receptorB = rb.id;
 
-    [chiefA, nurseA, chiefB] = await Promise.all([
+    [chiefA, nurseA, doctorA, chiefB] = await Promise.all([
       createUser("chief_doctor", orgA),
       createUser("nurse", orgA),
+      createUser("doctor", orgA),
       createUser("chief_doctor", orgB),
     ]);
   });
@@ -122,7 +124,7 @@ describe.skipIf(!hasCreds)("receptors RLS", () => {
     await admin.from("organizations").delete().in("id", [orgA, orgB]);
   });
 
-  it("nurse (inventory writer) can create a receptor", async () => {
+  it("nurse (operations role) can create a receptor", async () => {
     const { data, error } = await nurseA
       .from("receptors")
       .insert({
@@ -137,14 +139,26 @@ describe.skipIf(!hasCreds)("receptors RLS", () => {
     receptorA = data!.id;
   });
 
-  it("nurse cannot update or deactivate a receptor; chief_doctor can", async () => {
+  it("doctor cannot update a receptor; nurse and chief_doctor can", async () => {
+    // Receptors are an "operations" capability: chief_doctor, nurse and
+    // administrative, but not doctor (doctor is inventory-only).
     // RLS silently filters non-matching rows on update — assert no row changed.
-    const { data: nurseUpdate } = await nurseA
+    const { data: doctorUpdate } = await doctorA
       .from("receptors")
-      .update({ name: `${runId}-renamed-by-nurse` })
+      .update({ name: `${runId}-renamed-by-doctor` })
       .eq("id", receptorA)
       .select("id");
-    expect(nurseUpdate ?? []).toHaveLength(0);
+    expect(doctorUpdate ?? []).toHaveLength(0);
+
+    // Update a non-name field so the duplicate-name case below keeps its
+    // collision target.
+    const { data: nurseUpdate, error: nurseError } = await nurseA
+      .from("receptors")
+      .update({ phone: "+54 11 4444-4444" })
+      .eq("id", receptorA)
+      .select("id");
+    expect(nurseError).toBeNull();
+    expect(nurseUpdate).toHaveLength(1);
 
     const { data: chiefUpdate, error: chiefError } = await chiefA
       .from("receptors")

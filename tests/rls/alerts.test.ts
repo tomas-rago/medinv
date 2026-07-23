@@ -50,8 +50,9 @@ describe.skipIf(!hasCreds)("alerts RLS + lifecycle", () => {
 
   let chiefA: Client; // chief_doctor in org A (manages settings/thresholds)
   let nurseA: Client; // nurse in org A (moves stock)
-  let adminAssistA: Client; // administrative in org A (read + acknowledge only)
+  let adminAssistA: Client; // administrative in org A (operations role)
   let adminAssistAId: string;
+  let doctorA: Client; // doctor in org A (inventory only — no alert config)
   let chiefB: Client; // chief_doctor in org B
 
   async function createUser(role: string, organizationId: string): Promise<{ client: Client; id: string }> {
@@ -104,16 +105,18 @@ describe.skipIf(!hasCreds)("alerts RLS + lifecycle", () => {
     productLow = products.find((p) => p.name.endsWith("-low"))!.id;
     productExp = products.find((p) => p.name.endsWith("-exp"))!.id;
 
-    const [chief, nurse, assist, chiefOther] = await Promise.all([
+    const [chief, nurse, assist, doc, chiefOther] = await Promise.all([
       createUser("chief_doctor", orgA),
       createUser("nurse", orgA),
       createUser("administrative", orgA),
+      createUser("doctor", orgA),
       createUser("chief_doctor", orgB),
     ]);
     chiefA = chief.client;
     nurseA = nurse.client;
     adminAssistA = assist.client;
     adminAssistAId = assist.id;
+    doctorA = doc.client;
     chiefB = chiefOther.client;
   });
 
@@ -269,14 +272,16 @@ describe.skipIf(!hasCreds)("alerts RLS + lifecycle", () => {
     expect(foreign ?? []).toHaveLength(0);
   });
 
-  it("only chief_doctor can write alert_settings", async () => {
-    const { error: denied } = await adminAssistA.from("alert_settings").upsert({
+  it("doctor cannot write alert_settings; operations roles can", async () => {
+    // Alert configuration is an "operations" capability: chief_doctor, nurse
+    // and administrative, but not doctor (doctor is inventory-only).
+    const { error: denied } = await doctorA.from("alert_settings").upsert({
       organization_id: orgA,
       expiry_days_ahead: 5,
     });
     expect(denied).not.toBeNull();
 
-    const { error } = await chiefA.from("alert_settings").upsert({
+    const { error } = await adminAssistA.from("alert_settings").upsert({
       organization_id: orgA,
       expiry_days_ahead: 5,
     });
