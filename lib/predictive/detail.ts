@@ -15,7 +15,8 @@ import type {
   ConsumptionPoint,
   PredictionMethod,
 } from "./base";
-import type { PredictionRow, PredictiveSettingsRow } from "./data";
+import type { MovementRow, PredictionRow, PredictiveSettingsRow } from "./data";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 
 const MS_PER_DAY = 86_400_000;
 const BACKTEST_WINDOW_DAYS = 30;
@@ -46,7 +47,7 @@ export async function getProductDetail(
   // cast error instead of returning zero rows.
   if (!UUID_RE.test(productId)) return null;
 
-  const [{ data: settings }, { data: stockRow }, { data: movements }, { data: batchRows }] =
+  const [{ data: settings }, { data: stockRow }, movements, { data: batchRows }] =
     await Promise.all([
       supabase.from("predictive_settings").select(PREDICTIVE_SETTINGS_COLUMNS).maybeSingle(),
       supabase
@@ -54,19 +55,25 @@ export async function getProductDetail(
         .select("product_id, quantity, min_quantity, products(name, criticality)")
         .eq("product_id", productId)
         .maybeSingle(),
-      supabase
-        .from("stock_movements")
-        .select("id, product_id, type, quantity, created_at, corrects_movement_id")
-        .eq("product_id", productId)
-        .in("type", ["entry", "exit"])
-        .order("created_at", { ascending: true }),
+      // Paged for the same reason as getPredictions: PostgREST returns at most
+      // 1000 rows, and this read is ordered ascending, so an unpaged version
+      // would drop the newest movements of a long-lived product.
+      fetchAllRows<MovementRow>((from, to) =>
+        supabase
+          .from("stock_movements")
+          .select("id, product_id, type, quantity, created_at, corrects_movement_id")
+          .eq("product_id", productId)
+          .in("type", ["entry", "exit"])
+          .order("created_at", { ascending: true })
+          .range(from, to)
+      ),
       supabase.from("stock_batches").select(STOCK_BATCH_COLUMNS).eq("product_id", productId),
     ]);
   if (!stockRow) return null;
 
   const typedSettings = (settings ?? null) as PredictiveSettingsRow | null;
   const criticality = (stockRow.products?.criticality ?? null) as ProductCriticality | null;
-  const consumption = buildConsumptionSeries(movements ?? []).get(productId) ?? [];
+  const consumption = buildConsumptionSeries(movements).get(productId) ?? [];
 
   const leadTimeAuto = typedSettings?.lead_time_days == null;
   const leadTimeDays = leadTimeAuto
