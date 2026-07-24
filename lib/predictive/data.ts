@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { ProductCriticality } from "@/lib/constants/criticality";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { predictiveModel } from "./index";
 import { DEFAULT_LEAD_TIME_DAYS, fetchAutoLeadTimes } from "./lead-time";
 import { sortBatchesFefo, type StockBatch } from "./expiry";
@@ -83,7 +84,7 @@ export function groupBatchesByProduct(rows: BatchRow[]): Map<string, StockBatch[
   return byProduct;
 }
 
-type MovementRow = {
+export type MovementRow = {
   id: string;
   product_id: string;
   type: string;
@@ -144,21 +145,27 @@ export async function getPredictions(supabase: SupabaseClient<Database>): Promis
   rows: PredictionRow[];
   settings: PredictiveSettingsRow | null;
 }> {
-  const [{ data: settings }, { data: stockRows }, { data: movements }, { data: batchRows }] =
+  const [{ data: settings }, { data: stockRows }, movements, { data: batchRows }] =
     await Promise.all([
       supabase.from("predictive_settings").select(PREDICTIVE_SETTINGS_COLUMNS).maybeSingle(),
       supabase
         .from("stock")
         .select("product_id, quantity, min_quantity, products(name, criticality)"),
-      supabase
-        .from("stock_movements")
-        .select("id, product_id, type, quantity, created_at, corrects_movement_id")
-        .in("type", ["entry", "exit"])
-        .order("created_at", { ascending: true }),
+      // Paged: PostgREST caps a response at 1000 rows, and this read is ordered
+      // ascending — an unpaged version silently drops the most recent movements
+      // (i.e. the demand that matters most) once an org crosses that many.
+      fetchAllRows<MovementRow>((from, to) =>
+        supabase
+          .from("stock_movements")
+          .select("id, product_id, type, quantity, created_at, corrects_movement_id")
+          .in("type", ["entry", "exit"])
+          .order("created_at", { ascending: true })
+          .range(from, to)
+      ),
       supabase.from("stock_batches").select(STOCK_BATCH_COLUMNS),
     ]);
 
-  const consumptionByProduct = buildConsumptionSeries(movements ?? []);
+  const consumptionByProduct = buildConsumptionSeries(movements);
   const batchesByProduct = groupBatchesByProduct(batchRows ?? []);
 
   // Only pay the purchases query when lead time is on auto (explicit null

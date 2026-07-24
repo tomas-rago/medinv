@@ -7,7 +7,8 @@ import {
   RectifySchema,
 } from "@/lib/schemas/stock/movement";
 import { MovementFiltersSchema } from "@/lib/schemas/stock/filters";
-import { buildMovementsQuery } from "./query";
+import { buildMovementsQuery, type MovementQueryRow } from "./query";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { EXPORT_MAX_ROWS } from "@/lib/export/movements-types";
 import type { MovementExportRow, MovementsExportResult } from "@/lib/export/movements-types";
 import { canWriteInventory, canViewReports } from "@/lib/constants/roles";
@@ -210,16 +211,19 @@ export async function fetchMovementsForExport(
     return { ok: false, error: "not_authorized" };
   }
 
-  const { data, count, error } = await buildMovementsQuery(supabase, parsed.data).limit(
-    EXPORT_MAX_ROWS
-  );
-
+  // PostgREST caps a response at 1000 rows, so .limit(EXPORT_MAX_ROWS) used to
+  // yield at most 1000 while `truncated` compared the total against 5000 — an
+  // export could silently drop rows and still claim to be complete. Page it.
+  const { count, error } = await buildMovementsQuery(supabase, parsed.data).range(0, 0);
   if (error) {
-    console.error("[fetchMovementsForExport] query error:", error.message);
+    console.error("[fetchMovementsForExport] count error:", error.message);
     return { ok: false, error: "export_failed" };
   }
 
-  const movements = data ?? [];
+  const movements = await fetchAllRows<MovementQueryRow>(
+    (from, to) => buildMovementsQuery(supabase, parsed.data).range(from, to),
+    EXPORT_MAX_ROWS
+  );
 
   // user_id references auth.users (no PostgREST relationship to profiles) —
   // resolve names with a separate lookup, same as the /stock page.
@@ -256,7 +260,8 @@ export async function fetchMovementsForExport(
     };
   });
 
-  return { ok: true, rows, truncated: (count ?? 0) > EXPORT_MAX_ROWS };
+  // Truthful now: what the export actually holds vs. what matched the filters.
+  return { ok: true, rows, truncated: (count ?? 0) > rows.length };
 }
 
 export type RectifyResult = {
