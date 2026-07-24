@@ -9,7 +9,10 @@
     "lint": "eslint",
     "test": "vitest",
     "test:run": "vitest run",
-    "seed:mp-plans": "tsx --env-file=.env.local scripts/seed-mp-plans.ts"
+    "seed:mp-plans": "tsx --env-file=.env.local scripts/seed-mp-plans.ts",
+    "seed:demo": "tsx --env-file=.env.local scripts/seed-demo.ts",
+    "auth:link": "tsx --env-file=.env.local scripts/auth-link.ts",
+    "manual": "node docs/manual/build-manual.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",

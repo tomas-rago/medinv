@@ -170,7 +170,14 @@ async function main() {
   check("content.chart is object or null", content?.chart === null || typeof content?.chart === "object");
   if (content?.chart) {
     check("chart.type in {bar,hbar}", ["bar", "hbar"].includes(content.chart.type), content.chart.type);
-    check("chart.points has 2-8 entries", content.chart.points?.length >= 2 && content.chart.points?.length <= 8, `${content.chart.points?.length}`);
+    check("chart.points has 1-8 entries", content.chart.points?.length >= 1 && content.chart.points?.length <= 8, `${content.chart.points?.length}`);
+    // An all-zero chart renders as an empty panel; the prompt now steers away
+    // from such metrics and the card drops them.
+    check(
+      "chart has at least one non-zero value (not an empty panel)",
+      content.chart.points?.some((p: { value: number }) => p.value > 0),
+      JSON.stringify(content.chart.points)
+    );
   } else {
     console.log("INFO  model chose no chart (chart: null) — allowed.");
   }

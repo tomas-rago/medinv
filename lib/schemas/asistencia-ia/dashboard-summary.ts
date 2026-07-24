@@ -13,24 +13,44 @@ export type ChartType = (typeof CHART_TYPES)[number];
 export const CHART_TONES = ["danger", "warn", "normal"] as const;
 export type ChartTone = (typeof CHART_TONES)[number];
 
+// Length limits TRUNCATE instead of rejecting. A model that runs slightly long
+// on one action must never cost the user the whole summary (that produced a
+// 500 in practice); the caps are generous enough that realistic output passes
+// through untouched, and pathological output gets cut rather than discarded.
+const bounded = (max: number) =>
+  z
+    .string()
+    .trim()
+    .min(1)
+    .transform((s) => (s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s));
+
 export const ChartPointSchema = z.object({
-  label: z.string().trim().min(1).max(60),
-  value: z.number().finite().nonnegative(),
+  label: bounded(80),
+  // Clamp instead of rejecting: a stray negative shouldn't drop the chart.
+  value: z.number().finite().transform((v) => Math.max(0, v)),
   tone: z.enum(CHART_TONES).optional(),
 });
 
 export const SummaryChartSchema = z.object({
   type: z.enum(CHART_TYPES),
-  title: z.string().trim().min(1).max(80),
-  unit: z.string().trim().max(20).optional(),
+  title: bounded(100),
+  unit: z
+    .string()
+    .trim()
+    .transform((s) => s.slice(0, 24))
+    .optional(),
   // 1 is valid — an org with a single urgent product yields a one-bar chart.
-  points: z.array(ChartPointSchema).min(1).max(8),
+  // Extra points are dropped rather than failing the chart.
+  points: z
+    .array(ChartPointSchema)
+    .min(1)
+    .transform((p) => p.slice(0, 8)),
 });
 
 export const DashboardSummaryContentSchema = z.object({
-  headline: z.string().trim().min(1).max(120),
-  summary: z.string().trim().min(1).max(1200),
-  actions: z.array(z.string().trim().min(1).max(200)).max(5),
+  headline: bounded(200),
+  summary: bounded(2000),
+  actions: z.array(bounded(400)).transform((a) => a.slice(0, 5)),
   // null when a chart adds nothing — the model decides.
   chart: SummaryChartSchema.nullable(),
 });

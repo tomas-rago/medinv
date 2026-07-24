@@ -2,7 +2,11 @@ import { z } from "zod";
 import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import { getPredictions } from "@/lib/predictive/data";
+import {
+  getPredictions,
+  groupBatchesByProduct,
+  STOCK_BATCH_COLUMNS,
+} from "@/lib/predictive/data";
 import { getProductDetail } from "@/lib/predictive/detail";
 import type { ChatToolName } from "./wire";
 
@@ -169,26 +173,20 @@ async function getStockLevels(
   const omitted = Math.max(0, rows.length - STOCK_ROW_CAP);
   rows = rows.slice(0, STOCK_ROW_CAP);
 
+  // FEFO-ordered, same grouping the predictive model runs on.
   let batchesByProduct: Map<string, { expiry_date: string | null; quantity: number }[]> | null =
     null;
   if (args.include_batches) {
     const { data: batchRows } = await supabase
       .from("stock_batches")
-      .select("product_id, expiry_date, quantity")
+      .select(STOCK_BATCH_COLUMNS)
       .neq("quantity", 0);
     batchesByProduct = new Map();
-    for (const b of batchRows ?? []) {
-      const list = batchesByProduct.get(b.product_id) ?? [];
-      list.push({ expiry_date: b.expiry_date, quantity: b.quantity });
-      batchesByProduct.set(b.product_id, list);
-    }
-    for (const list of batchesByProduct.values()) {
-      list.sort((a, b) => {
-        if (a.expiry_date === b.expiry_date) return 0;
-        if (a.expiry_date === null) return 1;
-        if (b.expiry_date === null) return -1;
-        return a.expiry_date < b.expiry_date ? -1 : 1;
-      });
+    for (const [productId, lots] of groupBatchesByProduct(batchRows ?? [])) {
+      batchesByProduct.set(
+        productId,
+        lots.map((l) => ({ expiry_date: l.expiryDate, quantity: l.quantity }))
+      );
     }
   }
 
@@ -248,10 +246,13 @@ function compactPredictionRow(row: PredictionRowLike): Record<string, unknown> {
     name: row.product_name,
     criticality: row.criticality,
     current_stock: row.current_stock,
+    usable_stock: row.usable_stock,
+    expired_stock: p.expiredStock,
     min_quantity: row.min_quantity,
     lead_time_days: row.lead_time_days,
     method: p.method,
     daily_demand: p.dailyDemand,
+    projected_waste: p.projectedWaste,
     safety_stock: p.safetyStock,
     reorder_point: p.reorderPoint,
     days_until_reorder: p.daysUntilReorder,

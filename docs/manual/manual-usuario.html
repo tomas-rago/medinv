@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<title>Manual de usuario — Med+Inv</title>
+<style>
+  /* ============================================================
+     Med+Inv — Manual de usuario
+     Documento autocontenido. Sin recursos externos.
+     Paleta y logo tomados de la app (app/globals.css, isotype.svg).
+     ============================================================ */
+
+  :root {
+    --primary:   #4B813D;
+    --primary-d: #3C6B31;
+    --primary-t: #E8EFE1;
+    --accent:    #E0A12E;
+    --accent-s:  #FAEAC8;
+    --ink:       #2A2B2A;
+    --ink-2:     #6B6C66;
+    --ink-3:     #9A9B91;
+    --page:      #EFEEE4;
+    --surface:   #FBFAF3;
+    --surface-2: #F4F2E7;
+    --line:      #E4E0CF;
+    --line-2:    #ECE9DB;
+    --info:      #6E97B2;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+    color: var(--ink);
+    font-size: 10.5pt;
+    line-height: 1.5;
+    margin: 0;
+    background: #fff;
+  }
+
+  /* ---- Page setup ---- */
+  @page {
+    size: A4;
+    margin: 18mm 16mm 16mm 16mm;
+  }
+  @page :first { margin: 0; }
+
+  /* ---- Typography ---- */
+  h1, h2, h3, h4 { font-weight: 700; line-height: 1.2; color: var(--ink); }
+
+  h2 {
+    font-size: 19pt;
+    color: var(--primary-d);
+    margin: 0 0 4mm 0;
+    padding-bottom: 2mm;
+    border-bottom: 2px solid var(--primary);
+  }
+  h3 {
+    font-size: 13pt;
+    color: var(--primary-d);
+    margin: 6mm 0 2mm 0;
+  }
+  h4 {
+    font-size: 11pt;
+    color: var(--ink);
+    margin: 4mm 0 1.5mm 0;
+  }
+  p { margin: 0 0 2.5mm 0; }
+  a { color: var(--primary-d); text-decoration: none; }
+  strong { color: var(--ink); }
+  small { color: var(--ink-2); }
+
+  ul, ol { margin: 0 0 3mm 0; padding-left: 6mm; }
+  li { margin: 0 0 1.2mm 0; }
+
+  code {
+    font-family: "Consolas", "SF Mono", monospace;
+    font-size: 9pt;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0.3mm 1mm;
+    color: var(--primary-d);
+  }
+
+  /* ---- Section wrapper: force a new page per top-level section ---- */
+  .section { page-break-before: always; }
+  .section:first-of-type { page-break-before: avoid; }
+  h2, h3, h4 { break-after: avoid; }
+  figure, table, .box, .steps, .kv { break-inside: avoid; }
+
+  /* ============================================================
+     COVER
+     ============================================================ */
+  .cover {
+    height: 297mm;
+    width: 210mm;
+    background: linear-gradient(150deg, #3C6B31 0%, #4B813D 55%, #5c9a4b 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 30mm 24mm;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover .logo { width: 34mm; height: 34mm; }
+  .cover .logo svg { width: 100%; height: 100%; display: block;
+    border-radius: 10mm; box-shadow: 0 4mm 12mm rgba(0,0,0,.25); }
+  .cover-title { margin-top: auto; }
+  .cover-title .eyebrow {
+    text-transform: uppercase; letter-spacing: 3px; font-size: 11pt;
+    color: var(--accent-s); font-weight: 600; margin-bottom: 4mm;
+  }
+  .cover-title h1 { font-size: 42pt; margin: 0; line-height: 1.05; color: #fff; }
+  .cover-title .sub { font-size: 14pt; margin-top: 6mm; color: #eef4ea; max-width: 130mm; }
+  .cover-meta {
+    border-top: 1px solid rgba(255,255,255,.35);
+    padding-top: 5mm; font-size: 10pt; color: #e6efe1;
+    display: flex; justify-content: space-between;
+  }
+  .cover .watermark {
+    position: absolute; right: -40mm; bottom: -40mm;
+    width: 180mm; height: 180mm; opacity: .07;
+  }
+
+  /* ============================================================
+     COMPONENTS
+     ============================================================ */
+
+  /* Table of contents */
+  .toc { columns: 1; }
+  .toc ol { list-style: none; padding: 0; counter-reset: toc; }
+  .toc > ol > li {
+    counter-increment: toc;
+    display: flex; align-items: baseline;
+    padding: 1.6mm 0; border-bottom: 1px dotted var(--line);
+    font-size: 11pt;
+  }
+  .toc > ol > li::before {
+    content: counter(toc);
+    color: #fff; background: var(--primary);
+    font-size: 8.5pt; font-weight: 700;
+    width: 6mm; height: 6mm; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-right: 3mm; flex: 0 0 auto;
+  }
+  .toc .toc-title { font-weight: 600; }
+  .toc .toc-sub { color: var(--ink-2); font-weight: 400; margin-left: 2mm; font-size: 9.5pt; }
+
+  /* Lead paragraph under an h2 */
+  .lead { font-size: 11pt; color: var(--ink-2); margin-bottom: 4mm; }
+
+  /* Info / concept / warning callout boxes */
+  .box {
+    border-radius: 4px; padding: 3.5mm 4mm; margin: 3mm 0;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-size: 10pt;
+  }
+  .box .box-h { font-weight: 700; margin-bottom: 1.5mm; display: flex; align-items: center; gap: 2mm; }
+  .box p:last-child { margin-bottom: 0; }
+  .box--concept { background: var(--accent-s); border-color: #e9cf94; }
+  .box--concept .box-h { color: #8a6a12; }
+  .box--info { background: #eef3f6; border-color: #cdddE6; }
+  .box--info .box-h { color: #3f6377; }
+  .box--tip { background: var(--primary-t); border-color: #cad9bd; }
+  .box--tip .box-h { color: var(--primary-d); }
+  .box .tag {
+    font-size: 7.5pt; text-transform: uppercase; letter-spacing: .5px;
+    background: rgba(0,0,0,.06); border-radius: 3px; padding: .4mm 1.4mm;
+  }
+
+  /* "Cómo se hace" numbered steps */
+  .steps { counter-reset: step; margin: 2mm 0 3mm; padding: 0; list-style: none; }
+  .steps > li {
+    counter-increment: step;
+    position: relative; padding-left: 8mm; margin-bottom: 2mm;
+  }
+  .steps > li::before {
+    content: counter(step);
+    position: absolute; left: 0; top: -0.3mm;
+    width: 5.2mm; height: 5.2mm; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    font-size: 8pt; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Role chips */
+  .roles { display: flex; flex-wrap: wrap; gap: 1.5mm; margin: 1mm 0 3mm; }
+  .chip {
+    font-size: 8.5pt; font-weight: 600;
+    padding: 0.8mm 2.4mm; border-radius: 10mm;
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-2);
+  }
+  .chip--on { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .chip--chief { background: var(--accent); color: #3a2c08; border-color: var(--accent); }
+
+  /* "Quién puede usarlo" line */
+  .who {
+    font-size: 9.5pt; margin: 1mm 0 3mm;
+    padding: 2mm 3mm; background: var(--surface-2);
+    border-left: 3px solid var(--primary); border-radius: 0 3px 3px 0;
+  }
+  .who b { color: var(--primary-d); }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 9.5pt; }
+  th, td { text-align: left; padding: 2mm 2.5mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { background: var(--primary); color: #fff; font-size: 9pt; border-bottom: none; }
+  thead th:first-child { border-top-left-radius: 4px; }
+  thead th:last-child { border-top-right-radius: 4px; }
+  tbody tr:nth-child(even) { background: var(--surface); }
+  td.center, th.center { text-align: center; }
+  .yes { color: var(--primary); font-weight: 700; }
+  .no { color: var(--ink-3); }
+
+  /* Key/value definition rows (glossary) */
+  .kv { margin: 2mm 0; }
+  .kv dt { font-weight: 700; color: var(--primary-d); }
+  .kv dd { margin: 0 0 2.5mm 0; color: var(--ink); }
+
+  /* Module header band */
+  .module-band {
+    display: flex; align-items: center; gap: 3mm;
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-left: 4px solid var(--primary);
+    border-radius: 4px; padding: 3mm 4mm; margin-bottom: 4mm;
+  }
+  .module-band .mroute { font-family: "Consolas", monospace; font-size: 9pt; color: var(--primary-d); }
+  .module-band .mname { font-size: 13pt; font-weight: 700; }
+  .module-band .mmenu { font-size: 9pt; color: var(--ink-2); }
+
+  /* Pill row / lifecycle */
+  .flow { display: flex; align-items: center; gap: 2mm; flex-wrap: wrap; margin: 3mm 0; }
+  .flow .node {
+    padding: 1.6mm 3mm; border-radius: 4px; font-size: 9.5pt; font-weight: 600;
+    background: var(--surface); border: 1px solid var(--line);
+  }
+  .flow .node--start { border-color: var(--ink-3); color: var(--ink-2); }
+  .flow .node--mid { background: var(--primary-t); border-color: #cad9bd; color: var(--primary-d); }
+  .flow .node--end { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .flow .node--cancel { background: #f3e6e6; border-color: #e0c6c6; color: #8a4b4b; }
+  .flow .arrow { color: var(--ink-3); font-size: 11pt; }
+
+  .muted { color: var(--ink-2); }
+  hr.soft { border: none; border-top: 1px solid var(--line); margin: 5mm 0; }
+
+  /* Footer note on content pages */
+  .pagenote { color: var(--ink-3); font-size: 8pt; text-align: center; margin-top: 8mm; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ COVER -->
+<div class="cover">
+  <div class="logo">
+    <svg viewBox="0 0 810 810" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g>
+        <g><rect width="400" height="400" rx="120" fill="#4B813D"/>
+        <path d="M127.363 287.3C127.363 300.7 120.363 307.4 106.363 307.4C99.5625 307.4 94.1625 305.7 90.1625 302.3C86.1625 298.9 84.1625 293.9 84.1625 287.3V163.4C84.1625 139.8 89.1625 122 99.1625 110C109.363 97.8 124.363 91.7 144.163 91.7C158.763 91.7 170.863 94.7 180.463 100.7C190.063 106.7 196.463 115.3 199.663 126.5C202.863 115.3 209.263 106.7 218.863 100.7C228.463 94.7 240.763 91.7 255.763 91.7C276.163 91.7 291.263 97.6 301.063 109.4C310.863 121 315.763 139 315.763 163.4V284.3C315.763 292.5 314.163 298.4 310.963 302C307.763 305.6 302.363 307.4 294.763 307.4C287.163 307.4 281.563 305.6 277.963 302C274.363 298.2 272.563 292.3 272.563 284.3V161C272.563 141.2 264.063 131.3 247.063 131.3C238.463 131.3 232.063 134.2 227.863 140C223.663 145.6 221.563 154.6 221.563 167V281.3C221.563 289.5 219.963 295.4 216.763 299C213.563 302.6 208.163 304.4 200.563 304.4C192.963 304.4 187.363 302.6 183.763 299C180.163 295.2 178.363 289.3 178.363 281.3V167C178.363 143.2 169.863 131.3 152.863 131.3C135.863 131.3 127.363 141.2 127.363 161V287.3Z" fill="white"/></g>
+        <g><rect x="410" width="400" height="400" rx="120" fill="#F3B756"/>
+        <path d="M552.611 226.7C546.411 226.7 541.411 225.2 537.611 222.2C534.011 219 532.211 214.3 532.211 208.1C532.211 201.7 534.011 197 537.611 194C541.411 191 546.411 189.5 552.611 189.5H591.611V150.8C591.611 144.4 593.111 139.4 596.111 135.8C599.311 132.2 604.011 130.4 610.211 130.4C616.611 130.4 621.311 132.2 624.311 135.8C627.311 139.4 628.811 144.4 628.811 150.8V189.5H667.511C673.911 189.5 678.911 191 682.511 194C686.111 197 687.911 201.7 687.911 208.1C687.911 214.3 686.111 219 682.511 222.2C678.911 225.2 673.911 226.7 667.511 226.7H628.811V265.7C628.811 271.9 627.311 276.9 624.311 280.7C621.311 284.3 616.611 286.1 610.211 286.1C604.011 286.1 599.311 284.3 596.111 280.7C593.111 276.9 591.611 271.9 591.611 265.7V226.7H552.611Z" fill="white"/></g>
+        <g><rect y="410" width="400" height="400" rx="120" fill="#4B813D"/>
+        <path d="M200.07 536.8C192.67 536.8 186.47 534.4 181.47 529.6C176.47 524.8 173.97 518.9 173.97 511.9C173.97 504.5 176.47 498.4 181.47 493.6C186.47 488.8 192.67 486.4 200.07 486.4C207.67 486.4 213.87 488.8 218.67 493.6C223.67 498.4 226.17 504.5 226.17 511.9C226.17 518.9 223.67 524.8 218.67 529.6C213.87 534.4 207.67 536.8 200.07 536.8ZM221.67 697.3C221.67 710.7 214.67 717.4 200.67 717.4C193.87 717.4 188.47 715.8 184.47 712.6C180.47 709.2 178.47 704.1 178.47 697.3V583C178.47 576.6 180.07 571.6 183.27 568C186.67 564.4 192.27 562.6 200.07 562.6C207.87 562.6 213.37 564.4 216.57 568C219.97 571.6 221.67 576.6 221.67 583V697.3Z" fill="white"/></g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="cover-title">
+    <div class="eyebrow">Med+Inv</div>
+    <h1>Manual de usuario</h1>
+    <div class="sub">Guía práctica del sistema de gestión de inventario médico: qué hace cada módulo, quién puede usarlo y cómo realizar las tareas del día a día.</div>
+  </div>
+
+  <div class="cover-meta">
+    <span>Sistema de inventario para instituciones de salud</span>
+    <span>Versión de julio de 2026</span>
+  </div>
+</div>
+
+<!-- ============================================================ TOC -->
+<div class="section" id="indice">
+  <h2>Índice</h2>
+  <nav class="toc">
+    <ol>
+      <li><a href="#intro"><span class="toc-title">Introducción</span><span class="toc-sub">— qué es Med+Inv y cómo está organizado</span></a></li>
+      <li><a href="#roles"><span class="toc-title">Roles y permisos</span><span class="toc-sub">— quién puede hacer cada cosa</span></a></li>
+      <li><a href="#primeros-pasos"><span class="toc-title">Primeros pasos</span><span class="toc-sub">— ingresar, invitaciones, contraseña, perfil</span></a></li>
+      <li><a href="#panel"><span class="toc-title">Panel</span><span class="toc-sub">— tu punto de partida</span></a></li>
+      <li><a href="#insumos"><span class="toc-title">Insumos</span><span class="toc-sub">— el catálogo de productos</span></a></li>
+      <li><a href="#inventario"><span class="toc-title">Inventario</span><span class="toc-sub">— existencias, movimientos, lotes y reportes</span></a></li>
+      <li><a href="#alertas"><span class="toc-title">Alertas</span><span class="toc-sub">— stock bajo, vencimientos y reposición</span></a></li>
+      <li><a href="#compras"><span class="toc-title">Compras</span><span class="toc-sub">— órdenes a proveedores y recepción</span></a></li>
+      <li><a href="#proveedores"><span class="toc-title">Proveedores</span><span class="toc-sub">— tus fuentes de insumos</span></a></li>
+      <li><a href="#receptores"><span class="toc-title">Receptores</span><span class="toc-sub">— destinos de los egresos</span></a></li>
+      <li><a href="#prediccion"><span class="toc-title">Predicción</span><span class="toc-sub">— demanda, punto de pedido y sugerencias</span></a></li>
+      <li><a href="#asistente"><span class="toc-title">Asistente IA</span><span class="toc-sub">— consultas en lenguaje natural</span></a></li>
+      <li><a href="#personal"><span class="toc-title">Personal</span><span class="toc-sub">— gestión de usuarios</span></a></li>
+      <li><a href="#suscripcion"><span class="toc-title">Cuenta y suscripción</span><span class="toc-sub">— planes y facturación</span></a></li>
+      <li><a href="#faq"><span class="toc-title">Preguntas frecuentes</span></a></li>
+      <li><a href="#glosario"><span class="toc-title">Glosario</span></a></li>
+      <li><a href="#soporte"><span class="toc-title">Soporte y contacto</span></a></li>
+    </ol>
+  </nav>
+</div>
+
+<!-- ============================================================ INTRO -->
+<div class="section" id="intro">
+  <h2>1 · Introducción</h2>
+  <p class="lead">Med+Inv es un sistema de gestión de inventario de insumos médicos pensado para instituciones de salud pequeñas y medianas: clínicas, farmacias y centros de cuidado.</p>
+
+  <p>El sistema te permite llevar el control completo de tus insumos: qué tenés, cuánto queda, qué está por vencer, qué conviene pedir y a quién. Cada institución (organización) trabaja sobre sus propios datos, aislados del resto, y cada persona accede según el rol que tenga asignado.</p>
+
+  <h3>Cómo está organizado</h3>
+  <p>Una vez que iniciás sesión, vas a ver un menú lateral con todos los módulos, agrupados en tres secciones:</p>
+  <table>
+    <thead><tr><th>Grupo</th><th>Módulos</th><th>Para qué</th></tr></thead>
+    <tbody>
+      <tr><td><strong>General</strong></td><td>Panel</td><td>Resumen del estado del inventario y accesos rápidos.</td></tr>
+      <tr><td><strong>Operación</strong></td><td>Insumos, Inventario, Alertas, Compras, Proveedores, Receptores, Predicción</td><td>El trabajo del día a día: catálogo, existencias, avisos, pedidos y análisis.</td></tr>
+      <tr><td><strong>Cuenta</strong></td><td>Asistente IA, Personal, Suscripción, Preguntas frecuentes, Ajustes</td><td>Herramientas, administración de usuarios, plan y ayuda.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box box--tip">
+    <div class="box-h">Ayuda dentro de la app</div>
+    <p>Cada pantalla tiene un botón de <strong>tutorial</strong> que explica sus partes paso a paso, y la sección <strong>Preguntas frecuentes</strong> reúne las dudas más comunes. Este manual complementa esa ayuda con una visión completa del sistema.</p>
+  </div>
+
+  <h3>Cómo leer este manual</h3>
+  <p>Cada módulo se explica con la misma estructura, para que encuentres rápido lo que buscás:</p>
+  <ul>
+    <li><strong>Para qué sirve</strong> — el propósito del módulo.</li>
+    <li><strong>Quién puede usarlo</strong> — qué roles tienen acceso.</li>
+    <li><strong>Cómo se hace</strong> — los pasos de las tareas más frecuentes.</li>
+    <li><strong>Conceptos</strong> — explicaciones de las ideas que conviene entender bien (solo donde hacen falta).</li>
+  </ul>
+</div>
+
+<!-- ============================================================ ROLES -->
+<div class="section" id="roles">
+  <h2>2 · Roles y permisos</h2>
+  <p class="lead">Lo que cada persona puede ver y hacer depende de su rol. Hay cuatro roles.</p>
+
+  <table>
+    <thead><tr><th>Rol</th><th>Alcance</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip chip--chief">Médico Jefe</span></td><td><strong>Todo el sistema</strong>, más la administración de usuarios y la suscripción.</td></tr>
+      <tr><td><span class="chip chip--on">Enfermero/a</span></td><td>Inventario y toda la operación del día a día (compras, proveedores, receptores, alertas, predicción, reportes). No gestiona usuarios ni suscripción.</td></tr>
+      <tr><td><span class="chip chip--on">Administrativo/a</span></td><td>Igual que Enfermero/a: inventario y toda la operación. No gestiona usuarios ni suscripción.</td></tr>
+      <tr><td><span class="chip">Médico</span></td><td><strong>Solo inventario</strong>: alta, modificación y baja de insumos, y registro de ingresos y egresos de stock.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box box--info">
+    <div class="box-h">El modelo mental, en una frase</div>
+    <p><strong>Inventario</strong> (insumos y movimientos de stock) lo pueden hacer los cuatro roles. La <strong>operación</strong> (compras, proveedores, receptores, configuración de alertas y predicción, reportes y panel) la pueden hacer todos <strong>menos el Médico</strong>. La <strong>administración</strong> (usuarios, suscripción, resumen del panel con IA) es exclusiva del <strong>Médico Jefe</strong>.</p>
+  </div>
+
+  <h3>Qué puede hacer cada rol</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Módulo / acción</th>
+        <th class="center">Médico Jefe</th>
+        <th class="center">Enfermero/a</th>
+        <th class="center">Administrativo/a</th>
+        <th class="center">Médico</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Panel</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center no">—</td></tr>
+      <tr><td>Insumos (catálogo)</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td></tr>
+      <tr><td>Inventario (ingresos / egresos)</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td></tr>
+      <tr><td>Alertas</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center no">—</td></tr>
+      <tr><td>Compras</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center no">—</td></tr>
+      <tr><td>Proveedores</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center no">—</td></tr>
+      <tr><td>Receptores</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center no">—</td></tr>
+      <tr><td>Predicción</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center no">—</td></tr>
+      <tr><td>Asistente IA <small>(según el plan)</small></td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center no">—</td></tr>
+      <tr><td>Resumen del panel con IA</td><td class="center yes">Sí</td><td class="center no">—</td><td class="center no">—</td><td class="center no">—</td></tr>
+      <tr><td>Personal (usuarios)</td><td class="center yes">Sí</td><td class="center no">—</td><td class="center no">—</td><td class="center no">—</td></tr>
+      <tr><td>Suscripción</td><td class="center yes">Sí</td><td class="center no">—</td><td class="center no">—</td><td class="center no">—</td></tr>
+      <tr><td>Ajustes (perfil propio)</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td><td class="center yes">Sí</td></tr>
+    </tbody>
+  </table>
+  <p class="muted"><small>El rol lo asigna el Médico Jefe al invitar a cada persona, y puede cambiarlo en cualquier momento desde <strong>Personal</strong>.</small></p>
+</div>
+
+<!-- ============================================================ PRIMEROS PASOS -->
+<div class="section" id="primeros-pasos">
+  <h2>3 · Primeros pasos</h2>
+  <p class="lead">Cómo entrar al sistema por primera vez, recuperar tu clave y ajustar tu perfil.</p>
+
+  <h3>Ingresar por invitación</h3>
+  <p>Si alguien de tu institución te dio de alta, vas a recibir un <strong>email de invitación</strong> con un enlace. Ese enlace te lleva a una pantalla donde definís tu contraseña; a partir de ahí ya podés iniciar sesión con tu email y esa clave.</p>
+  <ol class="steps">
+    <li>Abrí el email de invitación y hacé clic en el enlace.</li>
+    <li>Elegí una contraseña (mínimo 8 caracteres) y confirmala.</li>
+    <li>Completá tu nombre y apellido si te los pide.</li>
+    <li>Listo: entrás al sistema con el rol que te asignaron.</li>
+  </ol>
+
+  <h3>Iniciar sesión</h3>
+  <p>Desde la pantalla de inicio de sesión, ingresá tu email y tu contraseña. Tu clave es <strong>personal, secreta e intransferible</strong>.</p>
+
+  <h3>Recuperar la contraseña</h3>
+  <ol class="steps">
+    <li>En la pantalla de inicio de sesión, tocá <strong>«¿Olvidaste tu contraseña?»</strong>.</li>
+    <li>Ingresá tu email: te enviamos un enlace para restablecerla.</li>
+    <li>Desde ese enlace, definí una contraseña nueva.</li>
+  </ol>
+
+  <h3>Tu perfil y tu contraseña (Ajustes)</h3>
+  <p>En <strong>Ajustes</strong> gestionás tus datos personales:</p>
+  <ul>
+    <li><strong>Mi perfil</strong> — actualizá tu nombre y apellido, que se muestran en el menú y en los registros de movimientos.</li>
+    <li><strong>Cambiar contraseña</strong> — ingresá tu contraseña actual y la nueva (mínimo 8 caracteres) para actualizarla.</li>
+  </ul>
+
+  <div class="box box--info">
+    <div class="box-h">Registrarte con una organización nueva</div>
+    <p>Si sos quien crea la institución en Med+Inv, al registrarte vas a pasar por un breve proceso de configuración (datos de la organización y elección de plan) y quedás como <strong>Médico Jefe</strong>, con acceso a todo. Desde ahí podés invitar al resto del equipo.</p>
+  </div>
+</div>
+
+<!-- ============================================================ PANEL -->
+<div class="section" id="panel">
+  <h2>4 · Panel</h2>
+  <div class="module-band">
+    <div>
+      <div class="mname">Panel</div>
+      <div class="mmenu">Menú: General › Panel</div>
+    </div>
+  </div>
+
+  <h4>Para qué sirve</h4>
+  <p>Es tu punto de partida: un resumen del estado del inventario y accesos directos a lo que necesitás hacer hoy. Al entrar te saluda por tu nombre y te muestra lo más importante de un vistazo.</p>
+
+  <div class="who"><b>Quién puede usarlo:</b> Médico Jefe, Enfermero/a y Administrativo/a. (El rol Médico entra directamente a Inventario.)</div>
+
+  <h4>Qué vas a encontrar</h4>
+  <ul>
+    <li><strong>Indicadores</strong> — tres tarjetas: alertas activas, insumos para reponer pronto y compras pendientes. Tocá una para ir al detalle.</li>
+    <li><strong>Insumos que conviene reponer</strong> — una lista con los insumos que más urge pedir, según el consumo reciente y el tiempo de entrega. Muestra el stock actual, cuándo pedir y la cantidad sugerida.</li>
+    <li><strong>Accesos rápidos</strong> — atajos a Inventario, Insumos, Alertas y Compras.</li>
+    <li><strong>Resumen del panel con IA</strong> <span class="chip chip--chief">solo Médico Jefe</span> — un panorama del estado del stock generado con inteligencia artificial, con acciones sugeridas. Se genera bajo demanda con el botón <strong>Generar</strong> / <strong>Regenerar</strong>. Requiere un plan con IA.</li>
+  </ul>
+
+  <div class="box box--info">
+    <div class="box-h">Sobre las sugerencias con IA</div>
+    <p>El resumen se genera a partir de tus datos y son sugerencias basadas en el historial: la decisión final siempre es del equipo.</p>
+  </div>
+</div>
+
+<!-- ============================================================ INSUMOS -->
+<div class="section" id="insumos">
+  <h2>5 · Insumos</h2>
+  <div class="module-band">
+    <div>
+      <div class="mname">Insumos</div>
+      <div class="mmenu">Menú: Operación › Insumos</div>
+    </div>
+  </div>
+
+  <h4>Para qué sirve</h4>
+  <p>Es el <strong>catálogo</strong> de productos de tu institución. Acá definís cada insumo con sus datos: nombre, categoría, unidad, criticidad, stock mínimo y código de barras. Los insumos del catálogo son la base de todo lo demás: recién cuando un producto existe podés registrar sus movimientos de stock, incluirlo en una compra o analizarlo en Predicción.</p>
+
+  <div class="who"><b>Quién puede usarlo:</b> los cuatro roles (Médico Jefe, Enfermero/a, Administrativo/a y Médico).</div>
+
+  <h4>Los datos de un insumo</h4>
+  <table>
+    <thead><tr><th>Campo</th><th>Qué es</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Nombre</strong></td><td>Cómo se identifica el insumo (ej. «Ibuprofeno 400mg»). No se puede modificar después, para preservar la trazabilidad histórica.</td></tr>
+      <tr><td><strong>Categoría</strong></td><td>Grupo terapéutico o tipo (analgésicos, antibióticos, material de curación, descartables, etc.).</td></tr>
+      <tr><td><strong>Criticidad (VED)</strong></td><td>Qué tan crítico es el insumo: <strong>Vital</strong>, <strong>Esencial</strong> o <strong>Deseable</strong>. Define el colchón de seguridad en la predicción de stock.</td></tr>
+      <tr><td><strong>EAN / código de barras</strong></td><td>El código del producto. Permite escanearlo con la cámara en los movimientos.</td></tr>
+      <tr><td><strong>Presentación</strong></td><td>Cómo viene (ej. «Caja con 2 blísters de 10 comprimidos»).</td></tr>
+      <tr><td><strong>Unidad</strong></td><td>La unidad de conteo: unidad, caja, blíster, ampolla, ml, mg, g.</td></tr>
+      <tr><td><strong>Descripción</strong></td><td>Notas adicionales, opcional.</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Cómo se hace</h4>
+  <p><strong>Crear un insumo nuevo</strong></p>
+  <ol class="steps">
+    <li>Tocá <strong>Nuevo</strong>.</li>
+    <li>Completá el nombre y los datos que tengas. Podés escanear el código de barras con el botón <strong>Escanear</strong>.</li>
+    <li>Elegí la criticidad (VED) — impacta directamente en la predicción.</li>
+    <li>Tocá <strong>Guardar</strong>. El insumo queda disponible para registrar movimientos.</li>
+  </ol>
+  <p><strong>Buscar y filtrar</strong> — usá el buscador (por nombre o EAN) y el filtro por categoría para encontrar un insumo. Podés editar cada uno desde su fila.</p>
+  <p><strong>Editar o dar de baja</strong> — desde <strong>Editar</strong> cambiás los datos (excepto el nombre). Con <strong>Desactivar</strong>, el insumo deja de estar disponible para nuevos movimientos, pero su historial se conserva; podés <strong>Reactivarlo</strong> cuando quieras.</p>
+
+  <div class="box box--concept">
+    <div class="box-h">Concepto · Criticidad VED</div>
+    <p>La clasificación <strong>VED</strong> (Vital / Esencial / Deseable) es una práctica estándar en logística de salud. En Med+Inv, además de ordenar tu catálogo, define cuántos días de consumo extra se guardan como <strong>stock de seguridad</strong> para cada insumo: cuanto más crítico, más colchón. Se configura en Predicción.</p>
+  </div>
+</div>
+
+<!-- ============================================================ INVENTARIO -->
+<div class="section" id="inventario">
+  <h2>6 · Inventario</h2>
+  <div class="module-band">
+    <div>
+      <div class="mname">Inventario</div>
+      <div class="mmenu">Menú: Operación › Inventario</div>
+    </div>
+  </div>
+
+  <h4>Para qué sirve</h4>
+  <p>Acá ves las existencias de cada insumo y registrás los movimientos de <strong>ingreso</strong> y <strong>egreso</strong>. Una regla de oro: el stock <strong>nunca se edita a mano</strong>; siempre cambia a través de movimientos, de modo que todo queda registrado con su fecha y su usuario.</p>
+
+  <div class="who"><b>Quién puede usarlo:</b> los cuatro roles.</div>
+
+  <h4>Las dos pestañas</h4>
+  <ul>
+    <li><strong>Existencias</strong> — el stock disponible de cada insumo. Si un insumo tiene lotes con vencimiento, podés expandir su fila para ver el detalle por lote. Se marca cuáles están en <strong>stock bajo</strong>.</li>
+    <li><strong>Movimientos</strong> — el historial completo: cada ingreso y egreso con su fecha, tipo, cantidad, vencimiento, usuario, proveedor y receptor. Se puede filtrar, ordenar y exportar.</li>
+  </ul>
+
+  <h4>Cómo se hace</h4>
+  <p><strong>Registrar un ingreso</strong> (compras, donaciones)</p>
+  <ol class="steps">
+    <li>Tocá <strong>Ingresar stock</strong>.</li>
+    <li>Buscá el insumo (por nombre, categoría o EAN) o escaneá su código. Si no existe todavía, podés crearlo en el momento.</li>
+    <li>Indicá la <strong>cantidad</strong> y, si corresponde, el <strong>vencimiento</strong> del lote y notas.</li>
+    <li>Tocá <strong>Registrar ingreso</strong>.</li>
+  </ol>
+  <p><strong>Registrar un egreso</strong> (consumos, bajas)</p>
+  <ol class="steps">
+    <li>Tocá <strong>Egresar stock</strong>.</li>
+    <li>Elegí el insumo y la cantidad (no puede superar lo disponible).</li>
+    <li>Indicá el <strong>receptor</strong>: el destino del insumo (un paciente, un sector, etc.).</li>
+    <li>Tocá <strong>Registrar egreso</strong>. El sistema descuenta primero los lotes que vencen antes.</li>
+  </ol>
+  <p><strong>Corregir un movimiento (rectificar)</strong> — si cargaste algo con un error, abrí el movimiento y elegí <strong>Rectificar movimiento</strong>. No se modifica el registro original: se genera un movimiento de ajuste que refleja la corrección (o que anula por completo el original). Así el historial nunca se altera.</p>
+
+  <div class="box box--concept">
+    <div class="box-h">Concepto · Lotes y vencimientos (FEFO)</div>
+    <p>Cada ingreso puede asociarse a un <strong>lote</strong> con su fecha de vencimiento. Cuando registrás un egreso, el sistema descuenta automáticamente <strong>primero lo que vence antes</strong> (criterio FEFO: <em>First-Expired, First-Out</em>), para minimizar los vencimientos. Cuando un lote está por vencer dentro de la ventana configurada, se genera una <strong>alerta de vencimiento</strong> para que puedas usarlo o darlo de baja a tiempo.</p>
+  </div>
+
+  <h4>Reporte de movimientos y exportación</h4>
+  <p>La pestaña <strong>Movimientos</strong> es también el reporte de trazabilidad. Podés:</p>
+  <ul>
+    <li><strong>Filtrar</strong> por producto, receptor, categoría, tipo de movimiento, criticidad, proveedor y rango de fechas.</li>
+    <li><strong>Ordenar</strong> por las distintas columnas.</li>
+    <li><strong>Exportar</strong> el resultado a <strong>CSV</strong>, <strong>Excel (.xlsx)</strong> o <strong>PDF</strong> con el botón <strong>Exportar</strong>.</li>
+  </ul>
+  <div class="box box--info">
+    <div class="box-h">Reportes y exportación según el plan</div>
+    <p>La exportación de reportes forma parte de las funciones de los planes pagos. Si no la ves disponible, revisá tu plan en Suscripción.</p>
+  </div>
+</div>
+
+<!-- ============================================================ ALERTAS -->
+<div class="section" id="alertas">
+  <h2>7 · Alertas</h2>
+  <div class="module-band">
+    <div>
+      <div class="mname">Alertas</div>
+      <div class="mmenu">Menú: Operación › Alertas</div>
+    </div>
+  </div>
+
+  <h4>Para qué sirve</h4>
+  <p>Concentra todos los avisos del sistema para que nada se te pase: stock bajo, lotes por vencer y sugerencias de reposición. El número que aparece junto a la <strong>campana</strong> indica cuántas alertas activas tenés pendientes.</p>
+
+  <div class="who"><b>Quién puede usarlo:</b> Médico Jefe, Enfermero/a y Administrativo/a.</div>
+
+  <h4>Los tres tipos de alerta</h4>
+  <table>
+    <thead><tr><th>Tipo</th><th>Se dispara cuando…</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Stock bajo</strong></td><td>El stock de un insumo cae por debajo del <strong>stock mínimo</strong> que configuraste.</td></tr>
+      <tr><td><strong>Por vencer</strong></td><td>Un lote está próximo a vencer, dentro de la ventana de días configurada.</td></tr>
+      <tr><td><strong>Reponer stock</strong></td><td>El stock llega al <strong>punto de pedido</strong> calculado por Predicción: es el momento de pedir para no quedarte sin stock durante el tiempo de entrega.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box box--info">
+    <div class="box-h">«Reponer stock» vs. «Stock bajo»</div>
+    <p>No son lo mismo, y conviven a propósito porque responden a preguntas distintas: <strong>«¿Debería pedir?»</strong> (reponer, se anticipa) y <strong>«¿Estoy peligrosamente bajo?»</strong> (stock bajo, el piso). La alerta de reposición aparece <strong>antes</strong>, para que puedas pedir a tiempo.</p>
+  </div>
+
+  <h4>Cómo se hace</h4>
+  <p><strong>Gestionar las alertas</strong></p>
+  <ol class="steps">
+    <li>Filtrá por <strong>tipo</strong> y por <strong>estado</strong> (activas / resueltas / sin leer).</li>
+    <li>Revisá el detalle de cada alerta (por ejemplo: «12 en mano, mínimo 20»).</li>
+    <li>Tocá <strong>Marcar leída</strong> para silenciar el aviso en la campana.</li>
+  </ol>
+  <div class="box box--tip">
+    <div class="box-h">Marcar como leída ≠ resolver</div>
+    <p>Marcar una alerta como leída solo silencia el contador. La alerta se <strong>resuelve sola</strong> cuando la condición que la originó desaparece (por ejemplo, cuando reponés stock y el insumo vuelve por encima del mínimo). Si la situación se repite, se genera una alerta nueva, así queda historial.</p>
+  </div>
+
+  <h4>Configuración</h4>
+  <p>Con <strong>Configurar alertas</strong> definís qué avisos recibe tu organización y ajustás los <strong>días de anticipación al vencimiento</strong>. Con <strong>Stock mínimo</strong> definís, por insumo, el umbral por debajo del cual se dispara la alerta de stock bajo.</p>
+</div>
+
+<!-- ============================================================ COMPRAS -->
+<div class="section" id="compras">
+  <h2>8 · Compras</h2>
+  <div class="module-band">
+    <div>
+      <div class="mname">Compras</div>
+      <div class="mmenu">Menú: Operación › Compras</div>
+    </div>
+  </div>
+
+  <h4>Para qué sirve</h4>
+  <p>Gestionás las <strong>órdenes de compra</strong> a tus proveedores, desde el borrador hasta la recepción de la mercadería. Cuando registrás la recepción, el stock ingresa automáticamente al inventario: no hace falta cargarlo dos veces.</p>
+
+  <div class="who"><b>Quién puede usarlo:</b> Médico Jefe, Enfermero/a y Administrativo/a.</div>
+
+  <h4>El ciclo de una orden</h4>
+  <div class="flow">
+    <span class="node node--start">Borrador</span>
+    <span class="arrow">→</span>
+    <span class="node node--mid">Enviada</span>
+    <span class="arrow">→</span>
+    <span class="node node--end">Recibida</span>
+    <span class="arrow" style="margin-left:4mm">↘</span>
+    <span class="node node--cancel">Cancelada</span>
+  </div>
+  <p>Una orden nace como <strong>borrador</strong>, luego se marca como <strong>enviada</strong> al proveedor y, cuando llega la mercadería, se registra la <strong>recepción</strong>. En cualquier momento antes de recibirla podés <strong>cancelarla</strong> (queda registrada y no impacta el stock).</p>
+
+  <h4>Cómo se hace</h4>
+  <p><strong>Crear una orden</strong></p>
+  <ol class="steps">
+    <li>Tocá <strong>Nueva orden</strong>.</li>
+    <li>Elegí el <strong>proveedor</strong> (o dejá «Sin proveedor» para una reposición informal).</li>
+    <li>Agregá los insumos con sus <strong>cantidades</strong> y, si querés, el precio unitario.</li>
+    <li>Guardá. La orden queda en <strong>borrador</strong>.</li>
+    <li>Cuando la mandes al proveedor, tocá <strong>Marcar como enviada</strong>.</li>
+  </ol>
+  <p><strong>Registrar la recepción</strong></p>
+  <ol class="steps">
+    <li>En la orden enviada (o en borrador), tocá <strong>Recibir</strong>.</li>
+    <li>Por cada renglón, ajustá la <strong>cantidad aceptada</strong> (poné 0 para rechazar ese renglón) y cargá el <strong>vencimiento</strong> del lote.</li>
+    <li>Confirmá la recepción: lo aceptado ingresa al stock automáticamente.</li>
+  </ol>
+
+  <div class="box box--concept">
+    <div class="box-h">Concepto · Recepción parcial</div>
+    <p>Si el proveedor entrega menos de lo pedido, la recepción admite <strong>cantidades parciales</strong>: indicás cuánto llegó realmente de cada insumo y solo eso se carga al inventario. La cantidad pedida <strong>no se modifica</strong>, así la diferencia queda visible en la orden (marcada «Con diferencias») para tu control y para mejorar las estimaciones de compra.</p>
+  </div>
+
+  <div class="box box--tip">
+    <div class="box-h">Órdenes con proveedor</div>
+    <p>Si la orden tiene un proveedor asignado, solo vas a poder agregar insumos que ese proveedor efectivamente provee (según su catálogo, ver <a href="#proveedores">Proveedores</a>). Las órdenes «Sin proveedor» no tienen esa restricción.</p>
+  </div>
+</div>
+
+<!-- ============================================================ PROVEEDORES -->
+<div class="section" id="proveedores">
+  <h2>9 · Proveedores</h2>
+  <div class="module-band">
+    <div>
+      <div class="mname">Proveedores</div>
+      <div class="mmenu">Menú: Operación › Proveedores</div>
+    </div>
+  </div>
+
+  <h4>Para qué sirve</h4>
+  <p>Administrás los proveedores a los que les comprás insumos, con sus datos de contacto. Además de asociarlos a las órdenes de compra, el sistema usa tu historial de compras para estimar automáticamente los <strong>tiempos de entrega</strong>, que alimentan el cálculo del punto de pedido en Predicción.</p>
+
+  <div class="who"><b>Quién puede usarlo:</b> Médico Jefe, Enfermero/a y Administrativo/a.</div>
+
+  <h4>Cómo se hace</h4>
+  <p><strong>Crear un proveedor</strong></p>
+  <ol class="steps">
+    <li>Tocá <strong>Nuevo</strong>.</li>
+    <li>Cargá el nombre y los datos de contacto (persona, email, teléfono, dirección).</li>
+    <li>Guardá.</li>
+  </ol>
+  <p><strong>Definir qué insumos provee</strong> — desde <strong>Insumos que provee</strong>, asociá al proveedor los productos de tu catálogo que te vende. Este listado es el que restringe qué podés pedirle en una orden de compra.</p>
+  <p><strong>Editar o dar de baja</strong> — podés editar sus datos o <strong>Desactivar</strong> al proveedor; los proveedores inactivos no aparecen al crear nuevas órdenes, pero su historial se conserva.</p>
+
+  <div class="box box--info">
+    <div class="box-h">Por qué conviene cargar proveedores</div>
+    <p>Cada vez que recibís una orden, el sistema aprende cuántos días pasaron entre el pedido y la entrega. Con ese historial estima el tiempo de entrega de cada insumo <strong>automáticamente</strong>, y eso hace que las sugerencias de Predicción sean más certeras.</p>
+  </div>
+</div>
+
+<!-- ============================================================ RECEPTORES -->
+<div class="section" id="receptores">
+  <h2>10 · Receptores</h2>
+  <div class="module-band">
+    <div>
+      <div class="mname">Receptores</div>
+      <div class="mmenu">Menú: Operación › Receptores</div>
+    </div>
+  </div>
+
+  <h4>Para qué sirve</h4>
+  <p>Los receptores son los <strong>destinos de los egresos</strong> de stock: pacientes, sectores u otros destinos de tu institución. Cada egreso de inventario se asocia a un receptor, así queda <strong>trazabilidad</strong> de adónde fue cada insumo.</p>
+
+  <div class="who"><b>Quién puede usarlo:</b> Médico Jefe, Enfermero/a y Administrativo/a.</div>
+
+  <h4>Los datos de un receptor</h4>
+  <ul>
+    <li><strong>Nombre</strong> — cómo se identifica (ej. un paciente o un sector).</li>
+    <li><strong>ID externo</strong> (opcional) — su identificador en otro sistema tuyo (ej. una historia clínica), para vincular registros.</li>
+    <li><strong>Tipo de paciente</strong> (opcional) — Particular, Obra social, Prepaga u Otro.</li>
+    <li><strong>Contacto</strong> (opcional) — teléfono, email y notas.</li>
+  </ul>
+
+  <h4>Cómo se hace</h4>
+  <ol class="steps">
+    <li>Tocá <strong>Nuevo</strong>.</li>
+    <li>Cargá el nombre, el tipo y los datos que tengas.</li>
+    <li>Guardá. El receptor queda disponible para seleccionarlo al registrar egresos.</li>
+  </ol>
+  <p class="muted"><small>También podés crear un receptor sobre la marcha desde el formulario de egreso en Inventario. Los receptores inactivos no aparecen al registrar nuevos egresos.</small></p>
+</div>
+
+<!-- ============================================================ PREDICCION -->
+<div class="section" id="prediccion">
+  <h2>11 · Predicción</h2>
+  <div class="module-band">
+    <div>
+      <div class="mname">Predicción de stock</div>
+      <div class="mmenu">Menú: Operación › Predicción</div>
+    </div>
+  </div>
+
+  <h4>Para qué sirve</h4>
+  <p>Estima la <strong>demanda</strong> de cada insumo a partir del consumo real y te dice <strong>cuándo</strong> y <strong>cuánto</strong> conviene pedir. Es la herramienta que convierte tu historial de movimientos en decisiones de compra.</p>
+
+  <div class="who"><b>Quién puede usarlo:</b> Médico Jefe, Enfermero/a y Administrativo/a. Las sugerencias predictivas forman parte de los planes pagos.</div>
+
+  <h4>Qué muestra la tabla</h4>
+  <table>
+    <thead><tr><th>Columna</th><th>Qué significa</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Demanda estimada</strong></td><td>Cuánto se consume por día, estimado a partir de los movimientos recientes. Indica el método usado: <strong>Tendencia</strong> (regresión, detecta consumo en aumento o baja), <strong>Promedio</strong> (poco historial) o <strong>Sin datos</strong>.</td></tr>
+      <tr><td><strong>Punto de pedido</strong></td><td>El nivel de stock a partir del cual conviene pedir: cubre la demanda durante el tiempo de entrega más el stock de seguridad.</td></tr>
+      <tr><td><strong>Sugerencia</strong></td><td>Cuándo conviene pedir: «Pedir ahora» o «Pedir en ~N días».</td></tr>
+      <tr><td><strong>Cantidad sugerida</strong></td><td>Cuánto pedir para cubrir el tiempo de entrega más los días de cobertura configurados.</td></tr>
+    </tbody>
+  </table>
+  <p>Tocá un insumo para ver su <strong>detalle</strong>, con un gráfico que compara el consumo <strong>proyectado vs. real</strong> de los últimos 30 días. Los íconos de información junto a cada columna explican cómo se calcula cada valor.</p>
+
+  <div class="box box--concept">
+    <div class="box-h">Concepto · Punto de pedido vs. stock mínimo</div>
+    <p>El <strong>stock mínimo</strong> es un umbral <em>fijo</em> que definís vos por insumo (en Alertas). El <strong>punto de pedido</strong>, en cambio, lo <em>calcula</em> Predicción a partir del consumo real, el tiempo de entrega y el stock de seguridad, y se actualiza solo a medida que cambia tu consumo. El primero es el piso; el segundo, el momento inteligente de pedir.</p>
+  </div>
+
+  <div class="box box--concept">
+    <div class="box-h">Concepto · Stock de seguridad</div>
+    <p>Es un colchón de unidades extra para absorber picos de consumo o demoras de entrega. Depende de la <strong>criticidad (VED)</strong> del insumo y se expresa en <strong>días de consumo</strong>: cuanto más crítico, más días de colchón. Los insumos «Vitales» reservan más que los «Deseables».</p>
+  </div>
+
+  <h4>Configurar la reposición</h4>
+  <p>Con <strong>Configurar reposición</strong> ajustás los parámetros que definen todos los cálculos de esta pantalla:</p>
+  <ul>
+    <li><strong>Tiempo de entrega (días)</strong> — cuánto tarda un pedido en llegar. Si lo dejás vacío, se calcula <strong>automáticamente</strong> como el promedio de días entre pedido y recepción de tus compras.</li>
+    <li><strong>Días de cobertura</strong> — cuántos días de consumo debe cubrir cada pedido, además del tiempo de entrega. Es lo que determina la <strong>cantidad sugerida</strong>.</li>
+    <li><strong>Stock de seguridad por criticidad</strong> — los días de colchón para Vital, Esencial y Deseable.</li>
+  </ul>
+
+  <div class="box box--info">
+    <div class="box-h">Aviso de vencimiento en la sugerencia</div>
+    <p>Si algunas unidades van a vencer antes de llegar a usarse al ritmo de consumo actual, el sistema lo advierte y ya las descuenta de la cantidad sugerida: no tiene sentido contar como cobertura un stock que se va a perder.</p>
+  </div>
+</div>
+
+<!-- ============================================================ ASISTENTE IA -->
+<div class="section" id="asistente">
+  <h2>12 · Asistente IA</h2>
+  <div class="module-band">
+    <div>
+      <div class="mname">Asistente IA</div>
+      <div class="mmenu">Menú: Cuenta › Asistente IA</div>
+    </div>
+  </div>
+
+  <h4>Para qué sirve</h4>
+  <p>Responde consultas en <strong>lenguaje natural</strong> sobre tu stock, tus alertas y tus predicciones de reposición. Solo <strong>lee</strong> datos: nunca los modifica. Es útil para preguntar rápido lo que de otro modo tendrías que buscar entre varias pantallas.</p>
+
+  <div class="who"><b>Quién puede usarlo:</b> Médico Jefe, Enfermero/a y Administrativo/a. Disponible <strong>a partir del plan intermedio</strong>; si tu plan no lo incluye, vas a ver la insignia «Pro» en el menú.</div>
+
+  <h4>Las tres formas de usar la IA</h4>
+  <ul>
+    <li><strong>Chatbot</strong> (Asistente IA) — escribí tu consulta y el asistente te responde consultando tus datos. Ejemplos: «¿Qué productos están por debajo del stock mínimo?», «¿Qué insumos vencen en los próximos 30 días?», «¿Qué conviene pedir esta semana?».</li>
+    <li><strong>Analizar con IA</strong> — en varias pantallas hay un botón para pedirle a la IA un resumen de lo que estás viendo, con foco en lo importante.</li>
+    <li><strong>Resumen del panel con IA</strong> <span class="chip chip--chief">solo Médico Jefe</span> — el panorama general del stock que aparece en el Panel.</li>
+  </ul>
+
+  <div class="box box--tip">
+    <div class="box-h">Tené presente</div>
+    <p>El asistente solo consulta datos y <strong>puede equivocarse</strong>: verificá antes de decidir. Cada plan incluye una cantidad de uso mensual, que se comparte entre todo el equipo de tu organización; en la pantalla del chat vas viendo cuánto llevás usado en el mes.</p>
+  </div>
+</div>
+
+<!-- ============================================================ PERSONAL -->
+<div class="section" id="personal">
+  <h2>13 · Personal</h2>
+  <div class="module-band">
+    <div>
+      <div class="mname">Personal</div>
+      <div class="mmenu">Menú: Cuenta › Personal · <span class="chip chip--chief">solo Médico Jefe</span></div>
+    </div>
+  </div>
+
+  <h4>Para qué sirve</h4>
+  <p>Administrás a las personas de tu organización y sus roles. Cada persona tiene un rol que define qué puede hacer en el sistema (ver <a href="#roles">Roles y permisos</a>).</p>
+
+  <div class="who"><b>Quién puede usarlo:</b> exclusivamente el <strong>Médico Jefe</strong>.</div>
+
+  <h4>Cómo se hace</h4>
+  <p><strong>Invitar a alguien</strong></p>
+  <ol class="steps">
+    <li>Tocá <strong>Invitar usuario</strong>.</li>
+    <li>Ingresá su <strong>email</strong> y elegí su <strong>rol</strong>.</li>
+    <li>Enviá la invitación: la persona recibe un enlace para crear su contraseña y entrar con el rol que le asignaste.</li>
+  </ol>
+  <p><strong>Cambiar un rol</strong> — editá al usuario y asignale otro rol; el cambio aplica de inmediato.</p>
+  <p><strong>Activar / desactivar</strong> — un usuario <strong>desactivado</strong> no puede iniciar sesión hasta que lo reactives. Sirve para dar de baja a alguien sin perder su historial de movimientos.</p>
+</div>
+
+<!-- ============================================================ SUSCRIPCION -->
+<div class="section" id="suscripcion">
+  <h2>14 · Cuenta y suscripción</h2>
+  <div class="module-band">
+    <div>
+      <div class="mname">Suscripción</div>
+      <div class="mmenu">Menú: Cuenta › Suscripción · <span class="chip chip--chief">solo Médico Jefe</span></div>
+    </div>
+  </div>
+
+  <h4>Para qué sirve</h4>
+  <p>Desde <strong>Cuenta › Suscripción</strong>, el Médico Jefe administra el plan de la institución: ver el plan actual, cambiarlo, actualizar el medio de pago o cancelar.</p>
+
+  <div class="who"><b>Quién puede usarlo:</b> exclusivamente el <strong>Médico Jefe</strong>. Los demás roles no ven esta sección.</div>
+
+  <h4>Los planes</h4>
+  <table>
+    <thead><tr><th>Plan</th><th>Para quién</th><th>Incluye</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Inicial</strong> (gratuito)</td><td>Farmacias que recién arrancan.</td><td>Inventario y control de stock, compras y seguimiento de pedidos, alertas de stock y vencimiento.</td></tr>
+      <tr><td><strong>Intermedio</strong></td><td>Equipos que crecen y quieren IA.</td><td>Todo lo anterior, más el Asistente IA, sugerencias predictivas de compra y reportes con exportación.</td></tr>
+      <tr><td><strong>Avanzado</strong></td><td>Cadenas y multi-sucursal.</td><td>Todo lo anterior, más usuarios ilimitados, multi-sucursal, soporte prioritario y acceso a la API.</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Cómo se hace</h4>
+  <ul>
+    <li><strong>Cambiar de plan</strong> — elegí el plan y el ciclo de facturación (mensual o anual). Al pasar a un plan pago por primera vez, se te piden los datos de la tarjeta.</li>
+    <li><strong>Medio de pago</strong> — los planes pagos se abonan con <strong>Mercado Pago</strong>, mediante una suscripción recurrente.</li>
+    <li><strong>Cancelar</strong> — al cancelar, la cuenta vuelve al plan gratuito. Los datos de tu organización <strong>se conservan</strong>.</li>
+  </ul>
+</div>
+
+<!-- ============================================================ FAQ -->
+<div class="section" id="faq">
+  <h2>15 · Preguntas frecuentes</h2>
+  <p class="lead">Respuestas a las dudas más comunes sobre el uso de Med+Inv.</p>
+
+  <h3>Inventario</h3>
+  <p><strong>¿Cómo ingreso stock de un insumo?</strong><br>Desde Inventario, registrá un movimiento de ingreso indicando el insumo, la cantidad y, si corresponde, el lote y su vencimiento. Si el ingreso viene de una orden de compra, al marcar la recepción en Compras el stock se carga automáticamente. Todos los ingresos quedan registrados como movimientos: nunca se edita el stock a mano.</p>
+  <p><strong>¿Cómo registro un egreso o consumo?</strong><br>Desde Inventario, registrá un movimiento de egreso indicando el insumo, la cantidad y el receptor (el destino: un paciente, un sector, etc.). El sistema descuenta primero los lotes que vencen antes, para minimizar vencimientos.</p>
+  <p><strong>¿Cómo funcionan los lotes y los vencimientos?</strong><br>Cada ingreso puede asociarse a un lote con fecha de vencimiento. El stock se descuenta por lote (primero lo que vence antes) y, cuando un lote está por vencer dentro de la ventana configurada, se genera una alerta de vencimiento.</p>
+  <p><strong>¿Puedo usar un lector de códigos de barras?</strong><br>Sí. Los insumos pueden tener un código EAN asociado, y en los formularios de movimiento podés escanear el código con la cámara del dispositivo para seleccionar el insumo sin buscarlo a mano.</p>
+
+  <h3>Alertas y compras</h3>
+  <p><strong>¿Qué tipos de alertas existen?</strong><br>Tres: <strong>stock bajo</strong> (cayó por debajo del mínimo configurado), <strong>vencimiento</strong> (un lote vence dentro de la ventana) y <strong>reposición</strong> (el stock llegó al punto de pedido calculado por Predicción).</p>
+  <p><strong>¿Cómo gestiono las alertas?</strong><br>En Alertas podés ver el detalle de cada una, marcarlas como leídas y resolverlas. El número junto a la campana indica cuántas alertas activas tenés pendientes.</p>
+  <p><strong>¿Cómo funciona una orden de compra?</strong><br>Se crea eligiendo un proveedor y los insumos con sus cantidades. Primero queda como borrador, después se marca como enviada y por último se registra la recepción cuando llega la mercadería. Recién al recibirla se carga el stock.</p>
+  <p><strong>¿Qué pasa si el proveedor entrega menos de lo pedido?</strong><br>La recepción admite cantidades parciales: indicás cuánto llegó realmente de cada insumo, y solo eso se carga al inventario. La diferencia queda registrada en la orden.</p>
+  <p><strong>¿Para qué sirve cargar proveedores?</strong><br>Las órdenes se asocian a un proveedor, y el sistema usa el historial de compras (días entre pedido y recepción) para estimar automáticamente el tiempo de entrega, que alimenta el punto de pedido en Predicción.</p>
+
+  <h3>Predicción</h3>
+  <p><strong>¿Cómo calcula el sistema la demanda estimada?</strong><br>A partir de los movimientos de egreso recientes. Con historial suficiente usa una regresión que detecta tendencias (consumo en aumento o baja); con pocos datos, el promedio diario. El método usado se indica en cada fila.</p>
+  <p><strong>¿Qué es el punto de pedido y el stock de seguridad?</strong><br>El punto de pedido es el nivel de stock a partir del cual conviene pedir: cubre el consumo estimado durante el tiempo de entrega más el stock de seguridad. El stock de seguridad es un colchón extra que depende de la criticidad del insumo y se configura en días de consumo.</p>
+  <p><strong>¿Cómo se calcula la cantidad sugerida de compra?</strong><br>Cuando el stock llega al punto de pedido, el sistema sugiere una cantidad que cubre los días de cobertura configurados además del tiempo de entrega. Los días de cobertura se ajustan desde «Configurar reposición».</p>
+
+  <h3>Cuenta</h3>
+  <p><strong>¿Qué puede hacer cada rol?</strong><br>El Médico Jefe administra todo (usuarios, suscripción, operación e inventario). Enfermero/a y Administrativo/a operan el día a día completo, pero no gestionan usuarios ni suscripción. El Médico se enfoca en el inventario.</p>
+  <p><strong>¿Qué hace el Asistente IA y por qué no lo veo?</strong><br>Responde consultas en lenguaje natural sobre tu stock, alertas y predicciones (solo lee datos). Está disponible a partir del plan intermedio: si tu plan no lo incluye, vas a ver la insignia «Pro».</p>
+  <p><strong>¿Cómo creo o recupero mi clave?</strong><br>La definís al aceptar la invitación o al registrarte, desde el enlace que llega a tu correo. Si la olvidaste, usá «¿Olvidaste tu contraseña?» en la pantalla de inicio de sesión.</p>
+  <p><strong>¿Cómo gestiono, pauso o cancelo la suscripción?</strong><br>Desde Cuenta › Suscripción, el Médico Jefe puede ver el plan, cambiarlo, actualizar el pago o cancelar. Al cancelar, la cuenta vuelve al plan gratuito y los datos se conservan. Los planes pagos se abonan con Mercado Pago.</p>
+
+  <h3>Contacto</h3>
+  <p><strong>¿A qué dirección puedo escribir por una sugerencia o reclamo?</strong><br>Podés escribirnos a <a href="mailto:tomasrago430@gmail.com">tomasrago430@gmail.com</a>.</p>
+</div>
+
+<!-- ============================================================ GLOSARIO -->
+<div class="section" id="glosario">
+  <h2>16 · Glosario</h2>
+  <dl class="kv">
+    <dt>Criticidad (VED)</dt>
+    <dd>Clasificación de un insumo según su importancia: <strong>Vital</strong>, <strong>Esencial</strong> o <strong>Deseable</strong>. Define el stock de seguridad en la predicción.</dd>
+    <dt>Lote</dt>
+    <dd>Un conjunto de unidades de un insumo que comparten fecha de vencimiento. El stock se descuenta por lote.</dd>
+    <dt>FEFO</dt>
+    <dd><em>First-Expired, First-Out</em>: al egresar, se consume primero lo que vence antes, para minimizar vencimientos.</dd>
+    <dt>Movimiento</dt>
+    <dd>Cada ingreso o egreso de stock. Nunca se edita ni se borra: para corregir se genera un movimiento de ajuste (rectificación).</dd>
+    <dt>Stock mínimo</dt>
+    <dd>Umbral fijo por insumo que definís en Alertas. Si el stock cae por debajo, se dispara la alerta de stock bajo.</dd>
+    <dt>Punto de pedido</dt>
+    <dd>Nivel de stock calculado por Predicción a partir del cual conviene pedir: cubre la demanda durante el tiempo de entrega más el stock de seguridad.</dd>
+    <dt>Stock de seguridad</dt>
+    <dd>Colchón de unidades extra, en días de consumo, según la criticidad del insumo, para absorber picos o demoras.</dd>
+    <dt>Tiempo de entrega</dt>
+    <dd>Días que tarda un pedido en llegar desde que se hace. Puede calcularse automáticamente con el historial de compras.</dd>
+    <dt>Receptor</dt>
+    <dd>El destino de un egreso: un paciente, un sector u otro. Da trazabilidad de adónde fue cada insumo.</dd>
+    <dt>EAN</dt>
+    <dd>El código de barras estándar de un producto. Permite escanear el insumo con la cámara.</dd>
+  </dl>
+</div>
+
+<!-- ============================================================ SOPORTE -->
+<div class="section" id="soporte">
+  <h2>17 · Soporte y contacto</h2>
+  <p>Para consultas sobre el uso del sistema, sugerencias o reclamos, escribinos a:</p>
+  <div class="box box--tip">
+    <div class="box-h">Contacto</div>
+    <p><a href="mailto:tomasrago430@gmail.com">tomasrago430@gmail.com</a></p>
+  </div>
+  <p>Dentro de la app, recordá que cada pantalla tiene su propio <strong>tutorial</strong> (botón de ayuda) y que la sección <strong>Preguntas frecuentes</strong> está siempre disponible en el menú.</p>
+  <p class="pagenote">Med+Inv — Manual de usuario · Documento generado a partir de la aplicación · Julio de 2026</p>
+</div>
+
+</body>
+</html>

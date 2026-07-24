@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logAuthLinkFallback, sendsRealAuthEmails } from "@/lib/auth/email-mode";
 import { InviteSchema } from "@/lib/schemas/users/invite";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -54,22 +55,14 @@ export async function inviteUser(
     redirectTo: `${siteUrl}/auth/invite`,
   };
 
-  if (process.env.NODE_ENV === "development") {
+  if (!sendsRealAuthEmails()) {
     // generateLink skips email sending entirely — link is logged to the server console.
     // This bypasses Supabase's dev-instance email rate limit.
-    const { data: linkData, error: authError } =
-      await adminClient.auth.admin.generateLink({
-        type: "invite",
-        email: result.data.email,
-        options: inviteOptions,
-      });
-    if (authError) {
-      console.error("[inviteUser] generateLink error:", authError.message);
-      return { ok: false, errors: { _form: [authError.message] } };
-    }
-    console.log(
-      `\n🔗 DEV invite link for ${result.data.email}:\n${linkData?.properties?.action_link}\n`
-    );
+    const link = await logAuthLinkFallback({
+      type: "invite",
+      email: result.data.email,
+    });
+    if (!link) return { ok: false, errors: { _form: ["cannot_invite_user"] } };
   } else {
     const { error: authError } = await adminClient.auth.admin.inviteUserByEmail(
       result.data.email,
@@ -77,7 +70,13 @@ export async function inviteUser(
     );
     if (authError) {
       console.error("[inviteUser] inviteUserByEmail error:", authError.message);
-      return { ok: false, errors: { _form: [authError.message] } };
+      // The email didn't go out — fall back to a console link. If that also fails
+      // the user record itself couldn't be created, so surface the original error.
+      const link = await logAuthLinkFallback({
+        type: "invite",
+        email: result.data.email,
+      });
+      if (!link) return { ok: false, errors: { _form: [authError.message] } };
     }
   }
 

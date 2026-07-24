@@ -3,13 +3,20 @@ import type { Database } from "@/lib/supabase/database.types";
 import type { ProductCriticality } from "@/lib/constants/criticality";
 import { predictiveModel } from "./index";
 import { DEFAULT_LEAD_TIME_DAYS, fetchAutoLeadTimes } from "./lead-time";
-import { buildConsumptionSeries, safetyDaysFor, PREDICTIVE_SETTINGS_COLUMNS } from "./data";
+import {
+  buildConsumptionSeries,
+  groupBatchesByProduct,
+  safetyDaysFor,
+  PREDICTIVE_SETTINGS_COLUMNS,
+  STOCK_BATCH_COLUMNS,
+} from "./data";
 import { buildBacktestSeries, type BacktestDay } from "./backtest";
 import type {
   ConsumptionPoint,
   PredictionMethod,
 } from "./base";
-import type { PredictionRow, PredictiveSettingsRow } from "./data";
+import type { MovementRow, PredictionRow, PredictiveSettingsRow } from "./data";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 
 const MS_PER_DAY = 86_400_000;
 const BACKTEST_WINDOW_DAYS = 30;
@@ -40,25 +47,33 @@ export async function getProductDetail(
   // cast error instead of returning zero rows.
   if (!UUID_RE.test(productId)) return null;
 
-  const [{ data: settings }, { data: stockRow }, { data: movements }] = await Promise.all([
-    supabase.from("predictive_settings").select(PREDICTIVE_SETTINGS_COLUMNS).maybeSingle(),
-    supabase
-      .from("stock")
-      .select("product_id, quantity, min_quantity, products(name, criticality)")
-      .eq("product_id", productId)
-      .maybeSingle(),
-    supabase
-      .from("stock_movements")
-      .select("id, product_id, type, quantity, created_at, corrects_movement_id")
-      .eq("product_id", productId)
-      .in("type", ["entry", "exit"])
-      .order("created_at", { ascending: true }),
-  ]);
+  const [{ data: settings }, { data: stockRow }, movements, { data: batchRows }] =
+    await Promise.all([
+      supabase.from("predictive_settings").select(PREDICTIVE_SETTINGS_COLUMNS).maybeSingle(),
+      supabase
+        .from("stock")
+        .select("product_id, quantity, min_quantity, products(name, criticality)")
+        .eq("product_id", productId)
+        .maybeSingle(),
+      // Paged for the same reason as getPredictions: PostgREST returns at most
+      // 1000 rows, and this read is ordered ascending, so an unpaged version
+      // would drop the newest movements of a long-lived product.
+      fetchAllRows<MovementRow>((from, to) =>
+        supabase
+          .from("stock_movements")
+          .select("id, product_id, type, quantity, created_at, corrects_movement_id")
+          .eq("product_id", productId)
+          .in("type", ["entry", "exit"])
+          .order("created_at", { ascending: true })
+          .range(from, to)
+      ),
+      supabase.from("stock_batches").select(STOCK_BATCH_COLUMNS).eq("product_id", productId),
+    ]);
   if (!stockRow) return null;
 
   const typedSettings = (settings ?? null) as PredictiveSettingsRow | null;
   const criticality = (stockRow.products?.criticality ?? null) as ProductCriticality | null;
-  const consumption = buildConsumptionSeries(movements ?? []).get(productId) ?? [];
+  const consumption = buildConsumptionSeries(movements).get(productId) ?? [];
 
   const leadTimeAuto = typedSettings?.lead_time_days == null;
   const leadTimeDays = leadTimeAuto
@@ -69,6 +84,7 @@ export async function getProductDetail(
     productId,
     consumption,
     currentStock: stockRow.quantity,
+    batches: groupBatchesByProduct(batchRows ?? []).get(productId) ?? [],
     minQuantity: stockRow.min_quantity,
     safetyStockDays: safetyDaysFor(typedSettings, criticality),
   };
@@ -86,8 +102,10 @@ export async function getProductDetail(
     .toISOString()
     .slice(0, 10);
   const windowStartDate = new Date(`${windowStart}T00:00:00Z`);
+  // Today's lots say nothing about a past window, so the refit runs without
+  // them — only its demand estimate is used to draw the projected line.
   const fitted = await predictiveModel.predict(
-    { ...history, consumption: consumption.filter((p) => p.date < windowStart) },
+    { ...history, batches: [], consumption: consumption.filter((p) => p.date < windowStart) },
     inputs,
     windowStartDate
   );
@@ -103,6 +121,7 @@ export async function getProductDetail(
       product_name: stockRow.products?.name ?? "",
       criticality,
       current_stock: stockRow.quantity,
+      usable_stock: prediction.usableStock,
       min_quantity: stockRow.min_quantity,
       lead_time_days: leadTimeDays,
       lead_time_auto: leadTimeAuto,

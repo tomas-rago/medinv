@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logAuthLinkFallback, sendsRealAuthEmails } from "@/lib/auth/email-mode";
 import { SignUpSchema } from "@/lib/schemas/sign-up/sign-up";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -39,7 +40,7 @@ export async function signup(
   const fullName = `${firstName} ${lastName}`;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-  if (process.env.NODE_ENV === "development") {
+  if (!sendsRealAuthEmails()) {
     // In dev, create the user as auto-confirmed and sign them in immediately.
     // generateLink was tried before but its confirmation URL uses implicit flow
     // (hash fragment) which the Route Handler can't read — the new session was
@@ -87,7 +88,16 @@ export async function signup(
     });
 
     if (error) {
-      return { ok: false, errors: { _form: [error.message] } };
+      console.error("[signup] signUp error:", error.message);
+      // The confirmation email didn't go out — mint a console link instead so the
+      // account is still reachable. Safe to invalidate: nothing landed in an inbox.
+      const link = await logAuthLinkFallback({
+        type: "signup",
+        email,
+        password,
+        data: { full_name: fullName },
+      });
+      if (!link) return { ok: false, errors: { _form: [error.message] } };
     }
 
     redirect("/auth/confirm");

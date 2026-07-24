@@ -1,8 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { ProductCriticality } from "@/lib/constants/criticality";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { predictiveModel } from "./index";
 import { DEFAULT_LEAD_TIME_DAYS, fetchAutoLeadTimes } from "./lead-time";
+import { sortBatchesFefo, type StockBatch } from "./expiry";
 import type { ConsumptionPoint, ProductPrediction } from "./base";
 
 // Fallbacks while the org has no predictive_settings row; values must match
@@ -27,7 +29,11 @@ export type PredictionRow = {
   product_id: string;
   product_name: string;
   criticality: ProductCriticality | null;
+  // Raw stock.quantity aggregate, including any already-expired lots.
   current_stock: number;
+  // current_stock minus already-expired lots — what the projection uses and
+  // what the UI should lead with.
+  usable_stock: number;
   min_quantity: number;
   // Effective value fed to the model, and whether it was derived from
   // purchase history (vs. the org's explicit setting).
@@ -55,7 +61,30 @@ export function safetyDaysFor(
   }
 }
 
-type MovementRow = {
+export const STOCK_BATCH_COLUMNS = "product_id, expiry_date, quantity";
+
+type BatchRow = {
+  product_id: string;
+  expiry_date: string | null;
+  quantity: number;
+};
+
+// Groups on-hand lots per product in FEFO order, the order the egress RPC
+// consumes them in and the order the model projects them in.
+export function groupBatchesByProduct(rows: BatchRow[]): Map<string, StockBatch[]> {
+  const byProduct = new Map<string, StockBatch[]>();
+  for (const b of rows) {
+    let list = byProduct.get(b.product_id);
+    if (!list) byProduct.set(b.product_id, (list = []));
+    list.push({ expiryDate: b.expiry_date, quantity: b.quantity });
+  }
+  for (const [productId, list] of byProduct) {
+    byProduct.set(productId, sortBatchesFefo(list));
+  }
+  return byProduct;
+}
+
+export type MovementRow = {
   id: string;
   product_id: string;
   type: string;
@@ -116,19 +145,28 @@ export async function getPredictions(supabase: SupabaseClient<Database>): Promis
   rows: PredictionRow[];
   settings: PredictiveSettingsRow | null;
 }> {
-  const [{ data: settings }, { data: stockRows }, { data: movements }] = await Promise.all([
-    supabase.from("predictive_settings").select(PREDICTIVE_SETTINGS_COLUMNS).maybeSingle(),
-    supabase
-      .from("stock")
-      .select("product_id, quantity, min_quantity, products(name, criticality)"),
-    supabase
-      .from("stock_movements")
-      .select("id, product_id, type, quantity, created_at, corrects_movement_id")
-      .in("type", ["entry", "exit"])
-      .order("created_at", { ascending: true }),
-  ]);
+  const [{ data: settings }, { data: stockRows }, movements, { data: batchRows }] =
+    await Promise.all([
+      supabase.from("predictive_settings").select(PREDICTIVE_SETTINGS_COLUMNS).maybeSingle(),
+      supabase
+        .from("stock")
+        .select("product_id, quantity, min_quantity, products(name, criticality)"),
+      // Paged: PostgREST caps a response at 1000 rows, and this read is ordered
+      // ascending — an unpaged version silently drops the most recent movements
+      // (i.e. the demand that matters most) once an org crosses that many.
+      fetchAllRows<MovementRow>((from, to) =>
+        supabase
+          .from("stock_movements")
+          .select("id, product_id, type, quantity, created_at, corrects_movement_id")
+          .in("type", ["entry", "exit"])
+          .order("created_at", { ascending: true })
+          .range(from, to)
+      ),
+      supabase.from("stock_batches").select(STOCK_BATCH_COLUMNS),
+    ]);
 
-  const consumptionByProduct = buildConsumptionSeries(movements ?? []);
+  const consumptionByProduct = buildConsumptionSeries(movements);
+  const batchesByProduct = groupBatchesByProduct(batchRows ?? []);
 
   // Only pay the purchases query when lead time is on auto (explicit null
   // or no settings row at all).
@@ -150,6 +188,7 @@ export async function getPredictions(supabase: SupabaseClient<Database>): Promis
           productId: s.product_id,
           consumption: consumptionByProduct.get(s.product_id) ?? [],
           currentStock: s.quantity,
+          batches: batchesByProduct.get(s.product_id) ?? [],
           minQuantity: s.min_quantity,
           safetyStockDays: safetyDaysFor(settings ?? null, criticality),
         },
@@ -162,6 +201,7 @@ export async function getPredictions(supabase: SupabaseClient<Database>): Promis
         product_name: s.products?.name ?? "",
         criticality,
         current_stock: s.quantity,
+        usable_stock: prediction.usableStock,
         min_quantity: s.min_quantity,
         lead_time_days: leadTimeDays,
         lead_time_auto: leadTimeAuto,
