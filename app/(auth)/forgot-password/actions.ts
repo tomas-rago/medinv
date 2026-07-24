@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { logAuthLinkFallback, sendsRealAuthEmails } from "@/lib/auth/email-mode";
 import { ForgotPasswordSchema } from "@/lib/schemas/forgot-password/forgot-password";
 import { cookies } from "next/headers";
 
@@ -24,26 +24,21 @@ export async function requestPasswordReset(
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const redirectTo = `${siteUrl}/auth/callback?type=recovery`;
 
-  if (process.env.NODE_ENV === "development") {
-    const adminClient = createAdminClient();
-    const { data: linkData, error } = await adminClient.auth.admin.generateLink({
-      type: "recovery",
-      email: result.data.email,
-      options: { redirectTo },
-    });
-    if (error) {
-      console.error(`[DEV] generateLink error:`, error.message);
-    } else if (linkData?.properties?.action_link) {
-      console.log(
-        `\n🔗 DEV password reset link for ${result.data.email}:\n${linkData.properties.action_link}\n`
-      );
-    } else {
-      console.warn(`[DEV] generateLink returned no action_link`, linkData);
-    }
+  if (!sendsRealAuthEmails()) {
+    await logAuthLinkFallback({ type: "recovery", email: result.data.email });
   } else {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
-    await supabase.auth.resetPasswordForEmail(result.data.email, { redirectTo });
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      result.data.email,
+      { redirectTo }
+    );
+    // The email didn't go out (rate limit, SMTP failure) — mint a console link so
+    // the flow is still usable. Safe to invalidate: there is nothing in an inbox.
+    if (error) {
+      console.error("[requestPasswordReset] resetPasswordForEmail error:", error.message);
+      await logAuthLinkFallback({ type: "recovery", email: result.data.email });
+    }
   }
 
   // Always return ok — never reveal whether the email exists

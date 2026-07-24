@@ -204,6 +204,7 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY   ← not ..._ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
 NEXT_PUBLIC_SITE_URL
+AUTH_EMAIL_MODE                        ← optional: real | dev-link (see §3.5)
 ANTHROPIC_API_KEY
 MP_ACCESS_TOKEN, MP_WEBHOOK_SECRET, MP_COOKIE_SECRET, MP_CURRENCY_ID,
 NEXT_PUBLIC_MP_PUBLIC_KEY, MP_TEST_*
@@ -236,24 +237,34 @@ and redirect to `/products` — the one screen every role can see — when denie
 ### 3.5 Sign-up, onboarding and invitation flows
 
 ```
-sign-up ──▶ (prod) email confirm ──▶ /auth/callback ──▶ /onboarding
-        └─▶ (dev) auto-confirmed + immediate sign-in ──▶ /onboarding
+sign-up ──▶ (real) email confirm ──▶ /auth/callback ──▶ /onboarding
+        └─▶ (dev-link) auto-confirmed + immediate sign-in ──▶ /onboarding
 
 /onboarding ── free plan ──▶ provisionOrganization ─▶ refreshSession ─▶ /dashboard
             └─ paid plan ──▶ signed pending-checkout cookie ─▶ /checkout ─▶ /api/mp/subscribe
 
 invite (chief) ──▶ Supabase invite email ──▶ /auth/invite ──▶ /auth/complete-profile
+
+any flow, email send failed ──▶ console link ──▶ /auth/verify ──▶ …
 ```
 
-Two details that trip people up:
+Three details that trip people up:
 
-- **Dev mode diverges deliberately.** [sign-up/actions.ts](../app/(auth)/sign-up/actions.ts)
-  uses `admin.createUser({ email_confirm: true })` plus an immediate
-  `signInWithPassword` in development. `generateLink` was tried first and rejected:
-  its confirmation URL uses the implicit flow (hash fragment), which a Route Handler
-  cannot read, so the new session was never established. Invites take the opposite
-  branch — `generateLink` in dev (link logged to the server console, dodging the
-  Supabase dev email rate limit), `inviteUserByEmail` in production.
+- **Email mode is a switch, not a `NODE_ENV` check.** `sendsRealAuthEmails()` in
+  [lib/auth/email-mode.ts](../lib/auth/email-mode.ts) reads `AUTH_EMAIL_MODE`
+  (`real` | `dev-link`), defaulting to `dev-link` under `next dev`. In `dev-link` mode
+  sign-up uses `admin.createUser({ email_confirm: true })` plus an immediate
+  `signInWithPassword`, and the other flows print a link instead of sending mail.
+  Set `AUTH_EMAIL_MODE=real` to exercise the production paths locally (e.g. for a demo).
+- **A generated link and an emailed link are mutually exclusive.** `auth.one_time_tokens`
+  is unique on `(user_id, token_type)`, so `admin.generateLink()` *replaces* whatever
+  token was mailed out. `logAuthLinkFallback()` therefore only runs when the real send
+  returned an error — never alongside a successful one. `npm run auth:link -- recovery
+  <email>` does the same thing on demand, and prints a warning to that effect.
+  The links it produces point at [/auth/verify](../app/(auth)/auth/verify/route.ts),
+  which consumes the `token_hash` with `verifyOtp` server-side; `properties.action_link`
+  is deliberately unused because its implicit-flow hash fragment never reaches the server
+  (the same trap that shaped the sign-up dev branch).
 - **Invited users get their JWT patched on first callback.** The invitation sets
   `profiles.organization_id`, but `app_metadata` is only stamped when
   [auth/callback](../app/(auth)/auth/callback/route.ts) notices the mismatch and calls
