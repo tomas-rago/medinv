@@ -41,8 +41,8 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
   let productA: string;
   const userIds: string[] = [];
 
-  let doctorA: Client; // doctor in org A (purchase writer)
-  let adminAssistA: Client; // administrative in org A (read-only)
+  let doctorA: Client; // doctor in org A (inventory only — no purchase writes)
+  let adminAssistA: Client; // administrative in org A (purchase writer)
   let chiefB: Client; // chief_doctor in org B
 
   async function createUser(role: string, organizationId: string): Promise<Client> {
@@ -111,15 +111,17 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
     await admin.from("organizations").delete().in("id", [orgA, orgB]);
   });
 
-  it("administrative cannot create a purchase; doctor can", async () => {
-    const { error: deniedError } = await adminAssistA.rpc("create_purchase", {
+  it("doctor cannot create a purchase; administrative can", async () => {
+    // Purchases are an "operations" capability: chief_doctor, nurse and
+    // administrative, but not doctor (doctor is inventory-only).
+    const { error: deniedError } = await doctorA.rpc("create_purchase", {
       p_provider_id: null,
       p_notes: null,
       p_items: [{ product_id: productA, quantity: 3, unit_price: null }],
     });
     expect(deniedError).not.toBeNull();
 
-    const { data: purchaseId, error } = await doctorA.rpc("create_purchase", {
+    const { data: purchaseId, error } = await adminAssistA.rpc("create_purchase", {
       p_provider_id: null,
       p_notes: `${runId} order`,
       p_items: [{ product_id: productA, quantity: 10, unit_price: 150 }],
@@ -134,7 +136,7 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
   });
 
   it("receive with partial acceptance updates lines, stock and movements", async () => {
-    const { data: purchase } = await doctorA
+    const { data: purchase } = await adminAssistA
       .from("purchases")
       .select("id, purchase_items(id, quantity)")
       .eq("notes", `${runId} order`)
@@ -142,13 +144,13 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
     expect(purchase).not.toBeNull();
     const line = purchase!.purchase_items[0];
 
-    const { error } = await doctorA.rpc("receive_purchase", {
+    const { error } = await adminAssistA.rpc("receive_purchase", {
       p_purchase_id: purchase!.id,
       p_items: [{ id: line.id, accepted_quantity: 7, expiry_date: "2027-01-31" }],
     });
     expect(error).toBeNull();
 
-    const { data: after } = await doctorA
+    const { data: after } = await adminAssistA
       .from("purchases")
       .select("status, received_at, purchase_items(accepted_quantity, expiry_date)")
       .eq("id", purchase!.id)
@@ -159,14 +161,14 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
     expect(after?.purchase_items[0].expiry_date).toBe("2027-01-31");
 
     // Accepted quantity entered stock through the shared ingress path.
-    const { data: stock } = await doctorA
+    const { data: stock } = await adminAssistA
       .from("stock")
       .select("quantity")
       .eq("product_id", productA)
       .single();
     expect(stock?.quantity).toBe(7);
 
-    const { data: batch } = await doctorA
+    const { data: batch } = await adminAssistA
       .from("stock_batches")
       .select("quantity")
       .eq("product_id", productA)
@@ -174,7 +176,7 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
       .single();
     expect(batch?.quantity).toBe(7);
 
-    const { data: movements } = await doctorA
+    const { data: movements } = await adminAssistA
       .from("stock_movements")
       .select("type, quantity, notes, purchase_id")
       .eq("product_id", productA);
@@ -186,13 +188,13 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
   });
 
   it("a received purchase cannot be received again", async () => {
-    const { data: purchase } = await doctorA
+    const { data: purchase } = await adminAssistA
       .from("purchases")
       .select("id, purchase_items(id)")
       .eq("notes", `${runId} order`)
       .single();
 
-    const { error } = await doctorA.rpc("receive_purchase", {
+    const { error } = await adminAssistA.rpc("receive_purchase", {
       p_purchase_id: purchase!.id,
       p_items: [{ id: purchase!.purchase_items[0].id, accepted_quantity: 1, expiry_date: null }],
     });
@@ -209,7 +211,7 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
     expect(providerError).toBeNull();
 
     // Not associated yet → rejected.
-    const { error: rejected } = await doctorA.rpc("create_purchase", {
+    const { error: rejected } = await adminAssistA.rpc("create_purchase", {
       p_provider_id: provider!.id,
       p_notes: `${runId} provider-order`,
       p_items: [{ product_id: productA, quantity: 2, unit_price: null }],
@@ -222,7 +224,7 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
       .from("provider_products")
       .insert({ organization_id: orgA, provider_id: provider!.id, product_id: productA });
 
-    const { error: accepted } = await doctorA.rpc("create_purchase", {
+    const { error: accepted } = await adminAssistA.rpc("create_purchase", {
       p_provider_id: provider!.id,
       p_notes: `${runId} provider-order`,
       p_items: [{ product_id: productA, quantity: 2, unit_price: null }],
@@ -231,19 +233,19 @@ describe.skipIf(!hasCreds)("purchases RLS + receive flow", () => {
   });
 
   it("cancelling a draft leaves stock untouched", async () => {
-    const { data: purchaseId } = await doctorA.rpc("create_purchase", {
+    const { data: purchaseId } = await adminAssistA.rpc("create_purchase", {
       p_provider_id: null,
       p_notes: `${runId} cancel-me`,
       p_items: [{ product_id: productA, quantity: 5, unit_price: null }],
     });
 
-    const { error } = await doctorA
+    const { error } = await adminAssistA
       .from("purchases")
       .update({ status: "cancelled" })
       .eq("id", purchaseId!);
     expect(error).toBeNull();
 
-    const { data: stock } = await doctorA
+    const { data: stock } = await adminAssistA
       .from("stock")
       .select("quantity")
       .eq("product_id", productA)

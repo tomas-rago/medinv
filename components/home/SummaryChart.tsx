@@ -171,16 +171,17 @@ function VerticalBars({ spec }: { spec: SummaryChartSpec }) {
             <title>{`${p.label}: ${fmtLabelWithUnit(spec, p.value)}`}</title>
             {/* invisible hit target across the slot */}
             <rect x={M.left + i * slotW} y={M.top} width={slotW} height={plotH} fill="transparent" />
-            {p.value > 0 && (
-              <rect
-                x={x(i) - barW / 2}
-                y={y(p.value)}
-                width={barW}
-                height={Math.max(2, h)}
-                rx={4}
-                fill={toneColor(p.tone)}
-              />
-            )}
+            {/* Zero-valued bars still draw a 2px stub at the baseline — a chart
+                of all-zero values (e.g. "días hasta reposición" when everything
+                is due now) must not render as a blank panel. */}
+            <rect
+              x={x(i) - barW / 2}
+              y={y(p.value) - (p.value > 0 ? 0 : 2)}
+              width={barW}
+              height={Math.max(2, h)}
+              rx={4}
+              fill={toneColor(p.tone)}
+            />
             {/* x label */}
             <text
               x={x(i)}
@@ -206,6 +207,14 @@ function VerticalBars({ spec }: { spec: SummaryChartSpec }) {
       })}
     </svg>
   );
+}
+
+// A chart whose values are all zero carries no information (and reads as an
+// empty panel), so the card treats it as "no chart" rather than rendering it.
+export function isRenderableChart(
+  spec: SummaryChartSpec | null | undefined
+): spec is SummaryChartSpec {
+  return !!spec && spec.points.some((p) => p.value > 0);
 }
 
 export function SummaryChart({ spec }: { spec: SummaryChartSpec }) {
